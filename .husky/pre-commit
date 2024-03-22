@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+[ -n "$CI" ] && exit 0
+
+. "$(dirname -- "$0")/_/husky.sh"
+
+npx --no-install lint-staged
+
+RESULT=$?
+if [ $RESULT -ne 0 ]; then
+  echo "WARNING: Running linters against staged files failed..."
+fi
+
+exit $RESULT

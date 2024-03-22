@@ -1,0 +1,36 @@
+name: GitHub CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'LICENSE']
+  pull_request:
+    branches: [main]
+    paths-ignore: ['**.md']
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: yarn install
+      - name: Format codebase
+        run: yarn run format
+      - name: Analyze codebase
+        run: yarn run lint
+      - name: Run unit tests
+        run: yarn test
+      - name: Build project
+        run: yarn build
+      - name: Persist build results
+        uses: actions/upload-artifact@v3
+        with:
+          name: cspark-core
+          path: lib
+          retention-days: 1

@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "types": ["node", "jest"],
+    "baseUrl": "./",
+    "paths": {
+      "@cspark/sdk": ["src/index"],
+      "@cspark/sdk/*": ["src/*"]
+    }
+  },
+  "extends": "./tsconfig.json",
+  "include": ["test/**/*", "examples/**/*"]
+}
