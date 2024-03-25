@@ -205,3 +205,10 @@ type UriOptions = { base: string; version?: string; endpoint?: string };
 export async function download(url: string, auth?: Authorization) {
   return _download(url, { headers: { ...auth?.asHeader } }).then((response) => response.buffer);
 }
+
+export interface ApiResponse {
+  status: string;
+  response_data: Record<string, any>;
+  response_meta: Record<string, any>;
+  error: any;
+}

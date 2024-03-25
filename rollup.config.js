@@ -11,5 +11,6 @@ exports.default = {
     require('@rollup/plugin-node-resolve')({ browser: true, preferBuiltins: false }),
     require('@rollup/plugin-commonjs')(),
     require('@rollup/plugin-typescript')({ tsconfig: './tsconfig.rollup.json' }),
+    require('@rollup/plugin-terser')(),
   ],
 };

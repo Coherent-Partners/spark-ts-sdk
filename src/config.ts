@@ -65,7 +65,7 @@ export class Config {
   }
 
   get hasHeaders(): boolean {
-    return Object.keys(this.extraHeaders).length > 0;
+    return !Utils.isEmptyObject(this.extraHeaders);
   }
 
   addInterceptors(...interceptors: Interceptor[]): void {

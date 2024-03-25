@@ -43,9 +43,8 @@ export class SparkError extends Error {
    * Returns a string representation of the error.
    */
   override toString(): string {
-    let report = `${this.name}: ${this.message}`;
-    if (this.details) report += ` (${this.details})`;
-    return report;
+    const error = `${this.name}: ${this.message}`;
+    return this.details ? `${error} (${this.details})` : error;
   }
 
   /**
@@ -63,7 +62,7 @@ export class SparkError extends Error {
     return new SparkSdkError(error);
   }
 
-  static api<T>(status: number, error: ErrorMessage<ApiErrorCause<T>>): SparkApiError {
+  static api<TReq, TResp>(status: number, error: ErrorMessage<ApiErrorCause<TReq, TResp>>): SparkApiError {
     return SparkApiError.when(status, error);
   }
 }
@@ -125,7 +124,7 @@ export class SparkApiError extends SparkError {
   static when<TReq, TResp>(status: number, error: ErrorMessage<ApiErrorCause<TReq, TResp>>): SparkApiError {
     switch (status) {
       case 0:
-        return new InternetError(error);
+        return new InternetError(error, 0);
       case 400:
         return new BadRequestError(error, 400);
       case 401:

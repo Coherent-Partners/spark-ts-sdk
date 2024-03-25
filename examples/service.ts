@@ -29,6 +29,15 @@ function getSwagger(spark: SparkClient) {
     .catch(console.error);
 }
 
+function validate(spark: SparkClient) {
+  spark.service
+    .validate('my-folder/my-service', {
+      data: { inputs: { '01_letter': 'b', '02_number': 23 }, validationType: 'dynamic' },
+    })
+    .then((response) => console.log(JSON.stringify(response.data, null, 2)))
+    .catch((err) => console.error(JSON.stringify(err.cause, null, 2)));
+}
+
 function download(spark: SparkClient) {
   spark.service
     .download({ folder: 'my-folder', service: 'my-service', type: 'configured' })
@@ -79,6 +88,7 @@ export default {
   getMetadata,
   getVersions,
   getSwagger,
+  validate,
   download,
   recompile,
   export: exportAsZip,

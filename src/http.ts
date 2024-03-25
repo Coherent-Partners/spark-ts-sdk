@@ -7,7 +7,7 @@ import { SparkApiError, SparkSdkError } from './error';
 import { Streamer } from './streaming';
 import Utils from './utils';
 
-export interface MultipartItem {
+export interface Multipart {
   readonly name: string;
   readonly data?: JsonData;
   readonly fileStream?: ByteStream;
@@ -46,7 +46,7 @@ export interface RequestOptions {
   /**
    * Parts of multipart data
    */
-  readonly multiparts?: MultipartItem[];
+  readonly multiparts?: Multipart[];
 
   /**
    * Token used for request cancellation
@@ -110,14 +110,14 @@ export interface Interceptor {
  * @param {int} baseInterval The base retry interval set in config
  * @returns {int} The number of milliseconds after which to retry
  */
-export function getRetryTimeout(retries: number, baseInterval = 1000): number {
+export function getRetryTimeout(retries: number, baseInterval: number = 1): number {
   // Retry intervals are between 50% and 150% of the exponentially increasing base amount
   const RETRY_RANDOMIZATION_FACTOR = 0.5;
   const minRandomization = 1 - RETRY_RANDOMIZATION_FACTOR;
   const maxRandomization = 1 + RETRY_RANDOMIZATION_FACTOR;
   const randomization = Math.random() * (maxRandomization - minRandomization) + minRandomization;
   const exponential = Math.pow(2, retries - 1);
-  return Math.ceil(exponential * baseInterval * randomization);
+  return Math.ceil(exponential * baseInterval * 1000 * randomization);
 }
 
 async function createRequestInit(options: HttpOptions): Promise<RequestInit> {
@@ -140,7 +140,7 @@ async function createRequestInit(options: HttpOptions): Promise<RequestInit> {
       for (const item of options.multiparts) {
         if (item.fileStream) {
           const buffer = await readStream(item.fileStream);
-          // headers['content-md5'] = await calculateMd5Hash(buffer);
+          headers['content-md5'] = await calculateMd5Hash(buffer);
           formData.append(item.name, buffer, {
             filename: item.fileName ?? 'file',
             contentType: item.contentType ?? 'application/octet-stream',
@@ -230,17 +230,17 @@ export async function _fetch<T = JsonData>(resource: string, options: HttpOption
   const contentType = response.headers.get('content-type') ?? '';
   const responseBytesBuffer = await response.arrayBuffer();
   const content = Streamer.fromBuffer(responseBytesBuffer);
-  const data = ((): T => {
+  const jsonData = ((): T => {
     if (contentType.includes('application/json')) {
       const text = new TextDecoder().decode(responseBytesBuffer);
       return Serializable.deserialize(text);
     }
-    return null as any;
+    return null as T;
   })();
 
   let httpResponse: HttpResponse<T> = {
     status: response.status,
-    data,
+    data: jsonData,
     buffer: content,
     headers: Object.fromEntries(response.headers.entries()),
   };
@@ -253,7 +253,7 @@ export async function _fetch<T = JsonData>(resource: string, options: HttpOption
     ) as HttpResponse<T>;
   }
 
-  // Should we retry the request?
+  // Should retry the request?
   if (httpResponse.status >= 400) {
     const { retries = 0 } = fetchOptions;
 
@@ -272,7 +272,7 @@ export async function _fetch<T = JsonData>(resource: string, options: HttpOption
     if (httpResponse.status === 429 && retries < fetchOptions.config.maxRetries) {
       const retryTimeout = httpResponse.headers['x-retry-after']
         ? parseFloat(httpResponse.headers['x-retry-after']!) * 1000
-        : getRetryTimeout(retries, 1000);
+        : getRetryTimeout(retries);
 
       await new Promise((resolve) => setTimeout(resolve, retryTimeout));
       return _fetch(resource, { ...fetchOptions, retries: retries + 1 });

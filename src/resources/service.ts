@@ -6,10 +6,15 @@ import Utils, { StringUtils } from '../utils';
 import { ApiResource, Uri, UriParams } from './base';
 import { BatchService } from './batch';
 import { ImpEx } from './impex';
+import { History } from './history';
 
 export class Service extends ApiResource {
   get batch() {
     return new BatchService(this.config);
+  }
+
+  get log() {
+    return new History(this.config);
   }
 
   execute(uri: string | Omit<UriParams, 'version'>, params: ExecBodyParams = {}): Promise<HttpResponse> {
@@ -47,6 +52,13 @@ export class Service extends ApiResource {
     const url = Uri.from({ folder, service }, { base: this.config.baseUrl.full, endpoint });
 
     return this.request(url.value);
+  }
+
+  validate(uri: string | Omit<UriParams, 'version'>, params: ExecBodyParams = {}): Promise<HttpResponse> {
+    const url = Uri.from(Uri.toParams(uri), { base: this.config.baseUrl.full, endpoint: 'validation' });
+    const body = parseBodyParams(params, {});
+
+    return this.request(url.value, { method: 'POST', body });
   }
 
   download(uri: string | DownloadUriParams): Promise<HttpResponse> {
@@ -87,10 +99,13 @@ export class Service extends ApiResource {
       versionIds: versionId ? [versionId] : [],
       ...params,
     });
+    const jobId = response.data?.id;
+    if (!jobId) throw new SparkError('failed to produce an export job', response);
+    console.log(`[INFO]: export job created <${jobId}>`);
 
-    const status = await impex.export.getStatus(response.data.id, { maxRetries: retries });
+    const status = await impex.export.getStatus(jobId, { maxRetries: retries });
     if (status.data?.outputs?.files?.length === 0) {
-      throw new SparkError('export job failed to produce any files');
+      throw new SparkError('export job failed to produce any files', status);
     }
 
     const downloads = [];
@@ -158,6 +173,7 @@ interface ExecData {
   requestedOutputRegex?: string;
   responseDataInputs?: boolean;
   serviceCategory?: string;
+  validationType?: 'default_values' | 'dynamic';
 }
 
 interface ExecBodyParams {
@@ -187,6 +203,7 @@ type ExecBody = {
     requested_output_regex?: string;
     response_data_inputs?: boolean;
     service_category?: string;
+    validation_type?: 'default_values' | 'dynamic';
   };
 };
 
@@ -211,6 +228,7 @@ function parseBodyParams(
     requested_output_regex: data?.requestedOutputRegex,
     response_data_inputs: data?.responseDataInputs,
     service_category: data?.serviceCategory,
+    validation_type: data?.validationType,
   };
 
   const inputs = data?.inputs || initialInputs;

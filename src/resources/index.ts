@@ -4,3 +4,4 @@ export * from './service';
 export * from './impex';
 export * from './oauth2';
 export * from './wasm';
+export * from './history';

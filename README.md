@@ -58,7 +58,7 @@ environments:
 <!doctype html>
 <html>
   <body>
-    <script src="https://www.unpkg.com/@cspark-sdk"></script>
+    <script src="https://www.unpkg.com/@cspark/sdk"></script>
     <script>
       const { SparkClient: Spark } = window['@cspark/sdk'];
 

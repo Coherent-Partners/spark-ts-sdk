@@ -1,4 +1,4 @@
-import { HttpResponse, MultipartItem } from '../http';
+import { HttpResponse, Multipart } from '../http';
 import { StringUtils } from '../utils';
 
 import { ApiResource, Uri } from './base';
@@ -127,7 +127,7 @@ interface Paging {
   sort?: string;
 }
 
-function parseBodyParams(data: BodyParams): MultipartItem[] {
+function parseBodyParams(data: BodyParams): Multipart[] {
   const { name, category = 'Other', description, launchDate, startDate, status, cover } = data;
   const now = new Date();
   const launch = new Date(now.getFullYear(), now.getMonth() + 3, now.getDate());

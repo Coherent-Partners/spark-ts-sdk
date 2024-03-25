@@ -47,7 +47,7 @@ class Export extends ApiResource {
       retries++;
       console.log(`[INFO]: waiting for export job to complete (attempt ${retries} of ${maxRetries})`);
 
-      const timeout = getRetryTimeout(retries, 1000);
+      const timeout = getRetryTimeout(retries, 2);
       await new Promise((resolve) => setTimeout(resolve, timeout));
     }
     throw SparkError.sdk({ message: 'export job status timed out' });
