@@ -12,12 +12,10 @@
     "restful",
     "api"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "repository": "github:c-spark/cspark-ts-sdk",
-  "main": "./lib/index.js",
-  "types": "./lib/index.d.ts",
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "types": "./lib/types/index.d.ts",
   "browser": "./lib/bundle.js",
   "files": [
     "lib"
@@ -26,12 +24,15 @@
     "node": ">=16.0.0"
   },
   "scripts": {
-    "demo": "tsc -p tsconfig.test.json && node lib/examples/index.js",
+    "demo": "tsc -p tsconfig.dev.json && node lib/examples/index.js",
     "start": "echo \">>> no start command specified\" && exit 0",
-    "format": "prettier --write \"{src,test}/**/*.ts\"",
+    "format": "prettier --write \"{src,test,examples}/**/*.ts\"",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
     "test": "jest",
-    "build": "tsc",
+    "prebuild": "rm -rf lib && tsc -p tsconfig.types.json",
+    "build": "yarn build-cjs && yarn build-esm",
+    "build-cjs": "tsc",
+    "build-esm": "tsc -p tsconfig.esm.json && echo '{\"type\":\"module\"}' > lib/esm/package.json",
     "postbuild": "rollup -c",
     "prepare": "husky install"
   },
@@ -68,6 +69,14 @@
     "tsconfig-paths": "4.2.0",
     "typescript": "*"
   },
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "require": "./lib/cjs/index.js",
+      "import": "./lib/esm/index.js",
+      "default": "./lib/esm/index.js"
+    }
+  },
   "jest": {
     "rootDir": "test",
     "testEnvironment": "node",
@@ -83,7 +92,7 @@
       "^.+.tsx?$": [
         "ts-jest",
         {
-          "tsconfig": "tsconfig.test.json"
+          "tsconfig": "tsconfig.dev.json"
         }
       ]
     },
