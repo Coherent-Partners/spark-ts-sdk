@@ -144,6 +144,67 @@ temporary failure, such as a unauthorized response or a status code greater than
   Only set this option to `true` if you understand the risks and have appropriate
   mitigations in place.
 
+## API Parity
+
+The SDK aims to provide over time a full parity with the Spark API. The following
+APIs are currently supported:
+
+| Config API                                | Description                                                                   |
+| ----------------------------------------- | ----------------------------------------------------------------------------- |
+| `Spark.config.auth.oauth.retrieveToken()` | Generate access token using OAuth2.0 via Client Credentials flow.             |
+| `Spark.config.auth.oauth.refreshToken()`  | Refresh access token when expired using OAuth2.0 via Client Credentials flow. |
+
+| Folder API                      | Description                                                           |
+| ------------------------------- | --------------------------------------------------------------------- |
+| `Spark.folder.getCategories()`  | Get the list of folder categories.                                    |
+| `Spark.folder.create(data)`     | Create a new folder using info like name, description, category, etc. |
+| `Spark.folder.find(name)`       | Find folders by name, status, category, or favorite.                  |
+| `Spark.folder.update(id, data)` | Update a folder's information by id.                                  |
+| `Spark.folder.delete(id)`       | Delete a folder by id.                                                |
+
+| Service API                                | Description                                                               |
+| ------------------------------------------ | ------------------------------------------------------------------------- |
+| `Spark.service.getSchema(uri)`             | Get the schema for a given service.                                       |
+| `Spark.service.getVersions(uri)`           | Get all the versions of a service using a service uri locator.            |
+| `Spark.service.getMetadata(uri)`           | Get the metadata of a service using a service uri locator.                |
+| `Spark.service.getSwagger(uri)`            | Get the JSON content or download swagger file a particular service.       |
+| `Spark.service.recompile(uri)`             | Recompile a service into a specified compiler type (e.g., Neuron_1.13.0). |
+| `Spark.service.download(uri)`              | Download the original excel file or the configured version of a service.  |
+| `Spark.service.execute(uri, data)`         | Execute a service using v3 format.                                        |
+| `Spark.service.batch.execute(uri, data)`   | Execute a service using synchronous batch (i.e., v4 format.)              |
+| `Spark.service.validate(uri, data)`        | Validate service data using static or dynamic validations.                |
+| `Spark.service.export(uri, data)`          | Extract Spark services and package them up into a zip file                |
+| `Spark.service.log.rehydrate(uri, callId)` | Rehydrate the model run into the original excel file.                     |
+| `Spark.service.log.download(uri, [type])`  | Initiate a log download job as csv or json file.                          |
+| `Spark.service.log.getStatus(uri, [type])` | Get the status for a csv or json download job.                            |
+
+| ImpEx API                                      | Description                                      |
+| ---------------------------------------------- | ------------------------------------------------ |
+| `Spark.impex.export.initiate(data)`            | Initiate a log download job as csv or json file. |
+| `Spark.impex.export.getStatus(jobId, options)` | Check Export job status                          |
+
+| Other APIs                                        | Description                                            |
+| ------------------------------------------------- | ------------------------------------------------------ |
+| `Spark.wasm.download(uri)`                        | Download a service's WebAssembly binary (WASM module). |
+| `Spark.file.download(url)`                        | Download a Spark file (with authentication).           |
+| `static Spark.download(url, [Spark.config.auth])` | Download a file (with or without authentication).      |
+
+> [!TIP]:
+> A service URI locator can be combined with other parameters to locate a specific
+> service when it's not a string. For example, you may execute a public service
+> using an object containing the `folder`, `service`, and `public` properties.
+
+```ts
+const spark = new Spark({ env: 'uat.us', tenant: 'my-tenant' });
+spark.service
+  .execute({ folder: 'my-folder', service: 'my-service', public: true }, { inputs: { value: 'Hello, Spark SDK!' } })
+  .then((response) => console.log(response.data))
+  .catch(console.error);
+// The final URI in this particular case will be: 'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
+```
+
+See the [Uri](./src/resources/base.ts) class for more details.
+
 ## Error Handling
 
 `SparkError` is a base class for all custom errors. There are two types of errors:

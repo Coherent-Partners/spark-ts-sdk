@@ -10,7 +10,7 @@ export class Wasm extends ApiResource {
    * FIXME: serviceUri made of folder and service fails to download.
    * Use serviceId or versionId instead.
    */
-  download(uri: string | DownloadUriParams): Promise<HttpResponse> {
+  download(uri: string | Omit<UriParams, 'proxy' | 'version'>): Promise<HttpResponse> {
     const { folder, service, public: isPublic, serviceId, versionId } = Uri.toParams(uri);
     let endpoint = 'getnodegenzipbyId/';
     if (folder && service) endpoint += `folders/${folder}/services/${service}`;
@@ -20,8 +20,4 @@ export class Wasm extends ApiResource {
 
     return this.request(url.value);
   }
-}
-
-interface DownloadUriParams extends Omit<UriParams, 'proxy' | 'version'> {
-  serviceId?: string;
 }

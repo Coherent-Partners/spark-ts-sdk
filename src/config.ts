@@ -31,7 +31,7 @@ export class Config {
     this.auth = Authorization.from({ apiKey, token, oauth: options?.oauth });
     this.timeout = numberValidator.isValid(options.timeout) ? options.timeout! : DEFAULT_TIMEOUT_IN_MS;
     this.maxRetries = numberValidator.isValid(options.maxRetries) ? options.maxRetries! : DEFAULT_MAX_RETRIES;
-    this.allowBrowser = !!options.allowBrowser;
+    this.allowBrowser = this.auth.isOpen || !!options.allowBrowser;
     this.environment = options.env;
 
     this.#options = JSON.stringify({
@@ -44,7 +44,7 @@ export class Config {
       allowBrowser: this.allowBrowser,
     });
 
-    if (!this.allowBrowser && Utils.isBrowser() && !this.auth.isOpen) {
+    if (!this.allowBrowser && Utils.isBrowser()) {
       throw new SparkError(
         ''.concat(
           'It looks like you are running in a browser-like environment.\n\n',

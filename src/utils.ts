@@ -1,6 +1,31 @@
 export type Maybe<T> = T | undefined;
 export type Nullable<T> = Maybe<T> | null;
 
+const LoadedModules: Record<string, any> = {};
+
+async function bootstrapModules(names: string[]) {
+  if (typeof module === 'object' && typeof module.exports === 'object') {
+    names.forEach((name) => (LoadedModules[name] = require(name)));
+  } else {
+    names.forEach((name) => import(name).then((module) => (LoadedModules[name] = module)));
+  }
+}
+
+bootstrapModules(['fs', 'stream', 'crypto']); // FIXME: use shims instead.
+
+export function isBrowser() {
+  return typeof window === 'object' && typeof document === 'object' && window.crypto;
+}
+
+export function loadModule<T = any>(path: string): T | undefined {
+  if (!LoadedModules[path]) {
+    console.warn(`[WARNING] Module "${path}" is not loaded.`);
+    bootstrapModules([path]);
+    return undefined;
+  }
+  return LoadedModules[path] as T;
+}
+
 /**
  * Reads an environment variable (in Node environment only).
  */
@@ -49,12 +74,8 @@ export function isNotEmptyArray(value: unknown): boolean {
   return Array.isArray(value) && value.length > 0;
 }
 
-export function isBrowser() {
-  return typeof window === 'object' && typeof document === 'object' && window.crypto;
-}
-
 export function readFile(path: string): string {
-  return eval('require')('fs').readFileSync(path, 'utf8');
+  return loadModule('fs').readFileSync(path, 'utf8');
 }
 
 export function formatUrl(baseUrl: string | URL, params: Record<string, string> = {}): string {

@@ -5,7 +5,7 @@ import { Config } from './config';
 import { JsonData, Serializable } from './data';
 import { SparkApiError, SparkSdkError } from './error';
 import { Streamer } from './streaming';
-import Utils from './utils';
+import Utils, { loadModule } from './utils';
 
 export interface Multipart {
   readonly name: string;
@@ -134,7 +134,7 @@ async function createRequestInit(options: HttpOptions): Promise<RequestInit> {
     body: ByteStream | string;
   }> => {
     if (options.multiparts) {
-      const FormData = Utils.isBrowser() ? window.FormData : eval('require')('form-data');
+      const FormData = Utils.isBrowser() ? window.FormData : loadModule('form-data');
       const formData = new FormData();
 
       for (const item of options.multiparts) {
@@ -202,7 +202,7 @@ export async function calculateMd5Hash(data: string | Buffer): Promise<string> {
   }
 
   // Node environment
-  const createHash = eval('require')('crypto').createHash;
+  const createHash = loadModule('crypto').createHash;
   return createHash('sha1').update(data).digest('hex');
 }
 

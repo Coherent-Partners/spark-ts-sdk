@@ -1,5 +1,5 @@
 import { type Readable } from 'stream';
-import { isBrowser } from './utils';
+import { isBrowser, loadModule } from './utils';
 
 export class Streamer {
   static fromBuffer(buffer: Buffer | ArrayBuffer): Readable {
@@ -10,6 +10,6 @@ export class Streamer {
             controller.close();
           },
         })
-      : eval('require')('stream').Readable.from(Buffer.from(buffer));
+      : loadModule('stream').Readable.from(Buffer.from(buffer));
   }
 }

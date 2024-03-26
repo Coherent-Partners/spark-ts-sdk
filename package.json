@@ -1,6 +1,6 @@
 {
   "name": "@cspark/sdk",
-  "version": "0.1.0-beta.0",
+  "version": "0.1.0-beta.1",
   "description": "A Node.js SDK for interacting with Coherent Spark APIs",
   "author": "Ralph Florent",
   "homepage": "https://github.com/c-spark/cspark-ts-sdk#readme",
@@ -15,8 +15,8 @@
   "repository": "github:c-spark/cspark-ts-sdk",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
-  "types": "./lib/types/index.d.ts",
-  "browser": "./lib/bundle.js",
+  "types": "./lib/esm/index.d.ts",
+  "browser": "./lib/bundle.min.js",
   "files": [
     "lib"
   ],
@@ -29,11 +29,9 @@
     "format": "prettier --write \"{src,test,examples}/**/*.ts\"",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
     "test": "jest",
-    "prebuild": "rm -rf lib && tsc -p tsconfig.types.json",
-    "build": "yarn build-cjs && yarn build-esm",
-    "build-cjs": "tsc",
-    "build-esm": "tsc -p tsconfig.esm.json && echo '{\"type\":\"module\"}' > lib/esm/package.json",
-    "postbuild": "rollup -c",
+    "prebuild": "rm -rf lib",
+    "build": "tsc && rollup -c",
+    "postbuild": "echo '{\"type\":\"module\"}' > lib/esm/package.json",
     "prepare": "husky install"
   },
   "lint-staged": {
@@ -48,6 +46,7 @@
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.5",
@@ -71,7 +70,7 @@
   },
   "exports": {
     ".": {
-      "types": "./lib/types/index.d.ts",
+      "types": "./lib/esm/index.d.ts",
       "require": "./lib/cjs/index.js",
       "import": "./lib/esm/index.js",
       "default": "./lib/esm/index.js"

@@ -1,6 +1,6 @@
 import { isBrowser } from './utils';
 
-const version = '0.1.0-beta.0';
+const version = '0.1.0-beta.1';
 
 const userAgentHeader = `Coherent Spark SDK v${version} (${
   isBrowser() ? navigator.userAgent : `Node ${process.version}`

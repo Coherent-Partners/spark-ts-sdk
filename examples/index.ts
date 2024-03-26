@@ -11,6 +11,7 @@ import Spark from '../src';
 import Config from './config';
 import Folder from './folder';
 import Service from './service';
+import History from './history';
 import Wasm from './wasm';
 
 const token = 'insert-your-access-token';
@@ -35,3 +36,7 @@ Service.execute(spark);
 Service.batchSync(spark);
 Service.recompile(spark);
 Service.export(spark);
+Service.validate(spark);
+
+History.rehydrate(spark);
+History.download(spark);
