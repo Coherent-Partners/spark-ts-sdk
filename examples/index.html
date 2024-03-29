@@ -6,7 +6,7 @@
   <script>
     const { SparkClient: Spark } = window['@cspark/sdk'];
 
-    async function main(apiKey) {
+    function main(apiKey) {
       const spark = new Spark({ env: 'uat.us', tenant: 'my-tenant', apiKey, allowBrowser: true });
       spark.service
         .execute('my-folder/my-service', { inputs: { value: 'Hello, Spark SDK!' } })

@@ -133,6 +133,8 @@ export class SparkApiError extends SparkError {
         return new ForbiddenError(error, 403);
       case 404:
         return new NotFoundError(error, 404);
+      case 409:
+        return new ConflictError(error, 409);
       case 415:
         return new UnsupportedMediaTypeError(error, 415);
       case 429:
@@ -186,6 +188,14 @@ export class NotFoundError extends SparkApiError {
 
   get details(): string {
     return super.details || 'content not found';
+  }
+}
+
+export class ConflictError extends SparkApiError {
+  override readonly status = 409;
+
+  get details(): string {
+    return super.details || 'resource conflict';
   }
 }
 

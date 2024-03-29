@@ -1,33 +1,59 @@
+import { Serializable } from '../data';
+import { SparkApiError } from '../error';
 import { HttpResponse, Multipart } from '../http';
 import { StringUtils } from '../utils';
 
-import { ApiResource, Uri } from './base';
+import { ApiResource, Uri, ApiResponse } from './base';
 
 export class Folder extends ApiResource {
   /**
    * Create a new folder.
-   * @param {string | BodyParams} params - Folder name and/or accompanying information
-   * @returns {Promise<HttpResponse>}
+   * @param {string | CreateParams} params - Folder name and/or accompanying information
+   * @returns {Promise<HttpResponse<FolderCreated>>}
    */
-  create(params: string | BodyParams): Promise<HttpResponse> {
+  async create(params: string | CreateParams): Promise<HttpResponse<FolderCreated>> {
     const url = Uri.from({}, { base: this.config.baseUrl.value, version: 'api/v1', endpoint: 'product/create' });
-    const bodyParams = (StringUtils.isString(params) ? { name: params } : params) as BodyParams;
-    const multiparts = parseBodyParams(bodyParams);
+    const createParams = (StringUtils.isString(params) ? { name: params } : params) as CreateParams;
+    const { name, category = 'Other', description, launchDate, startDate, status, cover } = createParams;
+    const now = new Date();
+    const launch = new Date(now.getFullYear(), now.getMonth() + 3, now.getDate());
 
-    return this.request(url.value, { method: 'POST', multiparts });
+    const multiparts: Multipart[] = [
+      { name: 'Name', data: name },
+      { name: 'Category', data: category },
+      { name: 'Description', data: description ?? 'Created by Spark JS SDK' },
+      { name: 'StartDate', data: startDate ?? now.toISOString() },
+      { name: 'LaunchDate', data: launchDate ?? launch.toISOString() },
+      { name: 'Status', data: status ?? 'Design' },
+      ...(cover ? [{ name: 'CoverImage', data: Buffer.isBuffer(cover) ? cover.toString() : cover }] : []),
+    ];
+
+    return this.request<FolderCreated>(url.value, { method: 'POST', multiparts }).then((response) => {
+      if (response.data.status === 'Success') return response;
+
+      const cause = {
+        request: { url: url.value, method: 'POST', headers: this.defaultHeaders, body: multiparts },
+        response: { headers: response.headers, body: response.data, raw: Serializable.serialize(response.data) },
+      };
+
+      if (response.data.errorCode === 'PRODUCT_ALREADY_EXISTS') {
+        throw SparkApiError.when(409, { message: `folder name <${name}> already exists`, cause });
+      }
+      throw SparkApiError.when(response.status, { message: `failed to create folder with name <${name}>`, cause });
+    });
   }
 
   /**
    * Find folders by name, status, category, or favorite.
    * @param {string | SearchParams} params - Search parameters (name, status, category, favorite)
    * If `params` is a string, it will be used as the name to search for.
-   * @param {Paging} paging - Paging options (page, pageSize, sort)
-   * @returns {Promise<HttpResponse>}
+   * @param {Paging} paging - Paging options (page, size, sort)
+   * @returns {Promise<HttpResponse<FolderListed>>}
    *
    * Note: `SearchParams.favorite` requires additional permissions if you're using API keys
    * for authentication.
    */
-  find(params: string | SearchParams, paging: Paging = {}): Promise<HttpResponse> {
+  find(params: string | SearchParams, paging: Paging = {}): Promise<HttpResponse<FolderListed>> {
     const url = Uri.from({}, { base: this.config.baseUrl.value, version: 'api/v1', endpoint: 'product/list' });
     const searchParams = (StringUtils.isString(params) ? { name: params } : params) as SearchParams;
     const search = Object.entries(searchParams)
@@ -37,7 +63,7 @@ export class Folder extends ApiResource {
     const body = {
       search,
       page: paging?.page ?? 1,
-      pageSize: paging?.pageSize ?? 100,
+      pageSize: paging?.size ?? 100,
       sort: paging?.sort ?? '-updated',
       shouldFetchActiveServicesCount: true,
     };
@@ -47,9 +73,9 @@ export class Folder extends ApiResource {
 
   /**
    * Get the list of folder categories.
-   * @returns {Promise<HttpResponse>}
+   * @returns {Promise<HttpResponse<FolderCategories>>}
    */
-  getCategories(): Promise<HttpResponse> {
+  getCategories(): Promise<HttpResponse<FolderCategories>> {
     const url = Uri.from({}, { base: this.config.baseUrl.value, version: 'api/v1', endpoint: 'lookup/getcategories' });
     return this.request(url.value);
   }
@@ -57,10 +83,10 @@ export class Folder extends ApiResource {
   /**
    * Update a folder's information.
    * @param {string} id - Folder ID
-   * @param {BodyParams} params - Folder information to update
-   * @returns {Promise<HttpResponse>}
+   * @param {CreateParams} params - Folder information to update
+   * @returns {Promise<HttpResponse<FolderUpdated>>}
    */
-  update(id: string, params: Omit<BodyParams, 'name' | 'cover' | 'status'>): Promise<HttpResponse> {
+  update(id: string, params: Omit<CreateParams, 'name' | 'cover' | 'status'>): Promise<HttpResponse<FolderUpdated>> {
     const url = Uri.from({}, { base: this.config.baseUrl.value, version: 'api/v1', endpoint: `product/update/${id}` });
     const body = { ...params, shouldTrackUserAction: true };
 
@@ -70,9 +96,9 @@ export class Folder extends ApiResource {
   /**
    * Delete a folder by ID.
    * @param {string} id - Folder ID
-   * @returns {Promise<HttpResponse>}
+   * @returns {Promise<HttpResponse<FolderDeleted>>}
    */
-  delete(id: string): Promise<HttpResponse> {
+  delete(id: string): Promise<HttpResponse<FolderDeleted>> {
     const url = Uri.from({}, { base: this.config.baseUrl.value, version: 'api/v1', endpoint: `product/delete/${id}` });
     return this.request(url.value, { method: 'DELETE' });
   }
@@ -97,17 +123,11 @@ type FolderCategory =
   | 'Property & Casualty'
   | 'Other';
 
-interface BodyParams {
+interface CreateParams {
   name: string;
   description?: string;
   category?: FolderCategory;
-  /**
-   * Launch date of the folder in `YYYY-MM-DDTHH:MM:SS.SSSZ` format.
-   */
   launchDate?: string;
-  /**
-   * Start date of the folder in `YYYY-MM-DDTHH:MM:SS.SSSZ` format.
-   */
   startDate?: string;
   status?: string;
   cover?: string | Buffer;
@@ -123,22 +143,40 @@ interface SearchParams {
 
 interface Paging {
   page?: number;
-  pageSize?: number;
+  size?: number;
   sort?: string;
 }
 
-function parseBodyParams(data: BodyParams): Multipart[] {
-  const { name, category = 'Other', description, launchDate, startDate, status, cover } = data;
-  const now = new Date();
-  const launch = new Date(now.getFullYear(), now.getMonth() + 3, now.getDate());
-
-  return [
-    { name: 'Name', data: name },
-    { name: 'Category', data: category },
-    { name: 'Description', data: description ?? 'Created by Spark JS SDK' },
-    { name: 'StartDate', data: startDate ?? now.toISOString() },
-    { name: 'LaunchDate', data: launchDate ?? launch.toISOString() },
-    { name: 'Status', data: status ?? 'Design' },
-    ...(cover ? [{ name: 'CoverImage', data: Buffer.isBuffer(cover) ? cover.toString() : cover }] : []),
-  ];
+interface FolderApiResponse<T> extends Pick<ApiResponse, 'status'> {
+  data: T;
+  errorCode: string | null;
+  message: string | null;
 }
+
+interface FolderInfo {
+  id: string;
+  name: string;
+  status: string;
+  category: FolderCategory;
+  description: string;
+  coverImagePath: string;
+  createdAt: string;
+  createdBy: string;
+  lastModifiedDate: string;
+  isStarred: boolean;
+  kanbanStatus: string;
+  startDate: string;
+  launchDate: string;
+  activeServiceCount: number;
+  totalServiceCount: number;
+}
+
+type FolderCategories = FolderApiResponse<Array<{ key: FolderCategory; value: FolderCategory; icon: string }>>;
+
+type FolderCreated = FolderApiResponse<{ folderId: string; get_product_url: string }>;
+
+type FolderListed = FolderApiResponse<FolderInfo[]> & { count: number; next: number; previous: number };
+
+type FolderUpdated = FolderApiResponse<null>;
+
+type FolderDeleted = FolderApiResponse<null>;

@@ -2,12 +2,8 @@
 
 [![npm version][version-img]][version-url]
 
-## Description
-
-The Coherent Spark Node.js SDK (currently in Beta), designed to elevate the developer
+The Coherent Spark Node.js SDK (currently in Beta) is designed to elevate the developer
 experience and provide a convenient access to the Coherent Spark API.
-
-> **NOTE**: This package requires Node.js 16 or higher.
 
 ## Installation
 
@@ -17,6 +13,9 @@ npm install @cspark/sdk
 yarn add @cspark/sdk
 ```
 
+> [!NOTE]
+> This package requires Node.js 16 or higher.
+
 ## Usage
 
 To use the SDK, you need a Coherent Spark account that lets you access the following:
@@ -25,16 +24,27 @@ To use the SDK, you need a Coherent Spark account that lets you access the follo
   or [OAuth2 client credentials][oauth2-docs] details)
 - Base URL (including the tenant and environment)
 - Spark service URI (to locate a specific resource):
-  - `folder` - a collection of services
-  - `service` - a specific service
-  - `version` - a specific version of a service
+  - `folder` - the folder name where the service is located
+  - `service` - the service name
+  - `version` - the revision number also known as the semantic version (e.g., 0.4.2)
+
+As a reminder, a `folder` contains one or more `service`s, and a `service` can have
+multiple `version`s. Technically speaking, when you're operating with a service,
+you're actually interacting with a specific version of that service (the latest
+version by default - unless specified otherwise).
+
+Hence, there are various ways to indicate a Spark service URI:
+
+- `{folder}/{service}[?{version}]` - _version_ or revision number is optional.
+- `service/{serviceId}`
+- `version/{versionId}`
 
 Here's an example of how to execute a Spark service:
 
 ```ts
 import Spark from '@cspark/sdk';
 
-async function main() {
+function main() {
   const spark = new Spark({ env: 'uat.us', tenant: 'my-tenant', apiKey: 'my-api-key' });
   spark.service
     .execute('my-folder/my-service', { inputs: { value: 'Hello, Spark SDK!' } })
@@ -44,12 +54,6 @@ async function main() {
 
 main();
 ```
-
-There are different ways to indicate a Spark service URI:
-
-- `{folder}/{service}[?{version}]` - _version_ is optional.
-- `service/{serviceId}`
-- `version/{versionId}`
 
 Though the package is designed for Node.js, it can also be used in browser-like
 environments:
@@ -62,7 +66,7 @@ environments:
     <script>
       const { SparkClient: Spark } = window['@cspark/sdk'];
 
-      async function main(apiKey) {
+      function main(apiKey) {
         const spark = new Spark({ env: 'uat.us', tenant: 'my-tenant', apiKey, allowBrowser: true });
         spark.service
           .execute('my-folder/my-service', { inputs: { value: 'Hello, Spark SDK!' } })
@@ -111,6 +115,10 @@ The SDK supports three types of authentication mechanisms:
 const spark = new Spark({ apiKey: 'my-api-key' });
 ```
 
+> [!TIP]
+> The Spark SaaS platform supports public APIs that can be accessed without any
+> authentication. In that case, you can set `apiKey` to `open`.
+
 - `token` - default: `process.env['CSPARK_BEARER_TOKEN']`: indicates the bearer token.
   It can be prefixed with 'Bearer' or not. A bearer token is usually valid for a
   limited time and should be refreshed periodically.
@@ -133,14 +141,14 @@ const spark = new Spark({ oauth: 'path/to/credentials.json' });
 - `timeout` - default: `60000`: indicates the maximum amount of time (in milliseconds)
   that the client should wait for a response from Spark servers before timing out a request.
 
-- `maxRetries` - default: `2`
-
-Indicates the maximum number of times that the client will retry a request in case of a
-temporary failure, such as a unauthorized response or a status code greater than 400.
+- `maxRetries` - default: `2`: indicates the maximum number of times that the client
+  will retry a request in case of a temporary failure, such as a unauthorized
+  response or a status code greater than 400.
 
 - `allowBrowser` - default: `false`: indicates whether the SDK should be used in
-  browser-like environments. By default, client-side use of this library is not
-  recommended, as it risks exposing your secret API credentials to attackers.
+  browser-like environments -- unless you intend to access public APIs.
+  By default, client-side use of this library is not recommended, as it risks
+  exposing your secret API credentials to attackers.
   Only set this option to `true` if you understand the risks and have appropriate
   mitigations in place.
 
@@ -149,12 +157,16 @@ temporary failure, such as a unauthorized response or a status code greater than
 The SDK aims to provide over time a full parity with the Spark API. The following
 APIs are currently supported:
 
-| Config API                                | Description                                                                   |
+**Authentication API**:
+
+| API                                       | Description                                                                   |
 | ----------------------------------------- | ----------------------------------------------------------------------------- |
 | `Spark.config.auth.oauth.retrieveToken()` | Generate access token using OAuth2.0 via Client Credentials flow.             |
 | `Spark.config.auth.oauth.refreshToken()`  | Refresh access token when expired using OAuth2.0 via Client Credentials flow. |
 
-| Folder API                      | Description                                                           |
+**Folder API**:
+
+| API                             | Description                                                           |
 | ------------------------------- | --------------------------------------------------------------------- |
 | `Spark.folder.getCategories()`  | Get the list of folder categories.                                    |
 | `Spark.folder.create(data)`     | Create a new folder using info like name, description, category, etc. |
@@ -162,34 +174,45 @@ APIs are currently supported:
 | `Spark.folder.update(id, data)` | Update a folder's information by id.                                  |
 | `Spark.folder.delete(id)`       | Delete a folder by id.                                                |
 
-| Service API                                | Description                                                               |
-| ------------------------------------------ | ------------------------------------------------------------------------- |
-| `Spark.service.getSchema(uri)`             | Get the schema for a given service.                                       |
-| `Spark.service.getVersions(uri)`           | Get all the versions of a service using a service uri locator.            |
-| `Spark.service.getMetadata(uri)`           | Get the metadata of a service using a service uri locator.                |
-| `Spark.service.getSwagger(uri)`            | Get the JSON content or download swagger file a particular service.       |
-| `Spark.service.recompile(uri)`             | Recompile a service into a specified compiler type (e.g., Neuron_1.13.0). |
-| `Spark.service.download(uri)`              | Download the original excel file or the configured version of a service.  |
-| `Spark.service.execute(uri, data)`         | Execute a service using v3 format.                                        |
-| `Spark.service.batch.execute(uri, data)`   | Execute a service using synchronous batch (i.e., v4 format.)              |
-| `Spark.service.validate(uri, data)`        | Validate service data using static or dynamic validations.                |
-| `Spark.service.export(uri, data)`          | Extract Spark services and package them up into a zip file                |
-| `Spark.service.log.rehydrate(uri, callId)` | Rehydrate the model run into the original excel file.                     |
-| `Spark.service.log.download(uri, [type])`  | Initiate a log download job as csv or json file.                          |
-| `Spark.service.log.getStatus(uri, [type])` | Get the status for a csv or json download job.                            |
+**Service API**:
 
-| ImpEx API                                      | Description                                      |
-| ---------------------------------------------- | ------------------------------------------------ |
-| `Spark.impex.export.initiate(data)`            | Initiate a log download job as csv or json file. |
-| `Spark.impex.export.getStatus(jobId, options)` | Check Export job status                          |
+| API                                      | Description                                                               |
+| ---------------------------------------- | ------------------------------------------------------------------------- |
+| `Spark.service.getSchema(uri)`           | Get the schema for a given service.                                       |
+| `Spark.service.getVersions(uri)`         | Get all the versions of a service using a service uri locator.            |
+| `Spark.service.getMetadata(uri)`         | Get the metadata of a service using a service uri locator.                |
+| `Spark.service.getSwagger(uri)`          | Get the JSON content or download swagger file a particular service.       |
+| `Spark.service.recompile(uri)`           | Recompile a service into a specified compiler type (e.g., Neuron_1.13.0). |
+| `Spark.service.download(uri)`            | Download the original excel file or the configured version of a service.  |
+| `Spark.service.execute(uri, data)`       | Execute a service using v3 format.                                        |
+| `Spark.service.batch.execute(uri, data)` | Execute a service using synchronous batch (i.e., v4 format.)              |
+| `Spark.service.validate(uri, data)`      | Validate service data using static or dynamic validations.                |
+| `Spark.service.export(uri, data)`        | Extract Spark services and package them up into a zip file                |
 
-| Other APIs                                        | Description                                            |
+**Log History API**:
+
+| API                                        | Description                                           |
+| ------------------------------------------ | ----------------------------------------------------- |
+| `Spark.service.log.rehydrate(uri, callId)` | Rehydrate the model run into the original excel file. |
+| `Spark.service.log.download(uri, [type])`  | Initiate a log download job as csv or json file.      |
+| `Spark.service.log.getStatus(uri, [type])` | Get the status for a csv or json download job.        |
+
+**ImpEx API**:
+
+| API                                            | Description                               |
+| ---------------------------------------------- | ----------------------------------------- |
+| `Spark.impex.export.initiate(data)`            | Initiate an Export job of spark services. |
+| `Spark.impex.export.getStatus(jobId, options)` | Check Export job status                   |
+
+**Other APIs**:
+
+| API                                               | Description                                            |
 | ------------------------------------------------- | ------------------------------------------------------ |
 | `Spark.wasm.download(uri)`                        | Download a service's WebAssembly binary (WASM module). |
 | `Spark.file.download(url)`                        | Download a Spark file (with authentication).           |
 | `static Spark.download(url, [Spark.config.auth])` | Download a file (with or without authentication).      |
 
-> [!TIP]:
+> [!TIP]
 > A service URI locator can be combined with other parameters to locate a specific
 > service when it's not a string. For example, you may execute a public service
 > using an object containing the `folder`, `service`, and `public` properties.
