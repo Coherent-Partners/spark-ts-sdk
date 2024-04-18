@@ -1,16 +1,34 @@
-import { createWriteStream } from 'fs';
-import { type SparkClient } from '../src';
+import { createWriteStream, createReadStream } from 'fs';
+import { type SparkClient } from '@cspark/sdk';
 
-function getMetadata(spark: SparkClient) {
+function create(spark: SparkClient) {
+  const file = createReadStream('my-service.xlsx');
   spark.service
-    .getMetadata('my-folder/my-service')
-    .then((response) => console.log(response.data))
+    .create({
+      file: file,
+      folder: 'my-folder',
+      service: 'my-service',
+      fileName: 'my-service.xlsx',
+      trackUser: true,
+      maxRetries: 10,
+      retryInterval: 3,
+    })
+    .then((response) => console.log(JSON.stringify(response.publication, undefined, 2)))
     .catch(console.error);
 }
 
-function getSchema(spark: SparkClient) {
+function execute(spark: SparkClient) {
+  const data = { inputs: { value: 'Hello, Spark SDK' }, versionId: 'uuid' };
   spark.service
-    .getSchema('my-folder/my-service')
+    .execute('my-folder/my-service', { data })
+    .then((response) => console.log(response.data))
+    .catch((err) => console.error(JSON.stringify(err.cause, null, 2)));
+}
+
+export function executeAll(spark: SparkClient) {
+  const batch = [{ value: 1 }, { value: 2 }, { value: 3 }];
+  spark.service.batch
+    .execute({ folder: 'my-folder', service: 'my-service' }, { inputs: batch })
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
@@ -22,6 +40,13 @@ function getVersions(spark: SparkClient) {
     .catch(console.error);
 }
 
+function getSchema(spark: SparkClient) {
+  spark.service
+    .getSchema('my-folder/my-service')
+    .then((response) => console.log(response.data))
+    .catch(console.error);
+}
+
 function getSwagger(spark: SparkClient) {
   spark.service
     .getSwagger('my-folder/my-service')
@@ -29,13 +54,20 @@ function getSwagger(spark: SparkClient) {
     .catch(console.error);
 }
 
+function getMetadata(spark: SparkClient) {
+  spark.service
+    .getMetadata('my-folder/my-service')
+    .then((response) => console.log(response.data))
+    .catch(console.error);
+}
+
 function validate(spark: SparkClient) {
   spark.service
     .validate('my-folder/my-service', {
-      data: { inputs: { '01_letter': 'b', '02_number': 23 }, validationType: 'dynamic' },
+      data: { inputs: { letter: 'b', number: 23 }, validationType: 'dynamic' },
     })
     .then((response) => console.log(JSON.stringify(response.data, null, 2)))
-    .catch((err) => console.error(JSON.stringify(err.cause, null, 2)));
+    .catch(console.error);
 }
 
 function download(spark: SparkClient) {
@@ -67,23 +99,30 @@ function exportAsZip(spark: SparkClient) {
     .catch(console.error);
 }
 
-function execute(spark: SparkClient) {
-  const data = { inputs: { value: 'Hello, Spark SDK' }, versionId: 'uuid' };
+function importFromZip(spark: SparkClient) {
+  const file = createReadStream('package.zip');
   spark.service
-    .execute('my-folder/my-service', { data })
-    .then((response) => console.log(response.data))
-    .catch((err) => console.error(JSON.stringify(err.cause, null, 2)));
-}
-
-export function batchSync(spark: SparkClient) {
-  const batch = [{ value: 1 }, { value: 2 }, { value: 3 }];
-  spark.service.batch
-    .execute({ folder: 'my-folder', service: 'my-service' }, { inputs: batch })
+    .import({
+      destination: { source: 'my-folder-source/my-service', target: 'my-folder-target/my-service' },
+      file,
+    })
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
 
+function migrate(spark: SparkClient) {
+  const config = spark.config.copyWith({ env: 'prod', apiKey: 'other-key' }); // my import config
+  spark.service
+    .migrate({
+      destination: { source: 'my-folder-source/my-service', target: 'my-folder-target/my-service' },
+      config,
+    })
+    .then((job) => console.log(job.imports))
+    .catch(console.error);
+}
+
 export default {
+  create,
   getSchema,
   getMetadata,
   getVersions,
@@ -92,6 +131,8 @@ export default {
   download,
   recompile,
   export: exportAsZip,
+  import: importFromZip,
+  migrate,
   execute,
-  batchSync,
+  executeAll,
 };

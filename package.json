@@ -1,6 +1,6 @@
 {
   "name": "@cspark/sdk",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.3",
   "description": "A Node.js SDK for interacting with Coherent Spark APIs",
   "author": "Ralph Florent",
   "homepage": "https://github.com/c-spark/cspark-ts-sdk#readme",
@@ -16,7 +16,7 @@
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
   "types": "./lib/esm/index.d.ts",
-  "browser": "./lib/bundle.min.js",
+  "browser": "./lib/bundle.js",
   "files": [
     "lib"
   ],
@@ -24,7 +24,6 @@
     "node": ">=16.0.0"
   },
   "scripts": {
-    "demo": "tsc -p tsconfig.dev.json && node lib/examples/index.js",
     "start": "echo \">>> no start command specified\" && exit 0",
     "format": "prettier --write \"{src,test,examples}/**/*.ts\"",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
@@ -32,11 +31,12 @@
     "prebuild": "rm -rf lib",
     "build": "tsc && rollup -c",
     "postbuild": "echo '{\"type\":\"module\"}' > lib/esm/package.json",
+    "demo": "tsc -p tsconfig.dev.json && node lib/examples/index.js",
     "prepare": "husky install"
   },
   "lint-staged": {
     "*.ts": "eslint \"{src,test}/**/*.ts\" --cache --fix",
-    "*.{md,ts,json,yml}": "prettier --write \"{src,test}/**/*.ts\""
+    "*.{md,ts,json,yml}": "prettier -u --write \"{src,test,examples,docs}/**/*\""
   },
   "dependencies": {
     "buffer": "^6.0.3",

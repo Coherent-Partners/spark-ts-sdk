@@ -4,7 +4,7 @@ import { ApiResource, Uri } from './base';
 export class OAuth2 extends ApiResource {
   async requestAccessToken(): Promise<AccessToken> {
     const baseUrl = this.config.baseUrl.oauth2;
-    const url = Uri.from({}, { base: baseUrl, version: 'protocol', endpoint: 'openid-connect/token' });
+    const url = Uri.from(undefined, { base: baseUrl, version: 'protocol', endpoint: 'openid-connect/token' });
     const { clientId: client_id, clientSecret: client_secret } = this.config.auth.oauth?.toJson() ?? {};
     const body = { grant_type: 'client_credentials', client_id, client_secret };
 

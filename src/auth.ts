@@ -2,6 +2,7 @@ import Utils, { type Maybe, StringUtils } from './utils';
 import { SparkError } from './error';
 import { ENV_VARS } from './constants';
 import { Config } from './config';
+import { Logger } from './logger';
 
 import { OAuth2 as OAuthManager } from './resources/oauth2';
 
@@ -52,9 +53,9 @@ export interface OAuthMethod {
  * NOTE: The order of precedence is API key > Bearer token > OAuth.
  */
 export class Authorization {
-  readonly apiKey?: Maybe<string>;
-  readonly token?: Maybe<string>;
-  readonly oauth?: Maybe<OAuth>;
+  readonly apiKey!: Maybe<string>;
+  readonly token!: Maybe<string>;
+  readonly oauth!: Maybe<OAuth>;
 
   private constructor({ apiKey, token, oauth }: OAuthMethod) {
     const clientId = Utils.readEnv(ENV_VARS.CLIENT_ID);
@@ -79,13 +80,20 @@ export class Authorization {
    * @see https://docs.coherent.global/spark-apis/public-apis for more information.
    */
   get isOpen(): boolean {
-    return this.apiKey === 'open' || this.token === 'open' || this.oauth?.clientId === 'open';
+    return this.apiKey === 'open' || this.token === 'open';
   }
 
+  /**
+   * Whether any authorization method is defined.
+   */
   get isEmpty(): boolean {
     return !this.apiKey && !this.token && !this.oauth;
   }
 
+  /**
+   * The type of authorization method provided.
+   * @returns {'apiKey' | 'token' | 'oauth'}
+   */
   get type(): keyof OAuthMethod | undefined {
     return this.apiKey ? 'apiKey' : this.token ? 'token' : this.oauth ? 'oauth' : undefined;
   }
@@ -143,7 +151,7 @@ export class OAuth {
           'Provide a JSON object including cliendId and clientSecret ',
           'or a string with the path to a JSON file containing the client ID and secret.',
         ),
-        cause: Utils.isObject(props) ? JSON.stringify(props) : props.toString(),
+        cause: Utils.isObject(props) ? JSON.stringify(props) : (props as string)?.toString(),
       });
     }
   }
@@ -186,17 +194,34 @@ export class OAuth {
     return { clientId: this.clientId, clientSecret: this.clientSecret };
   }
 
+  /**
+   * Retrieves an OAuth2 access token using the client ID and secret.
+   * @param {Config} config Spark configuration.
+   *
+   * When the access token is expired, the client will automatically refresh it
+   * before making the next request using this method.
+   */
   async retrieveToken(config: Config): Promise<void> {
+    const logger = Logger.of(config.logger);
+    logger.log('refreshing OAuth2 access token...');
+
     try {
       const manager = new OAuthManager(config);
       this.#accessToken = await manager.requestAccessToken();
-      if (!this.accessToken) console.warn('failed to retrieve OAuth2 access token');
+      if (!this.accessToken) logger.warn('failed to retrieve OAuth2 access token');
     } catch (reason) {
-      console.warn('failed to retrieve OAuth2 access token');
+      logger.warn('failed to retrieve OAuth2 access token');
       return Promise.reject(reason);
     }
   }
 
+  /**
+   * Refreshes the OAuth2 access token using the client ID and secret.
+   * @param {Config} config Spark configuration.
+   *
+   * Currently, a wrapper around `retrieveToken` method.
+   * @see OAuth#retrieveToken
+   */
   refreshToken(config: Config): Promise<void> {
     return this.retrieveToken(config);
   }

@@ -4,6 +4,7 @@ export type Nullable<T> = Maybe<T> | null;
 const LoadedModules: Record<string, any> = {};
 
 async function bootstrapModules(names: string[]) {
+  if (isBrowser()) return;
   if (typeof module === 'object' && typeof module.exports === 'object') {
     names.forEach((name) => (LoadedModules[name] = require(name)));
   } else {
@@ -11,7 +12,7 @@ async function bootstrapModules(names: string[]) {
   }
 }
 
-bootstrapModules(['fs', 'stream', 'crypto', 'form-data']); // FIXME: use shims instead.
+bootstrapModules(['fs', 'stream', 'crypto', 'form-data', 'buffer']); // FIXME: use shims instead.
 
 export function isBrowser() {
   return typeof window === 'object' && typeof document === 'object' && window.crypto;
@@ -19,7 +20,6 @@ export function isBrowser() {
 
 export function loadModule<T = any>(path: string): T | undefined {
   if (!LoadedModules[path]) {
-    console.warn(`[WARNING] Module "${path}" is not loaded.`);
     bootstrapModules([path]);
     return undefined;
   }
@@ -93,7 +93,7 @@ export function sanitizeUri(url: string, leading = false): string {
 }
 
 export abstract class StringUtils {
-  static isString(text: unknown): boolean {
+  static isString(text: unknown): text is string {
     return typeof text === 'string' || text instanceof String;
   }
 
@@ -107,7 +107,7 @@ export abstract class StringUtils {
 }
 
 export abstract class NumberUtils {
-  static isNumber(value: unknown): boolean {
+  static isNumber(value: unknown): value is number {
     return !Number.isNaN(value) || typeof value === 'number' || value instanceof Number;
   }
 
@@ -117,6 +117,37 @@ export abstract class NumberUtils {
 
   static isBetween(value: unknown, min: number, max: number): boolean {
     return NumberUtils.isNumber(value) && (value as number) >= min && (value as number) <= max;
+  }
+}
+
+export abstract class DateUtils {
+  static isDate(value: unknown): value is Date {
+    if (value instanceof Date) return true;
+    if (typeof value === 'string' || typeof value === 'number') {
+      return !Number.isNaN(Date.parse(value.toString()));
+    }
+    return false;
+  }
+
+  static parse(
+    start: Maybe<number | string | Date>,
+    end?: Maybe<number | string | Date>,
+    { years = 10, months = 0, days = 0 }: { days?: number; months?: number; years?: number } = {},
+  ): [Date, Date] {
+    const startDate = new Date(start ?? Date.now());
+    const endDate =
+      end && DateUtils.isAfter(end, startDate)
+        ? new Date(end)
+        : new Date(startDate.getFullYear() + years, startDate.getMonth() + months, startDate.getDate() + days);
+    return [startDate, endDate];
+  }
+
+  static isBefore(date: string | number | Date, when: Date): boolean {
+    return new Date(date).getTime() < when.getTime();
+  }
+
+  static isAfter(date: string | number | Date, when: Date): boolean {
+    return new Date(date).getTime() > when.getTime();
   }
 }
 
@@ -131,6 +162,4 @@ export default {
   readFile,
   formatUrl,
   getUuid,
-  StringUtils,
-  NumberUtils,
 };

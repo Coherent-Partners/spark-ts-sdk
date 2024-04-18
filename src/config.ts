@@ -1,6 +1,7 @@
 import Utils from './utils';
 import Validators from './validators';
 import { ClientOptions } from './client';
+import { Logger, type LoggerOptions } from './logger';
 import { SparkError } from './error';
 import { Authorization } from './auth';
 import { Interceptor } from './http';
@@ -8,6 +9,7 @@ import { DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT_IN_MS, ENV_VARS } from './constant
 
 export class Config {
   readonly #options!: string;
+  readonly #interceptors: Set<Interceptor> = new Set<Interceptor>();
 
   readonly baseUrl!: BaseUrl;
   readonly auth!: Authorization;
@@ -15,9 +17,8 @@ export class Config {
   readonly maxRetries!: number;
   readonly timeout!: number;
   readonly allowBrowser!: boolean;
-
+  readonly logger!: LoggerOptions;
   readonly extraHeaders: Record<string, string> = {};
-  readonly #interceptors: Set<Interceptor> = new Set<Interceptor>();
 
   constructor({
     baseUrl = Utils.readEnv(ENV_VARS.BASE_URL),
@@ -32,6 +33,7 @@ export class Config {
     this.timeout = numberValidator.isValid(options.timeout) ? options.timeout! : DEFAULT_TIMEOUT_IN_MS;
     this.maxRetries = numberValidator.isValid(options.maxRetries) ? options.maxRetries! : DEFAULT_MAX_RETRIES;
     this.allowBrowser = this.auth.isOpen || !!options.allowBrowser;
+    this.logger = Logger.of(options.logger).options;
     this.environment = options.env;
 
     this.#options = JSON.stringify({
@@ -68,6 +70,10 @@ export class Config {
     return !Utils.isEmptyObject(this.extraHeaders);
   }
 
+  /**
+   * Adds interceptors to the configuration (experimental feature).
+   * @param interceptors - methods to intercept requests and responses
+   */
   addInterceptors(...interceptors: Interceptor[]): void {
     interceptors.forEach((interceptor) => {
       if (this.#interceptors.has(interceptor)) return;
@@ -78,6 +84,19 @@ export class Config {
   addHeaders(headers: Record<string, string>): void {
     Object.entries(headers).forEach(([key, value]) => {
       this.extraHeaders[key] = value;
+    });
+  }
+
+  copyWith(options: ClientOptions = {}): Config {
+    return new Config({
+      baseUrl: options.baseUrl || this.baseUrl.full,
+      apiKey: options.apiKey || this.auth.apiKey,
+      token: options.token || this.auth.token,
+      oauth: options.oauth || this.auth.oauth,
+      timeout: options.timeout || this.timeout,
+      maxRetries: options.maxRetries || this.maxRetries,
+      allowBrowser: options.allowBrowser || this.allowBrowser,
+      env: options.env || this.environment,
     });
   }
 

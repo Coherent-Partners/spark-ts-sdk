@@ -137,6 +137,8 @@ export class SparkApiError extends SparkError {
         return new ConflictError(error, 409);
       case 415:
         return new UnsupportedMediaTypeError(error, 415);
+      case 422:
+        return new UnprocessableEntityError(error, 422);
       case 429:
         return new RateLimitError(error, 429);
       case 500:
@@ -204,6 +206,14 @@ export class UnsupportedMediaTypeError extends SparkApiError {
 
   get details(): string {
     return super.details || 'unsupported media type';
+  }
+}
+
+export class UnprocessableEntityError extends SparkApiError {
+  override readonly status = 422;
+
+  get details(): string {
+    return super.details || 'unprocessable entity';
   }
 }
 

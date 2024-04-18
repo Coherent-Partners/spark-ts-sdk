@@ -1,6 +1,8 @@
 import { isBrowser } from './utils';
 
-const version = '0.1.0-beta.1';
+const version = '0.1.0-beta.3';
+
+const sdkLogger = `CSPARK v${version}`;
 
 const userAgentHeader = `Coherent Spark SDK v${version} (${
   isBrowser() ? navigator.userAgent : `Node ${process.version}`
@@ -18,4 +20,4 @@ const sdkUaHeader = (() => {
     .trim();
 })();
 
-export { version, userAgentHeader, sdkUaHeader };
+export { version, userAgentHeader, sdkUaHeader, sdkLogger };

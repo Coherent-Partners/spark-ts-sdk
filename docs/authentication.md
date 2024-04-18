@@ -1,10 +1,10 @@
-# Authentication API
+# Authentication
 
 The SDK supports three types of authentication mechanisms:
 
 - `apiKey`
 - `token`
-- `oauth` (preferred and recommended method)
+- `oauth` (recommended method for production)
 
 ## API Key
 
@@ -18,19 +18,19 @@ and access the following APIs:
 
 If and when you need that API key to access additional APIs, you need to review and
 configure [feature permissions][feature-permissions] in the Spark platform. Find
-out more on generate and manage API keys in the [Spark documentation][spark-api-keys].
+out more on how to generate and manage API keys in the [Spark documentation][spark-api-keys].
 
 Keep in mind that API keys are sensitive and should be kept secure. Therefore, we
 strongly recommend reading [this article][openai-api-keys] by OpenAI on best practices
 for API key safety.
 
-### Setting the API Key in Node Environment
+### Setting the API Key in Node Environments
 
 To create a `SparkClient` instance with an API key, you can provide the key
 directly or set it in the environment variable `CSPARK_API_KEY`:
 
 ```ts
-const spark = new Spark({ apiKey: 'your-api-key' });
+const spark = new Spark({ apiKey: 'my-api-key' });
 ```
 
 When accessing publicly available APIs, you do not require an API key or any
@@ -51,9 +51,9 @@ const spark = new Spark();
 console.log(spark.config.auth.apiKey);
 ```
 
-### Setting the API Key in Browser Environment
+### Setting the API Key in Browser Environments
 
-By default, client-side use of this SDK is not recommended, as it risks exposing
+By default, client-side use of this SDK is not recommended as it risks exposing
 your secret API credentials to attackers. However, the `allowBrowser` option can
 be used to bypass this restriction. When set to `true`, the SDK will assume you
 understand the risks and let you proceed.
@@ -61,7 +61,7 @@ understand the risks and let you proceed.
 ```ts
 const { SparkClient: Spark } = window['@cspark/sdk'];
 
-const spark = new Spark({ apiKey: 'your-api-key', allowBrowser: true });
+const spark = new Spark({ apiKey: 'my-api-key', allowBrowser: true });
 ```
 
 > [!NOTE]
@@ -70,7 +70,7 @@ const spark = new Spark({ apiKey: 'your-api-key', allowBrowser: true });
 
 ## Bearer Token
 
-A bearer token (or simply token) is a short-lived JSON Web token that allows you
+A bearer token (or simply token) is a short-lived JSON Web token (JWT) that allows you
 to authenticate to the Spark platform and access its APIs. Follow [this guide][bearer-token] to
 learn how to access your bearer token.
 
@@ -79,7 +79,7 @@ SDK will automatically add the prefix if it is not provided. You can provide a b
 token directly or set it in the environment variable `CSPARK_BEARER_TOKEN`.
 
 ```ts
-const spark = new Spark({ token: 'Bearer your-access-token' });
+const spark = new Spark({ token: 'Bearer my-access-token' });
 ```
 
 ## Client Credentials Grant
@@ -91,7 +91,7 @@ client ID and secret or the path to the JSON file containing the credentials.
 Using the client ID and secret directly:
 
 ```ts
-const oauth = { clientId: 'your-client-id', clientSecret: 'your-client-secret' };
+const oauth = { clientId: 'my-client-id', clientSecret: 'my-client-secret' };
 const spark = new Spark({ oauth });
 ```
 
@@ -102,21 +102,21 @@ and secret:
 const spark = new Spark({ oauth: 'path/to/your/credentials.json' });
 ```
 
-## Using Environment Variables instead (recommended)
+## Using Environment Variables (recommended)
 
 As you already know, the SDK will attempt to read the API key, bearer token, and
 OAuth credentials from the environment variables. This is the recommended way to
 store your sensitive information.
 
 ```bash
-export CSPARK_API_KEY='your-api-key'
+export CSPARK_API_KEY='my-api-key'
 # or
 export CSPARK_BEARER_TOKEN='Bearer your access token'
 # or
-export CSPARK_CLIENT_ID='your-client-id'
-export CSPARK_CLIENT_SECRET='your-client'
+export CSPARK_CLIENT_ID='my-client-id'
+export CSPARK_CLIENT_SECRET='my-client-secret'
 # or
-export CSPARK_OAUTH_PATH='path/to/your/credentials.json'
+export CSPARK_OAUTH_PATH='path/to/my/client-credentials.json'
 ```
 
 Creating a `SparkClient` instance now becomes as simple as:
@@ -132,7 +132,7 @@ the token when it expires. However, you can also generate or refresh the token m
 how you can do it:
 
 ```ts
-const spark = new Spark({ oauth: 'path/to/your/credentials.json' });
+const spark = new Spark({ oauth: 'path/to/my/credentials.json' });
 await spark.config.auth.oauth?.retrieveToken(spark.config);
 
 // the access token is now available in the configuration

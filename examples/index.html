@@ -1,21 +1,19 @@
 <!doctype html>
 <html>
+  <body>
+    <script src="../lib/bundle.js"></script>
+    <script>
+      const { SparkClient: Spark } = window['@cspark/sdk'];
 
-<body>
-  <script src="../lib/bundle.js"></script>
-  <script>
-    const { SparkClient: Spark } = window['@cspark/sdk'];
+      function main(apiKey) {
+        const spark = new Spark({ env: 'uat.us', tenant: 'my-tenant', apiKey, allowBrowser: true });
+        spark.service
+          .execute('my-folder/my-service', { inputs: { value: 'Hello, Spark SDK!' } })
+          .then((response) => console.log(response.data))
+          .catch(console.error);
+      }
 
-    function main(apiKey) {
-      const spark = new Spark({ env: 'uat.us', tenant: 'my-tenant', apiKey, allowBrowser: true });
-      spark.service
-        .execute('my-folder/my-service', { inputs: { value: 'Hello, Spark SDK!' } })
-        .then((response) => console.log(response.data))
-        .catch(console.error);
-    }
-
-    main(prompt('Provide your API key'));
-  </script>
-</body>
-
+      main(prompt('Provide your API key'));
+    </script>
+  </body>
 </html>

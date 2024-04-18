@@ -1,4 +1,4 @@
-# How to contribute
+# How to Contribute
 
 These are a few guidelines that contributors need to follow to keep things easy.
 
@@ -33,51 +33,51 @@ As a developer, you should be aware of the following:
 
 ### Code Quality
 
-This project uses [Husky](https://github.com/typicode/husky) to manage Git hooks,
+[Husky](https://github.com/typicode/husky) is used to manage Git hooks,
 and both `ESLint` and `Prettier` to help enforce code quality.
 
 ### Rollup
 
-This project uses [Rollup](https://rollupjs.org/guide/en/) to bundle the code
+[Rollup](https://rollupjs.org/guide/en/) is used to bundle the code
 for browser distribution. Located in `rollup.config.js`, the configuration is set
-to output a CommonJS module and ES module.
+to output a CommonJS, ESM and UMD bundle.
 
 ### Unit Testing
 
-This project uses [Jest](https://jestjs.io/) for unit testing. The `jest` setup
+[Jest](https://jestjs.io/) is used for unit testing. The `jest` setup
 is located in the `jest` field of `package.json`. It only targets `*.spec.ts` files.
 Only a portion of the codebase is tested, so feel free to add more tests.
 
-### Installation
+### Installation and Devtools
+
+Using `yarn` as the package manager, you may run the following commands:
 
 ```bash
+# install dependencies
 yarn install
-```
 
-### Tooling
-
-```bash
 # lint code
-yarn run lint
+yarn lint
 
 # test code
-yarn run test
+yarn test
 
 # build code
-yarn run build
+yarn build
 ```
 
-To run an example, you will need to follow the instructions in the `examples/index.ts` file,
-then run the following command:
+To run an example, you will need to follow the instructions in the
+[examples/index.ts](./examples/index.ts) file, then run the following command:
 
 ```bash
-yarn run demo
+yarn demo
 ```
 
-> **Disclaimer:** This project is inspired by many open-source SDKs and libraries.
+> **Disclaimer:** This project is inspired by many open source SDKs and libraries.
 > Among them are [openai-node], [box-typescript-sdk-gen], and [stripe-node]. In fact,
 > the http client implementation is heavily based on both `openai-node` and
-> `box-typescript-sdk-gen`'s approach to handling API requests.
+> `box-typescript-sdk-gen`'s approaches to handling API requests. So, big kudos to
+> the developers behind these projects.
 
 [openai-node]: https://github.com/openai/openai-node
 [box-typescript-sdk-gen]: https://github.com/box/box-typescript-sdk-gen

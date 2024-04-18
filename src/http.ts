@@ -111,13 +111,9 @@ export interface Interceptor {
  * @returns {int} The number of milliseconds after which to retry
  */
 export function getRetryTimeout(retries: number, baseInterval: number = 1): number {
-  // Retry intervals are between 50% and 150% of the exponentially increasing base amount
-  const RETRY_RANDOMIZATION_FACTOR = 0.5;
-  const minRandomization = 1 - RETRY_RANDOMIZATION_FACTOR;
-  const maxRandomization = 1 + RETRY_RANDOMIZATION_FACTOR;
-  const randomization = Math.random() * (maxRandomization - minRandomization) + minRandomization;
-  const exponential = Math.pow(2, retries - 1);
-  return Math.ceil(exponential * baseInterval * 1000 * randomization);
+  const RETRY_RANDOMIZATION_FACTOR = 1.5;
+  const randomization = Math.random() * RETRY_RANDOMIZATION_FACTOR;
+  return Math.ceil(retries * baseInterval * 1000 * randomization);
 }
 
 async function createRequestInit(options: HttpOptions): Promise<RequestInit> {
@@ -140,7 +136,6 @@ async function createRequestInit(options: HttpOptions): Promise<RequestInit> {
       for (const item of options.multiparts) {
         if (item.fileStream) {
           const buffer = await readStream(item.fileStream);
-          headers['content-md5'] = await calculateMd5Hash(buffer);
           formData.append(item.name, buffer, {
             filename: item.fileName ?? 'file',
             contentType: item.contentType ?? 'application/octet-stream',
@@ -177,7 +172,7 @@ async function createRequestInit(options: HttpOptions): Promise<RequestInit> {
         return { contentType, body: fileStream };
 
       default:
-        throw new SparkSdkError({ message: `Unsupported content type : ${contentType}` });
+        throw new SparkSdkError({ message: `Unsupported content type: ${contentType}` });
     }
   })();
 
@@ -185,7 +180,7 @@ async function createRequestInit(options: HttpOptions): Promise<RequestInit> {
     method,
     body: method === 'GET' ? undefined : body,
     headers: { ...headers, 'Content-Type': contentType, ...options.config.auth?.asHeader },
-    signal: options.cancellationToken as RequestInit['signal'],
+    signal: options.cancellationToken,
   };
 }
 
@@ -220,11 +215,12 @@ export async function _fetch<T = JsonData>(resource: string, options: HttpOption
   const fetchOptions: typeof options = options.config.hasInterceptors
     ? options.config.interceptors.reduce((opts: HttpOptions, i: Interceptor) => i.beforeRequest(opts), options)
     : options;
+  const { config } = fetchOptions;
 
   // prepare and make request using fetch API
   const requestInit = await createRequestInit(fetchOptions);
   const url = Utils.formatUrl(resource, fetchOptions.params);
-  const response = await nodeFetch(url, { ...requestInit, redirect: 'manual' });
+  const response = await nodeFetch(url, { ...requestInit, redirect: 'manual', timeout: config.timeout });
 
   // Extract response data and headers
   const contentType = response.headers.get('content-type') ?? '';
@@ -246,8 +242,8 @@ export async function _fetch<T = JsonData>(resource: string, options: HttpOption
   };
 
   // Apply afterRequest interceptors if any.
-  if (fetchOptions.config?.hasInterceptors) {
-    httpResponse = fetchOptions.config.interceptors.reduce(
+  if (config?.hasInterceptors) {
+    httpResponse = config.interceptors.reduce(
       (rsp: HttpResponse<T>, i: Interceptor) => i.afterRequest(rsp),
       httpResponse,
     ) as HttpResponse<T>;
@@ -258,18 +254,13 @@ export async function _fetch<T = JsonData>(resource: string, options: HttpOption
     const { retries = 0 } = fetchOptions;
 
     // when unauthorized
-    if (
-      httpResponse.status == 401 &&
-      fetchOptions.config.auth?.type === 'oauth' &&
-      retries < fetchOptions.config.maxRetries
-    ) {
-      console.warn('OAuth2 access token will be refreshed to retry the request');
-      await fetchOptions.config.auth.oauth?.retrieveToken(fetchOptions.config);
+    if (httpResponse.status == 401 && config.auth?.type === 'oauth' && retries < config.maxRetries) {
+      await config.auth.oauth?.refreshToken(config);
       return _fetch(resource, { ...fetchOptions, retries: retries + 1 });
     }
 
     // when rate limit exceeded
-    if (httpResponse.status === 429 && retries < fetchOptions.config.maxRetries) {
+    if (httpResponse.status === 429 && retries < config.maxRetries) {
       const retryTimeout = httpResponse.headers['x-retry-after']
         ? parseFloat(httpResponse.headers['x-retry-after']!) * 1000
         : getRetryTimeout(retries);
@@ -308,7 +299,7 @@ export async function _download(
   const url = Utils.formatUrl(resource, params);
   const headers = { 'Content-Type': 'application/json', ..._headers };
 
-  return nodeFetch(url, { method, headers, redirect: 'manual', signal: cancellationToken as RequestInit['signal'] })
+  return nodeFetch(url, { method, headers, redirect: 'manual', signal: cancellationToken })
     .then(async (response) => {
       if (!response.ok || response.status >= 400) throw response;
       return {

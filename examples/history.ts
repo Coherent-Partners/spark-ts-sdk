@@ -1,31 +1,31 @@
 import { createWriteStream } from 'fs';
-import { type SparkClient } from '../src';
+import { type SparkClient } from '@cspark/sdk';
 
 function rehydrate(spark: SparkClient) {
   spark.service.log
-    .rehydrate('floherent/Subservices', '4556a22d-99fa-4c8f-a154-acbf59b44532')
+    .rehydrate('my-folder/my-service', 'uuid')
     .then((response) => {
       console.log(JSON.stringify(response.data, null, 2));
       const file = createWriteStream('my-rehydrated-subservices.xlsx');
       response.buffer.pipe(file);
     })
-    .catch((err) => console.error(JSON.stringify(err.cause, null, 2)));
+    .catch(console.error);
 }
 
 function download(spark: SparkClient) {
   spark.service.log
     .download({
-      folder: 'floherent',
-      service: 'Subservices',
-      callIds: ['4556a22d-99fa-4c8f-a154-acbf59b44532'],
+      folder: 'my-folder',
+      service: 'my-service',
+      callIds: ['uuid1', 'uuid2', 'uuid3'],
       type: 'json',
     })
     .then((response) => {
-      // console.log(JSON.stringify(response.data, null, 2));
+      console.log(JSON.stringify(response.data, null, 2));
       const file = createWriteStream('my-log-history.zip');
       response.buffer.pipe(file);
     })
-    .catch((err) => console.error(JSON.stringify(err, null, 2)));
+    .catch(console.error);
 }
 
 export default { rehydrate, download };

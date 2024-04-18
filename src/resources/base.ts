@@ -2,12 +2,28 @@ import { Authorization } from '../auth';
 import { Config } from '../config';
 import { JsonData } from '../data';
 import { SparkError } from '../error';
+import { Logger } from '../logger';
 import { userAgentHeader, sdkUaHeader } from '../version';
 import { _fetch, _download, HttpOptions, HttpResponse } from '../http';
-import Utils, { StringUtils } from '../utils';
+import Utils, { StringUtils, Maybe, sanitizeUri } from '../utils';
 
+/**
+ * Base class for all API resources.
+ *
+ * This class provides a common interface for all API resources to interact with
+ * the Spark APIs. It is designed to be extended by other classes that represent
+ * specific API resources, such as folders, services, logs, imports, exports, etc.
+ *
+ * @param {Config} config - the configuration options for the API resource.
+ *
+ * @see Config for more details.
+ */
 export abstract class ApiResource {
-  constructor(protected readonly config: Config) {}
+  protected readonly logger!: Logger;
+
+  constructor(protected readonly config: Config) {
+    this.logger = Logger.of(config.logger);
+  }
 
   protected get defaultHeaders(): Record<string, string> {
     return {
@@ -23,6 +39,7 @@ export abstract class ApiResource {
     url: string,
     { method = 'GET', headers = {}, ...opts }: Omit<HttpOptions, 'config'> = {},
   ): Promise<HttpResponse<T>> {
+    this.logger.debug(`${method} ${url}`);
     return _fetch<T>(url, {
       ...opts,
       method,
@@ -35,7 +52,7 @@ export abstract class ApiResource {
 /**
  * Optional parameters for building a Spark URI.
  *
- * Spark may use different parameters to build a Spark URI to locate a specific
+ * Spark may use distinct parameters to build a Spark URI to locate a specific
  * resource. Roughly speaking, Spark is structured such that a folder contains
  * services, and a service contains versions. However, a service may also have a
  * custom endpoint (a.k.a proxy endpoint), and a version may be public.
@@ -44,8 +61,8 @@ export abstract class ApiResource {
  *
  * @param folder - the folder name
  * @param service - the service name
- * @param serviceId - the service (UUID)
- * @param version - the semantic version (a.k.a revision number - e.g., 4.2.1)
+ * @param serviceId - the service ID (UUID)
+ * @param version - the semantic version (a.k.a revision number - e.g., "4.2.1")
  * @param versionId - the version ID
  * @param proxy - the custom endpoint a.k.a proxy
  * @param public - whether the endpoint is public
@@ -68,7 +85,7 @@ export interface UriParams {
  * throw `SparkError` if the input is invalid.
  *
  * As specified in the `UriParams` interface, there are two main formats a user can
- * use to pass in the parameters to build a Spark URI: string or UriParams.
+ * use to pass in the parameters to build a Spark URI: `string` or `UriParams`.
  *
  * Should a user pass in a string, the `Uri` will attempt to parse it and extract
  * the UriParams from the following:
@@ -82,7 +99,7 @@ export interface UriParams {
  * IMPORTANT:
  * Spark URIs' formats may vary depending on the action to be performed
  * (e.g., upload, execute, download, etc.) due to API versioning and endpoint
- * requirements.  Therefore, the `Uri` helper is designed to be flexible enough to
+ * requirements. Therefore, the `Uri` helper is designed to be flexible enough to
  * handle different formats.
  */
 export class Uri {
@@ -98,7 +115,7 @@ export class Uri {
   /**
    * Builds a Spark URI from UriParams.
    *
-   * @param uri - the distinct parameters to build a Spark URI from.
+   * @param {UriParams} uri - the distinct parameters to build a Spark URI from.
    * @returns {Uri} - a Spark URI
    * @throws {SparkError} - if a final URL cannot be built from the given
    * parameters.
@@ -107,12 +124,12 @@ export class Uri {
    * In this case, the order of priority: folder and service > serviceId > versionId > proxy.
    * However, if a `proxy` is provided, it will be used as the endpoint.
    */
-  static from(uri: UriParams, { base, version: path = 'api/v3', endpoint = '' }: UriOptions): Uri {
+  static from(uri: Maybe<UriParams> = {}, { base, version: path = 'api/v3', endpoint = '' }: UriOptions): Uri {
     const { folder, service, versionId, proxy, public: isPublic } = uri;
     if (isPublic) path += `/public`;
     if (folder && service) path += `/folders/${folder}/services/${service}`;
     else if (versionId) path += `/version/${versionId}`;
-    else if (proxy) path += `/proxy/${proxy.startsWith('/') ? proxy.slice(1) : proxy}`;
+    else if (proxy) path += `/proxy/${sanitizeUri(proxy)}`;
 
     if (endpoint && !proxy) path += `/${endpoint}`;
     try {

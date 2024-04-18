@@ -1,5 +1,5 @@
-import { createWriteStream } from 'fs';
-import Spark, { type SparkClient } from '../src';
+import { createWriteStream, createReadStream } from 'fs';
+import Spark, { type SparkClient } from '@cspark/sdk';
 
 function getCategories(spark: SparkClient) {
   spark.folder
@@ -9,8 +9,10 @@ function getCategories(spark: SparkClient) {
 }
 
 function create(spark: SparkClient) {
+  const fileName = 'my-cover.png';
+  const image = createReadStream(fileName);
   spark.folder
-    .create({ name: 'some-folder-name' })
+    .create({ name: 'some-folder-name', cover: { image, fileName } })
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
@@ -24,20 +26,20 @@ function find(spark: SparkClient) {
 
 function update(spark: SparkClient) {
   spark.folder
-    .update('some-folder-id', { description: 'new-folder-name' })
+    .update('uuid', { description: 'this has been updated.' })
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
 
 function deleteFolder(spark: SparkClient) {
   spark.folder
-    .delete('some-folder-id')
+    .delete('uuid')
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
 
 function downloadFile() {
-  Spark.download('file-url-without-authentication')
+  Spark.download('https://example.com/file.json')
     .then((buffer) => {
       const file = createWriteStream('my-file.json');
       buffer.pipe(file);
