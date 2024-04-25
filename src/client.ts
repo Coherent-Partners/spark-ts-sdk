@@ -1,7 +1,7 @@
-import { type Maybe } from './utils';
-import { Config } from './config';
-import { LogLevel, type LoggerOptions } from './logger';
-import { Authorization, type OAuthMethod } from './auth';
+import { Maybe } from './utils';
+import { Config, type BaseUrl } from './config';
+import { LogLevel, LoggerOptions } from './logger';
+import { Authorization, OAuthMethod } from './auth';
 import * as API from './resources';
 
 /**
@@ -29,7 +29,7 @@ export interface ClientOptions extends OAuthMethod {
    * Overrides the default base URL for the API, e.g., "https://excel.us.coherent.global/tenant-name/"
    * By default, it'll be read from `process.env['CSPARK_BASE_URL']`.
    */
-  baseUrl?: Maybe<string>;
+  baseUrl?: Maybe<string | BaseUrl>;
 
   /**
    * Overrides the inferred tenant name from `baseUrl`.
@@ -72,12 +72,12 @@ export interface ClientOptions extends OAuthMethod {
   /**
    * Enables or disables the logger for the client.
    * if `true`, determines whether client should print colorful logs (including timestamps).
-   * if `string`, client will print logs with the specified log level.
+   * if `LogLevel | LogLevel[]`, client will print logs with the specified log level(s).
    * if `LoggerOptions`, client will print logs with the specified options.
    *
    * @see LoggerOptions for more details.
    */
-  logger?: boolean | LogLevel | LoggerOptions;
+  logger?: boolean | LogLevel | LogLevel[] | LoggerOptions;
 }
 
 export class Client {

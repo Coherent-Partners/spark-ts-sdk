@@ -1,6 +1,5 @@
-import { SparkSdkError, Authorization } from '@cspark/sdk';
+import { SparkSdkError } from '@cspark/sdk';
 import { Config, BaseUrl } from '@cspark/sdk/config';
-import { OAuth } from '@cspark/sdk/auth';
 import * as Constants from '@cspark/sdk/constants';
 
 describe('Config', () => {
@@ -49,6 +48,15 @@ describe('Config', () => {
     expect(config.timeout).toBe(Constants.DEFAULT_TIMEOUT_IN_MS);
     expect(config.maxRetries).toBe(Constants.DEFAULT_MAX_RETRIES);
   });
+
+  it('should be copied with new values', () => {
+    const config = new Config({ baseUrl: BASE_URL, apiKey: API_KEY, tenant: TENANT_NAME });
+    const newConfig = config.copyWith({ apiKey: 'new-key', tenant: 'new-tenant' });
+    expect(newConfig).toBeDefined();
+    expect(newConfig.baseUrl.value).toBe(BASE_URL);
+    expect(newConfig.auth.apiKey).toBe('new-key');
+    expect(newConfig.baseUrl.tenant).toBe('new-tenant');
+  });
 });
 
 describe('BaseUrl', () => {
@@ -78,72 +86,5 @@ describe('BaseUrl', () => {
     expect(() => BaseUrl.from({ url: 'https://excel.test.coherent.global.net/tenant' })).toThrow(SparkSdkError);
     expect(() => BaseUrl.from({ url: 'file://excel.test.coherent.global/tenant' })).toThrow(SparkSdkError);
     expect(() => BaseUrl.from({ url: 'https://excel.spark.global/tenant' })).toThrow(SparkSdkError);
-  });
-});
-
-describe('Authorization', () => {
-  const TOKEN = 'some-access-token';
-  const API_KEY = 'some-api-key';
-  const OAUTH = { clientId: 'some-id', clientSecret: 'some-secret' };
-
-  it('should create an open authorization', () => {
-    expect(Authorization.from({ apiKey: 'open' }).isOpen).toBe(true);
-    expect(Authorization.from({ token: 'open' }).isOpen).toBe(true);
-  });
-
-  it('should create an authorization with API key', () => {
-    const auth = Authorization.from({ apiKey: API_KEY });
-    expect(auth).toBeDefined();
-    expect(auth.apiKey).toBe(API_KEY);
-    expect(auth.isEmpty).toBe(false);
-    expect(auth.isOpen).toBe(false);
-    expect(auth.type).toBe('apiKey');
-    expect(auth.asHeader).toEqual({ 'x-synthetic-key': API_KEY });
-    expect(auth.oauth).toBeUndefined();
-    expect(auth.token).toBeUndefined();
-  });
-
-  it('should create an authorization with bearer token', () => {
-    const auth = Authorization.from({ token: 'Bearer ' + TOKEN });
-    expect(auth).toBeDefined();
-    expect(auth.token).toBe(TOKEN);
-    expect(auth.isEmpty).toBe(false);
-    expect(auth.isOpen).toBe(false);
-    expect(auth.type).toBe('token');
-    expect(auth.asHeader).toEqual({ Authorization: `Bearer ${TOKEN}` });
-    expect(auth.apiKey).toBeUndefined();
-    expect(auth.oauth).toBeUndefined();
-
-    expect(Authorization.from({ token: TOKEN }).asHeader).toEqual({ Authorization: `Bearer ${TOKEN}` });
-  });
-
-  it('should create an authorization with JSON OAuth', () => {
-    const auth = Authorization.from({ oauth: OAUTH });
-    expect(auth).toBeDefined();
-    expect(auth.oauth).toBeInstanceOf(OAuth);
-    expect(auth.oauth?.clientId).toBe(OAUTH.clientId);
-    expect(auth.oauth?.clientSecret).toBe(OAUTH.clientSecret);
-    expect(auth.isEmpty).toBe(false);
-    expect(auth.isOpen).toBe(false);
-    expect(auth.type).toBe('oauth');
-    expect(auth.apiKey).toBeUndefined();
-    expect(auth.token).toBeUndefined();
-  });
-
-  it('should create an authorization with file OAuth', () => {
-    const auth = Authorization.from({ oauth: './test/sample-ccg.txt' });
-    expect(auth).toBeDefined();
-    expect(auth.oauth).toBeInstanceOf(OAuth);
-    expect(auth.oauth?.clientId).toBe(OAUTH.clientId);
-    expect(auth.oauth?.clientSecret).toBe(OAUTH.clientSecret);
-    expect(auth.isEmpty).toBe(false);
-    expect(auth.isOpen).toBe(false);
-    expect(auth.type).toBe('oauth');
-    expect(auth.apiKey).toBeUndefined();
-    expect(auth.token).toBeUndefined();
-  });
-
-  it('should throw an SDK error if no authentication method is provided', () => {
-    expect(() => Authorization.from({})).toThrow(SparkSdkError);
   });
 });

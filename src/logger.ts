@@ -20,6 +20,7 @@ enum Colors {
   green = '#90EE90',
   seaGreen = '#20B2AA',
   limeGreen = '#32CD32',
+  magenta = '#FF77FF',
   linen = '#FAF0E6',
 }
 
@@ -271,7 +272,7 @@ class BrowserLogger implements LoggerService {
       case 'log':
         return Colors.green;
       case 'debug':
-        return Colors.limeGreen;
+        return Colors.magenta;
       case 'verbose':
         return Colors.seaGreen;
       case 'warn':
@@ -378,12 +379,13 @@ export class Logger implements LoggerService {
     this.options.logLevels = logLevels ?? this.options.logLevels;
   }
 
-  static of(options?: boolean | string | LoggerOptions): Logger {
-    const loggerOptions = ((options?: boolean | string | LoggerOptions): LoggerOptions => {
+  static of(options?: boolean | LogLevel | LogLevel[] | LoggerOptions): Logger {
+    const loggerOptions = ((options?: boolean | LogLevel | LogLevel[] | LoggerOptions): LoggerOptions => {
       const defaultOptions: LoggerOptions = DEFAULT_LOGGER_OPTIONS;
 
       if (typeof options === 'boolean') return { logLevels: options ? defaultOptions.logLevels : ['none'] };
       if (typeof options === 'string') return { ...defaultOptions, logLevels: [options.toLowerCase() as LogLevel] };
+      if (Array.isArray(options)) return { ...defaultOptions, logLevels: options };
       if (typeof options === 'object' && options !== null) return { ...defaultOptions, ...options };
       return defaultOptions;
     })(options);

@@ -5,6 +5,15 @@
 The Coherent Spark Node.js SDK (currently in Beta) is designed to elevate the developer
 experience and provide a convenient access to the Coherent Spark APIs.
 
+👋 **Just a heads-up:**
+
+This SDK isn't officially supported by Coherent. It originally started as a collection
+of code snippets I built for demo purposes. I then thought, "Why not share it
+with the community?" So, here we are!
+
+If you encounter any bumps while using it, please report them
+[here](https://github.com/c-spark/cspark-ts-sdk/issues) by creating a new issue.
+
 ## Installation
 
 ```bash
@@ -13,14 +22,14 @@ npm install @cspark/sdk
 yarn add @cspark/sdk
 ```
 
-> 🫣 This package requires [Node.js 16](https://nodejs.org/en/download/current) or higher.
+> 🫣 This package requires [Node.js 14.15](https://nodejs.org/en/download/current) or higher.
 
 ## Usage
 
 To use the SDK, you need a Coherent Spark account that lets you access the following:
 
 - User authentication ([API key][api-key-docs], [bearer token][bearer-token-docs]
-  or [OAuth2 client credentials][oauth2-docs] details)
+  or [OAuth2.0 client credentials][oauth2-docs] details)
 - Base URL (including the environment and tenant name)
 - Spark service URI (to locate a specific resource):
   - `folder` - the folder name where the service is located
@@ -91,7 +100,7 @@ to find out more about the SDK's capabilities.
 
 ## Client Options
 
-As shown in the example above, the `Spark` client is your entry point to the SDK.
+As shown in the examples above, the `Spark` client is your entry point to the SDK.
 It is quite flexible and can be configured with the following options:
 
 ### Base URL
@@ -161,7 +170,7 @@ const spark = new Spark({ oauth: 'path/to/oauth/credentials.json' });
 
 - `logger` (default: `LoggerOptions`): enables or disables the logger for the SDK.
   - If `boolean`, determines whether or not the SDK should print logs.
-  - If `LogLevel`, the SDK will only print logs that match the specified level or higher.
+  - If `LogLevel | LogLevel[]`, the SDK will only print logs that match the specified level or higher.
   - If `LoggerOptions`, the SDK will print messages with the specified options:
     - `context` (default: `CSPARK v{version}`): defines the context of the logs (e.g., `CSPARK v1.2.3`);
     - `colorful` (default: `true`): determines whether the logs should be colorful;
@@ -173,22 +182,22 @@ const spark = new Spark({ oauth: 'path/to/oauth/credentials.json' });
 ```ts
 const spark = new Spark({ logger: true });
 // or
-const spark = new Spark({ logger: 'warn' });
+const spark = new Spark({ logger: 'warn' }); // or ['warn', 'error']
 // or
-const spark = new Spark({ logger: { colorful: false, logLevels: ['warn', 'error'] } });
+const spark = new Spark({ logger: { colorful: false } });
 ```
 
 ## Client Errors
 
 `SparkError` is the base class for all custom errors thrown by the SDK. There are
-two types of errors:
+two types of it:
 
 - `SparkSdkError`: usually thrown when an argument (user entry) fails to comply
   with the expected format. Because it's a client-side error, it will include in
   the majority of cases the invalid entry as `cause`.
 - `SparkApiError`: when attempting to communicate with the API, the SDK will wrap
   any sort of failure (any error during the roundtrip) into `SparkApiError`, which
-  will include the HTTP `status` code of the response and the `requestId`, a unique
+  includes the HTTP `status` code of the response and the `requestId`, a unique
   identifier of the request.
 
 Some of the derived `SparkApiError` are:
@@ -235,14 +244,14 @@ OAuth2.0 Client Credentials flow:
 - `Spark.service.getSchema(uri)` gets the schema of a service.
 - `Spark.service.getMetadata(uri)` gets the metadata of a service.
 - `Spark.service.download(uri)` downloads the excel file of a service.
-- `Spark.service.recompile(uri)` recompiles a service using specific compiler version.
+- `Spark.service.recompile(uri)` recompiles a service using specific compiler versions.
 - `Spark.service.validate(uri, data)` validates input data using static or dynamic validations.
-- `Spark.service.export(uri, data)` exports Spark services as a zip file.
+- `Spark.service.export(uri)` exports Spark services as a zip file.
 - `Spark.service.import(data)` imports Spark services from a zip file into the Spark platform.
 
 [Log History API](./docs/history.md) - manages service execution logs:
 
-- `Spark.service.log.rehydrate(uri, [callId])` rehydrates the executed model into the original Excel file.
+- `Spark.service.log.rehydrate(uri, callId)` rehydrates the executed model into the original Excel file.
 - `Spark.service.log.download(uri, [type])` downloads service execution logs as `csv` or `json` file.
 
 [ImpEx API](./docs/impex.md) - imports and exports Spark services:

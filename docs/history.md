@@ -136,6 +136,7 @@ download job.
 | _correrationId_      | `string`                   | The correlation ID (possible fallback for `callIds`).            |
 | _sourceSystem_       | `string`                   | The source system (possible fallback for `callIds`).             |
 | _maxRetries_         | `number`                   | The maximum number of retries (defaults to `Config.maxRetries`). |
+| _retryInterval_      | `number`                   | The interval between status check retries in seconds.            |
 
 ```ts
 await spark.service.log.download({

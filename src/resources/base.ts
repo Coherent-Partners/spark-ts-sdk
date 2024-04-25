@@ -116,6 +116,7 @@ export class Uri {
    * Builds a Spark URI from UriParams.
    *
    * @param {UriParams} uri - the distinct parameters to build a Spark URI from.
+   * @param {UriOptions} - the base URL, version, and endpoint options.
    * @returns {Uri} - a Spark URI
    * @throws {SparkError} - if a final URL cannot be built from the given
    * parameters.
@@ -139,6 +140,13 @@ export class Uri {
     }
   }
 
+  /**
+   * Builds a Spark URI from a partial resource.
+   * @param resource - the partial resource to build a Spark URI from.
+   * @param {UriOptions} - the base URL, version, and endpoint options.
+   * @returns {Uri} - a Spark URI
+   * @throws {SparkError} - if a final URL cannot be built from the given
+   */
   static partial(resource: string, { base, version = 'api/v3', endpoint = '' }: UriOptions): Uri {
     try {
       resource = Utils.sanitizeUri(resource);
@@ -195,6 +203,11 @@ export class Uri {
     return '';
   }
 
+  /**
+   * Concatenates query parameters to the URL.
+   * @param params - the query parameters to concatenate
+   * @returns the final URL with query parameters
+   */
   concat(params: Record<string, string> = {}): string {
     const url = this.value;
     const searchParams = new URLSearchParams(params).toString();

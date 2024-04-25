@@ -15,7 +15,35 @@ async function bootstrapModules(names: string[]) {
 bootstrapModules(['fs', 'stream', 'crypto', 'form-data', 'buffer']); // FIXME: use shims instead.
 
 export function isBrowser() {
-  return typeof window === 'object' && typeof document === 'object' && window.crypto;
+  return typeof window === 'object' && typeof document === 'object' && typeof navigator !== 'undefined';
+}
+
+/**
+ * Returns the browser name and version when running in browser environments.
+ * Inspired by: https://github.com/JS-DevTools/host-environment/blob/b1ab79ecde37db5d6e163c050e54fe7d287d7c92/src/isomorphic.browser.ts
+ */
+export function getBrowserInfo(): string | undefined {
+  if (typeof navigator === 'undefined' || !navigator) return undefined;
+
+  // NOTE: The order matters here!
+  const browserPatterns = [
+    { key: 'Edge' as const, pattern: /Edge(?:\W+(\d+)\.(\d+)(?:\.(\d+))?)?/ },
+    { key: 'IE' as const, pattern: /MSIE(?:\W+(\d+)\.(\d+)(?:\.(\d+))?)?/ },
+    { key: 'IE' as const, pattern: /Trident(?:.*rv\:(\d+)\.(\d+)(?:\.(\d+))?)?/ },
+    { key: 'Chrome' as const, pattern: /Chrome(?:\W+(\d+)\.(\d+)(?:\.(\d+))?)?/ },
+    { key: 'Firefox' as const, pattern: /Firefox(?:\W+(\d+)\.(\d+)(?:\.(\d+))?)?/ },
+    { key: 'Safari' as const, pattern: /(?:Version\W+(\d+)\.(\d+)(?:\.(\d+))?)?(?:\W+Mobile\S*)?\W+Safari/ },
+  ];
+
+  // Find the FIRST matching browser
+  for (const { key, pattern } of browserPatterns) {
+    const match = pattern.exec(navigator.userAgent);
+    if (match) {
+      const [, major = 0, minor = 0, patch = 0] = match;
+      return `${key}/${major}.${minor}.${patch}`;
+    }
+  }
+  return undefined;
 }
 
 export function loadModule<T = any>(path: string): T | undefined {
@@ -159,6 +187,7 @@ export default {
   isNotEmptyArray,
   sanitizeUri,
   isBrowser,
+  getBrowserInfo,
   readFile,
   formatUrl,
   getUuid,

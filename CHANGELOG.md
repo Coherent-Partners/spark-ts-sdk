@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.1.0 (2024-04-25)
+
+- Add support for Node.js ^14.15.0 or higher
+- Fix bug in `Config.copyWith` (it was not copying the tenant name correctly)
+- Fix file upload in browser environments
+- Refactor `Config.interceptors` and `Config.headers` to be more flexible
+- Refactor CI/CD workflows to test multiple Node.js versions and environments
+
 ## 0.1.0-beta.3 (2024-04-18)
 
 - Add documentation comments

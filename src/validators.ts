@@ -47,7 +47,7 @@ export class EmptyStringValidator extends Validator<Maybe<string> | unknown> {
     }
   }
 
-  isValid(value: Maybe<string> | unknown, message?: string): boolean {
+  isValid(value: Maybe<string> | unknown, message?: string): value is string {
     try {
       this.validate(value, message);
       return true;
@@ -93,7 +93,7 @@ export class PositiveIntegerValidator extends Validator<number | unknown> {
     return validator;
   }
 
-  validate(value: number): void {
+  validate(value: number | unknown): void {
     if (!NumberUtils.isPositive(value)) {
       throw SparkError.sdk({ message: 'must be a positive integer', cause: value });
     }
@@ -126,8 +126,8 @@ export class BaseUrlValidator extends Validator<Maybe<string>> {
 }
 
 export default {
-  baseUrl: BaseUrlValidator.getInstance(),
-  emptyString: EmptyStringValidator.getInstance(),
-  arrayString: ArrayStringValidator.getInstance(),
-  positiveInteger: PositiveIntegerValidator.getInstance(),
+  baseUrl: BaseUrlValidator,
+  emptyString: EmptyStringValidator,
+  arrayString: ArrayStringValidator,
+  positiveInteger: PositiveIntegerValidator,
 };

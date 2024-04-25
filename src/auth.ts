@@ -1,6 +1,6 @@
-import Utils, { type Maybe, StringUtils } from './utils';
-import { SparkError } from './error';
+import Utils, { Maybe, StringUtils } from './utils';
 import { ENV_VARS } from './constants';
+import { SparkError } from './error';
 import { Config } from './config';
 import { Logger } from './logger';
 
@@ -201,14 +201,15 @@ export class OAuth {
    * When the access token is expired, the client will automatically refresh it
    * before making the next request using this method.
    */
-  async retrieveToken(config: Config): Promise<void> {
+  async retrieveToken(config: Config): Promise<AccessToken> {
     const logger = Logger.of(config.logger);
     logger.log('refreshing OAuth2 access token...');
 
     try {
       const manager = new OAuthManager(config);
       this.#accessToken = await manager.requestAccessToken();
-      if (!this.accessToken) logger.warn('failed to retrieve OAuth2 access token');
+      if (!this.accessToken) throw new SparkError('no access token found');
+      return this.#accessToken!;
     } catch (reason) {
       logger.warn('failed to retrieve OAuth2 access token');
       return Promise.reject(reason);
@@ -222,8 +223,8 @@ export class OAuth {
    * Currently, a wrapper around `retrieveToken` method.
    * @see OAuth#retrieveToken
    */
-  refreshToken(config: Config): Promise<void> {
-    return this.retrieveToken(config);
+  async refreshToken(config: Config): Promise<void> {
+    await this.retrieveToken(config);
   }
 }
 
