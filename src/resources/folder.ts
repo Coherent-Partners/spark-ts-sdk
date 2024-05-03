@@ -10,7 +10,7 @@ import { ApiResource, Uri, ApiResponse } from './base';
 
 export class Folder extends ApiResource {
   /**
-   * Get the list of folder categories.
+   * Gets the list of folder categories.
    * @returns {Promise<HttpResponse<FolderCategories>>}
    */
   getCategories(): Promise<HttpResponse<FolderCategories>> {
@@ -19,11 +19,11 @@ export class Folder extends ApiResource {
       version: 'api/v1',
       endpoint: 'lookup/getcategories',
     });
-    return this.request(url.value);
+    return this.request(url);
   }
 
   /**
-   * Create a new folder.
+   * Creates a new folder.
    * @param {string | CreateParams} params - Folder name (and additional information)
    * If `params` is a string, it will be used as the folder name.
    * @returns {Promise<HttpResponse<FolderCreated>>}
@@ -45,7 +45,7 @@ export class Folder extends ApiResource {
       { name: 'Status', data: status ?? 'Design' },
     ];
 
-    const response = await this.request<FolderLocation>(url.value, { method: 'POST', multiparts });
+    const response = await this.request<FolderLocation>(url, { method: 'POST', multiparts });
     const { data, headers } = response;
     if (data.status === 'Success') {
       if (cover) await this.uploadCover(data.data.folderId, cover);
@@ -66,7 +66,7 @@ export class Folder extends ApiResource {
   }
 
   /**
-   * Find folders by name, status, category, or favorite.
+   * Finds folders by name, status, category, or favorite.
    * @param {string | SearchParams} params - Search parameters (name, status, category, favorite)
    * If `params` is a string, it will be used as the name to search for.
    * @param {Paging} paging - Paging options (page, size, sort)
@@ -94,11 +94,11 @@ export class Folder extends ApiResource {
       shouldFetchActiveServicesCount: true,
     };
 
-    return this.request(url.value, { method: 'POST', body });
+    return this.request(url, { method: 'POST', body });
   }
 
   /**
-   * Update a folder's information.
+   * Updates a folder's information.
    * @param {string} id - Folder ID
    * @param {CreateParams} params - Folder information to update
    * @returns {Promise<HttpResponse<FolderUpdated>>}
@@ -115,18 +115,18 @@ export class Folder extends ApiResource {
       launchDate: DateUtils.isDate(launchDate) ? new Date(launchDate).toISOString() : undefined,
       shouldTrackUserAction: true,
     };
-    return this.request(url.value, { method: 'POST', body });
+    return this.request(url, { method: 'POST', body });
   }
 
   /**
-   * Delete a folder by ID.
+   * Deletes a folder by ID.
    * @param {string} id - Folder ID
    * @returns {Promise<HttpResponse<FolderDeleted>>}
    */
   delete(id: string): Promise<HttpResponse<FolderDeleted>> {
     const endpoint = `product/delete/${id?.trim()}`;
     const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
-    return this.request(url.value, { method: 'DELETE' });
+    return this.request(url, { method: 'DELETE' });
   }
 
   /**
@@ -143,7 +143,7 @@ export class Folder extends ApiResource {
       { name: 'coverImage', fileStream: cover.image, fileName: cover.fileName },
     ];
 
-    return this.request(url.value, { method: 'POST', multiparts });
+    return this.request(url, { method: 'POST', multiparts });
   }
 }
 

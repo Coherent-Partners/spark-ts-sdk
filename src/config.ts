@@ -5,7 +5,7 @@ import { Authorization } from './auth';
 import { Interceptor } from './http';
 import { ClientOptions } from './client';
 import { Logger, LoggerOptions } from './logger';
-import { DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT_IN_MS, ENV_VARS } from './constants';
+import { DEFAULT_MAX_RETRIES, DEFAULT_RETRY_INTERVAL, DEFAULT_TIMEOUT_IN_MS, ENV_VARS } from './constants';
 
 export class Config {
   readonly #options!: string;
@@ -14,6 +14,7 @@ export class Config {
   readonly auth!: Authorization;
   readonly environment?: string | undefined;
   readonly maxRetries!: number;
+  readonly retryInterval!: number;
   readonly timeout!: number;
   readonly allowBrowser!: boolean;
   readonly logger!: LoggerOptions;
@@ -24,14 +25,18 @@ export class Config {
     baseUrl: url = Utils.readEnv(ENV_VARS.BASE_URL),
     apiKey = Utils.readEnv(ENV_VARS.API_KEY),
     token = Utils.readEnv(ENV_VARS.BEARER_TOKEN),
+    timeout = DEFAULT_TIMEOUT_IN_MS,
+    maxRetries = DEFAULT_MAX_RETRIES,
+    retryInterval = DEFAULT_RETRY_INTERVAL,
     ...options
   }: ClientOptions = {}) {
     const numberValidator = Validators.positiveInteger.getInstance();
 
     this.baseUrl = url instanceof BaseUrl ? url : BaseUrl.from({ url, tenant: options?.tenant, env: options?.env });
     this.auth = Authorization.from({ apiKey, token, oauth: options?.oauth });
-    this.timeout = numberValidator.isValid(options.timeout) ? options.timeout! : DEFAULT_TIMEOUT_IN_MS;
-    this.maxRetries = numberValidator.isValid(options.maxRetries) ? options.maxRetries! : DEFAULT_MAX_RETRIES;
+    this.timeout = numberValidator.isValid(timeout) ? timeout! : DEFAULT_TIMEOUT_IN_MS;
+    this.maxRetries = numberValidator.isValid(maxRetries) ? maxRetries! : DEFAULT_MAX_RETRIES;
+    this.retryInterval = numberValidator.isValid(retryInterval) ? retryInterval! : DEFAULT_RETRY_INTERVAL;
     this.allowBrowser = this.auth.isOpen || !!options.allowBrowser;
     this.logger = Logger.of(options.logger).options;
     this.environment = options.env;
@@ -43,6 +48,7 @@ export class Config {
       oauth: this.auth.oauth?.toJson(),
       timeout: this.timeout,
       maxRetries: this.maxRetries,
+      retryInterval: this.retryInterval,
       allowBrowser: this.allowBrowser,
     });
 
@@ -78,6 +84,7 @@ export class Config {
       oauth: options.oauth ?? this.auth.oauth,
       timeout: options.timeout ?? this.timeout,
       maxRetries: options.maxRetries ?? this.maxRetries,
+      retryInterval: options.retryInterval ?? this.retryInterval,
       allowBrowser: options.allowBrowser ?? this.allowBrowser,
       logger: options.logger ?? this.logger,
     });

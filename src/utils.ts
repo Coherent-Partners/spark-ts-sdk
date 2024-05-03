@@ -98,7 +98,7 @@ export function isObject(obj: unknown): obj is Record<string, unknown> {
   return obj != null && typeof obj === 'object' && !Array.isArray(obj);
 }
 
-export function isNotEmptyArray(value: unknown): boolean {
+export function isNotEmptyArray(value: unknown): value is unknown[] {
   return Array.isArray(value) && value.length > 0;
 }
 
@@ -110,6 +110,10 @@ export function formatUrl(baseUrl: string | URL, params: Record<string, string> 
   const url = baseUrl.toString();
   const searchParams = new URLSearchParams(params).toString();
   return `${url}${searchParams ? (url.includes('?') ? '&' : '?') + searchParams : ''}`;
+}
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -191,4 +195,5 @@ export default {
   readFile,
   formatUrl,
   getUuid,
+  sleep,
 };

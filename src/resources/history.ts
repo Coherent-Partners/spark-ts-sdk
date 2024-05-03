@@ -1,7 +1,7 @@
 import { SparkError } from '../error';
 import { HttpResponse, getRetryTimeout } from '../http';
 import { ApiResource, ApiResponse, Uri, UriParams } from './base';
-import { DateUtils } from '../utils';
+import Utils, { DateUtils } from '../utils';
 
 export class History extends ApiResource {
   get downloads(): LogDownload {
@@ -9,12 +9,12 @@ export class History extends ApiResource {
   }
 
   /**
-   * Rehydrate the executed model into the original excel file.
+   * Rehydrates the executed model into the original excel file.
    * @param {string | RehydrateParams} uri - how to locate the service
    * @param {string} callId - optional callId to rehydrate if not provided in the params.
-   * @returns {Promise<HttpResponse<LogRehydrated>>} - the rehydrated log
+   * @returns {Promise<HttpResponse<LogRehydrated>>} the rehydrated log
    *
-   * @throws {SparkError} - if the callId is missing or the rehydration fails
+   * @throws {SparkError} if the callId is missing or the rehydration fails
    * to produce a downloadable Excel file.
    */
   async rehydrate(uri: string, callId: string): Promise<HttpResponse<LogRehydrated>>;
@@ -29,7 +29,7 @@ export class History extends ApiResource {
     }
 
     const url = Uri.from({ folder, service }, { base: this.config.baseUrl.full, endpoint: `download/${callId}` });
-    const response = await this.request<LogRehydrated>(url.value);
+    const response = await this.request<LogRehydrated>(url);
     const downloadUrl = response.data?.response_data?.download_url;
 
     if (!downloadUrl) {
@@ -43,17 +43,17 @@ export class History extends ApiResource {
   }
 
   /**
-   * Download service execution logs as csv or json file.
+   * Downloads service execution logs as csv or json file.
    * @param {string | DownloadParams} uri - how to locate the service
    * @param {'csv' | 'json'} type - the file format to download
-   * @returns {Promise<HttpResponse<LogStatus>>} - the download file
-   *
-   * @throws {SparkError} - if the download job fails to produce a downloadable file.
+   * @returns {Promise<HttpResponse<LogStatus>>} the downloaded file
+   * @throws {SparkError} if the download job fails to produce a downloadable file.
    */
   async download(uri: string, type: DownloadFileType): Promise<HttpResponse<LogStatus>>;
   async download(params: DownloadParams): Promise<HttpResponse<LogStatus>>;
   async download(uri: string | DownloadParams, type?: DownloadFileType): Promise<HttpResponse<LogStatus>> {
-    const { folder, service, maxRetries = this.config.maxRetries, retryInterval = 3, ...params } = Uri.toParams(uri);
+    const { folder, service, ...params } = Uri.toParams(uri);
+    const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
     type = (type ?? params?.type ?? 'json').toLowerCase() as DownloadFileType;
 
     const response = await this.downloads.initiate(uri, type);
@@ -79,12 +79,11 @@ export class History extends ApiResource {
 
 class LogDownload extends ApiResource {
   /**
-   * Create a download job for service execution logs.
+   * Creates a download job for service execution logs.
    * @param {string | CreateJobParams} uri - how to locate the service
    * @param {'csv' | 'json'} type - optional file format to download
-   * @returns {Promise<HttpResponse<LogStatus>>} - includes the download file and status
-   *
-   * @throws {SparkError} - if the download job fails to produce a downloadable file.
+   * @returns {Promise<HttpResponse<LogStatus>>} includes the downloaded file and status
+   * @throws {SparkError} if the download job fails to produce a downloadable file.
    */
   async initiate(uri: string | CreateJobParams, type?: DownloadFileType): Promise<HttpResponse<JobCreated>> {
     const { folder, service, ...params } = Uri.toParams(uri);
@@ -110,37 +109,38 @@ class LogDownload extends ApiResource {
       };
     })(params);
 
-    return this.request<JobCreated>(url.value, { method: 'POST', body }).then((response) => {
+    return this.request<JobCreated>(url, { method: 'POST', body }).then((response) => {
       this.logger.log(`${type} download job created <${response.data.response_data.job_id}>`);
       return response;
     });
   }
 
   /**
-   * Get the status of a download job for service execution logs.
+   * Gets the status of a download job for service execution logs.
    * @param {string | GetStatusParams} uri - how to locate the job
    * @param {'csv' | 'json'} type - optional file format to download
-   * @returns {Promise<HttpResponse<LogStatus>>} - the download status and URL
-   * @throws {SparkError} - if the download job status check times out.
+   * @returns {Promise<HttpResponse<LogStatus>>} the download status and URL
+   * @throws {SparkError} if the download job status check times out.
    */
   async getStatus(uri: string, type: DownloadFileType): Promise<HttpResponse<LogStatus>>;
   async getStatus(params: GetStatusParams): Promise<HttpResponse<LogStatus>>;
   async getStatus(uri: string | GetStatusParams, type?: DownloadFileType): Promise<HttpResponse<LogStatus>> {
-    const { jobId, maxRetries = this.config.maxRetries, retryInterval = 3, ...params } = Uri.toParams(uri);
+    const { jobId, ...params } = Uri.toParams(uri);
+    const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
     type = (type ?? params?.type ?? 'json').toLowerCase() as DownloadFileType;
     const url = Uri.from(params, { base: this.config.baseUrl.full, endpoint: `log/download${type}/status/${jobId}` });
 
     let retries = 0;
-    let response = await this.request<LogStatus>(url.value);
+    let response = await this.request<LogStatus>(url);
     do {
       const { progress } = response.data.response_data;
       this.logger.log(`waiting for log status job to complete - ${progress || 0}%`);
 
       if (progress == 100) return response;
-      await new Promise((resolve) => setTimeout(resolve, getRetryTimeout(retries, retryInterval)));
+      await Utils.sleep(getRetryTimeout(retries, retryInterval));
 
       retries++;
-      response = await this.request<LogStatus>(url.value);
+      response = await this.request<LogStatus>(url);
     } while (response.data.response_data.progress < 100 && retries < maxRetries);
 
     if (response.data.response_data.download_url) return response;

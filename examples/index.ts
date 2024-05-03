@@ -13,6 +13,7 @@ import Folder from './folder';
 import Service from './service';
 import History from './history';
 import ImpEx from './impex';
+import Batch from './batch';
 
 const token = 'insert-my-access-token';
 const spark = new Spark({ token, env: 'my-env', tenant: 'my-tenant' });
@@ -44,3 +45,6 @@ History.download(spark);
 ImpEx.export(spark);
 ImpEx.import(spark);
 ImpEx.downloadWasm(spark);
+
+Batch.create(spark);
+Batch.createAndRun(spark);

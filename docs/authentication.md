@@ -99,7 +99,7 @@ Alternatively, you can provide the path to the JSON file containing the client I
 and secret:
 
 ```ts
-const spark = new Spark({ oauth: 'path/to/your/credentials.json' });
+const spark = new Spark({ oauth: 'path/to/my/credentials.json' });
 ```
 
 ## Using Environment Variables (recommended)

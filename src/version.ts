@@ -1,21 +1,13 @@
 import { getBrowserInfo } from './utils';
 
-const version = '0.1.0';
+const version = '0.1.1';
 
 const sdkLogger = `CSPARK v${version}`;
 
-const userAgentHeader = `Coherent Spark SDK v${version} (${getBrowserInfo() ?? `Node ${process.version}`})`;
+const platformInfo = getBrowserInfo() ?? `Node/${process?.version?.replace('v', '')}`;
 
-const sdkUaHeader = (() => {
-  const analytics = {
-    agent: `cspark-ts-sdk/${version}`,
-    env: getBrowserInfo() ?? `Node/${process.version.replace('v', '')}`,
-  } as Record<string, string>;
+const about = `Coherent Spark SDK v${version} (${platformInfo})`;
 
-  return Object.keys(analytics)
-    .map((k) => `${k}=${analytics[k]}`)
-    .join('; ')
-    .trim();
-})();
+const sdkUaHeader = [`agent=cspark-ts-sdk/${version}`, `env=${platformInfo}`].join('; ');
 
-export { version, userAgentHeader, sdkUaHeader, sdkLogger };
+export { version, about, sdkUaHeader, sdkLogger };

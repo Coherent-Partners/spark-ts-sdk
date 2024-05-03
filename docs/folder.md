@@ -152,11 +152,11 @@ Otherwise, it will throw a `SparkApiError`:
 - `ConflictError` when the folder name already exists.
 - `UnknownApiError` when the SDK failed to create the folder due to unknown reasons.
 
-> [!NOTE]
-> If you are using API key as your authentication method, the API key needs to
-> have permission to create a folder. Otherwise, you will get a `401 Unauthorized` error.
-> See [Authentication API](./authentication.md) for more information on how to set up feature
-> permissions for API keys.
+> [!IMPORTANT]
+> If you are using API key as your authentication method, you should know that API keys
+> can't be used to create a folder unfortunately. You will get a `401 Unauthorized` error.
+> You should use one of the other methods.
+> See [Authentication API](./authentication.md) for more information.
 
 ## Find folders by criteria
 

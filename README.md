@@ -32,7 +32,7 @@ To use the SDK, you need a Coherent Spark account that lets you access the follo
   or [OAuth2.0 client credentials][oauth2-docs] details)
 - Base URL (including the environment and tenant name)
 - Spark service URI (to locate a specific resource):
-  - `folder` - the folder name where the service is located
+  - `folder` - the folder name (where the service is located)
   - `service` - the service name
   - `version` - the semantic version a.k.a revision number (e.g., 0.4.2)
 
@@ -46,6 +46,8 @@ Hence, there are various ways to indicate a Spark service URI:
 - `{folder}/{service}[?{version}]` - _version_ is optional.
 - `service/{serviceId}`
 - `version/{versionId}`
+
+> **IMPORTANT:** Do **not** use URL-encoded characters in the service URI.
 
 Here's an example of how to execute a Spark service:
 
@@ -161,6 +163,8 @@ const spark = new Spark({ oauth: 'path/to/oauth/credentials.json' });
   will retry a request in case of a temporary failure, such as a unauthorized
   response or a status code greater than 400.
 
+- `retryInterval` (default: `1` second): indicates the delay between each retry.
+
 - `allowBrowser` (default: `false`): indicates whether the SDK should be used in
   browser-like environments -- unless you intend to access public APIs.
   By default, client-side use of this library is not recommended as it risks
@@ -180,7 +184,7 @@ const spark = new Spark({ oauth: 'path/to/oauth/credentials.json' });
     - `logger`: a custom logger that implements the `LoggerService` interface.
 
 ```ts
-const spark = new Spark({ logger: true });
+const spark = new Spark({ logger: false });
 // or
 const spark = new Spark({ logger: 'warn' }); // or ['warn', 'error']
 // or

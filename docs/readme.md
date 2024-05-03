@@ -39,7 +39,49 @@ const { SparkClient: Spark } = require('@cspark/sdk');
 To avoid confusion and maintain consistency across the examples used in the SDK
 documentation, the ESM format will be used in all the code snippets.
 
-### Transactional vs Non-Transactional Requests
+### Spark URI Locator
+
+You may notice by now that the `folder` and `service` when combined together
+form a base identifier to locate a resource in the Spark platform for a particular
+environment and tenant. I term this _Spark URI Locator_.
+
+Given that the locator may be part of both the final URL or the request payload,
+it is recommended to use non-URL encoded strings when referring its identifiers.
+The SDK will take care of encoding them when necessary. Otherwise, you risk
+encountering issues when trying to locate a resource.
+
+Let's say you want to execute a Spark service using the `my folder` and `my service`
+identifiers.
+
+```ts
+const folder = 'my%20folder'; // encoding equivalent to 'my folder'
+const service = 'my%20service'; // encoding equivalent to 'my service'
+
+// Use case 1: as part of the URL
+await spark.service.execute(
+  { folder, service },
+  {
+    /* data */
+  },
+);
+
+// Use case 2: as part of the payload
+await spark.service.batch.execute(
+  { folder, service },
+  {
+    /* data */
+  },
+);
+```
+
+Behind the scenes, the `Spark.service.execute` uses the URI locator as part of
+the final URL to locate the service to execute. Hence, it works fine whether the
+identifiers are URL encoded or not. However, when using the `Spark.service.batch.execute`,
+the method uses the URI locator as part of the payload, which will fail to locate
+the service if the identifiers are URL encoded. Therefore, it is recommended to
+use non-URL encoded strings when referring to these identifiers.
+
+### Transactional vs Non-Transactional Methods
 
 Most of the SDK methods are non-transactional, meaning that a request is expected
 to perform one task only (i.e, hitting one Spark endpoint only). In short, a
@@ -136,7 +178,7 @@ The following properties are available in a `SparkApiError`:
 - `cause`: cause of the failure
 - `message`: summary of the error message causing the failure
 - `requestId`: unique identifier of the request (useful for debugging)
-- `details`: a stringified version of error, combining `cause` and `message`.
+- `details`: a stringified version of `cause`.
 
 The `cause` property will include key information regarding the attempted request
 as well as the obtained response if available.
@@ -153,7 +195,7 @@ as well as the obtained response if available.
       "url": "https://excel.my-env.coherent.global/api/v1/product/delete/uuid",
       "method": "DELETE",
       "headers": {
-        "User-Agent": "Coherent Spark SDK v0.1.0 (Node v16.14.2)",
+        "User-Agent": "Coherent Spark SDK v0.1.0 (Node/16.14.2)",
         "x-spark-ua": "agent=cspark-ts-sdk/0.1.0; env=Node/16.14.2",
         "x-request-id": "uuid",
         "x-tenant-name": "my-tenant",
@@ -199,7 +241,7 @@ class MyResource extends ApiResource {
       endpoint: 'my/resource',
     });
 
-    return this.request(url.value, { method: 'GET' });
+    return this.request(url, { method: 'GET' });
   }
 }
 
@@ -273,25 +315,23 @@ logger.error('something went wrong');
 There are various ways of handling files in both Node and Browser environments.
 To keep things simple and easy, the following ways are recommended:
 
-**In Node environments**, you can use the `fs` (file system) module to read and write
-files from/to disks. The recommended way to read and write files is to use the
-`createReadStream` and `createWriteStream` methods, respectively. Below is an
-example of how to create a folder with a cover image:
+- **In Node environments**, you can use the `fs` (file system) module to read and write
+  files from/to disks. The recommended way to read and write files is to use the
+  `createReadStream` and `createWriteStream` methods, respectively. Below is an
+  example of how to create a folder with a cover image:
 
 ```ts
 import { createReadStream } from 'fs';
 
-const cover = {
-  image: createReadStream('path/to/image.png'), // be mindful of the OS.
-  fileName: 'image.png',
-};
+const file = createReadStream('path/to/image.png'); // be mindful of the OS.
+const cover = { image: file, fileName: 'image.png' };
 
 // omit Spark initialization for brevity
 await spark.folder.create({ name: 'my-folder', cover });
 ```
 
-**In Browser environments**, you may use the `File` object to read files. Here's
-the same example as above but for the browser environment:
+- **In Browser environments**, you may use the `File` object to read files. Here's
+  the same example as above but for the browser environment:
 
 ```html
 <body>
@@ -299,8 +339,8 @@ the same example as above but for the browser environment:
   <button onclick="createFolder()">Create Folder</button>
   <script>
     async function createFolder() {
-      const fileInput = document.getElementById('file-input');
-      const file = fileInput.files[0];
+      const inputRef = document.getElementById('file-input');
+      const file = inputRef.files[0];
       if (!file) return;
 
       const cover = { image: file, fileName: file.name };

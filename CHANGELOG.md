@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.1.1 (2024-05-01)
+
+- Add support for async Batch API (experimental feature)
+- Apply minor improvements to the SDK (e.g., analytics)
+
 ## 0.1.0 (2024-04-25)
 
 - Add support for Node.js ^14.15.0 or higher

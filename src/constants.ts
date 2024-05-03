@@ -1,4 +1,5 @@
 export const DEFAULT_MAX_RETRIES = 2;
+export const DEFAULT_RETRY_INTERVAL = 1; // 1 second
 export const DEFAULT_TIMEOUT_IN_MS = 60000; // 60 seconds
 export const RETRY_RANDOMIZATION_FACTOR = 1.5;
 export const SPARK_SDK = 'Spark JS SDK';

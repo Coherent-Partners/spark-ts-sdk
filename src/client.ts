@@ -7,7 +7,7 @@ import * as API from './resources';
 /**
  * The available settings to initialize a new client.
  *
- * The client options are used to configure the behavior of the client, including
+ * These options are used to configure the behavior of the `SparkClient`, including
  * the base URL for the APIs, the API key to use for authentication, and the maximum
  * amount of time to wait for a response from the server before timing out.
  *
@@ -62,6 +62,15 @@ export interface ClientOptions extends OAuthMethod {
   maxRetries?: number;
 
   /**
+   * The interval (in seconds, defaults to 1) between retries.
+   *
+   * This value is used to calculate the exponential backoff time with randomized
+   * jitters. The actual retry interval will be a random value between 0.5 and 1.5
+   * times the retry interval.
+   */
+  retryInterval?: number;
+
+  /**
    * By default, client-side use of this library is not recommended, as it risks exposing
    * your secret API credentials to attackers.
    * Only set this option to `true` if you understand the risks and have appropriate
@@ -71,15 +80,24 @@ export interface ClientOptions extends OAuthMethod {
 
   /**
    * Enables or disables the logger for the client.
-   * if `true`, determines whether client should print colorful logs (including timestamps).
+   * if `boolean`, determines whether client should print logs.
    * if `LogLevel | LogLevel[]`, client will print logs with the specified log level(s).
-   * if `LoggerOptions`, client will print logs with the specified options.
+   * if `LoggerOptions`, client will print logs in accordance with the specified options.
    *
    * @see LoggerOptions for more details.
    */
   logger?: boolean | LogLevel | LogLevel[] | LoggerOptions;
 }
 
+/**
+ * The main entry point for the Coherent Spark SDK client.
+ *
+ * This class provides access to all the resources available in the SDK, including
+ * the `folder`, and `service` APIs, as well as the `impex` and `wasm` utilities.
+ *
+ * Visit the main documentation page for more details on how to use the SDK.
+ * @see https://github.com/c-spark/cspark-ts-sdk/blob/main/docs
+ */
 export class Client {
   readonly config!: Config;
 
@@ -87,12 +105,16 @@ export class Client {
     this.config = new Config(options);
   }
 
+  get folder(): API.Folder {
+    return new API.Folder(this.config);
+  }
+
   get service(): API.Service {
     return new API.Service(this.config);
   }
 
-  get folder(): API.Folder {
-    return new API.Folder(this.config);
+  get batch(): API.Batch {
+    return new API.Batch(this.config);
   }
 
   get file(): API.File {
@@ -110,6 +132,11 @@ export class Client {
   /**
    * Download a file from the given URL.
    * @param url - valid URL
+   */
+  static download(url: string): ReturnType<typeof API.download>;
+  /**
+   * Download a file from the given URL.
+   * @param url - valid URL
    * @param auth - optional authorization
    */
   static download(url: string, auth?: Authorization) {
@@ -118,12 +145,47 @@ export class Client {
 
   /**
    * Prepare migration data from one tenant to another.
+   * @param {ClientOptions} from - source tenant options.
+   * @param {ClientOptions} to - target tenant options
+   * @throws {SparkError} if invalid options are provided.
+   */
+  static migration(from: ClientOptions, to: ClientOptions): API.Migration;
+  /**
+   * Prepare migration data from one tenant to another.
+   * @param {Config} from - source tenant configuration.
+   * @param {Config} to - target tenant configuration
+   */
+  static migration(from: Config | ClientOptions, to: Config | ClientOptions) {
+    return API.ImpEx.migration({
+      exports: from instanceof Config ? from : new Config(from),
+      imports: to instanceof Config ? to : new Config(to),
+    });
+  }
+
+  /**
+   * Prepare migration data from one tenant to another.
+   * @param {ClientOptions} to - target tenant options
+   * The current tenant configuration will be used as the source.
+   * @throws {SparkError} if invalid options are provided.
+   */
+  migration(to: ClientOptions): API.Migration;
+  /**
+   * Prepare migration data from one tenant to another.
+   * @param {Config} to - target tenant configuration
+   * The current tenant configuration will be used as the source.
+   */
+  migration(to: Config): API.Migration;
+  /**
+   * Prepare migration data from one tenant to another.
    * @param {Config} to - target tenant configuration
    * @param {Config} from - optional source tenant configuration; if not provided,
    * the current tenant configuration will be used as the source.
    */
-  migration(to: Config, from: Config = this.config) {
-    return API.ImpEx.migration({ exports: from, imports: to });
+  migration(to: Config | ClientOptions, from: Config | ClientOptions = this.config) {
+    return API.ImpEx.migration({
+      exports: from instanceof Config ? from : new Config(from),
+      imports: to instanceof Config ? to : new Config(to),
+    });
   }
 }
 

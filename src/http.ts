@@ -23,7 +23,7 @@ export type CancellationToken = AbortSignal;
 /**
  * Exposes some options when building HTTP requests.
  */
-export interface RequestOptions {
+export interface RequestOptions<T = JsonData> {
   /**
    * Key-value pairs of headers to be sent with the request.
    */
@@ -37,7 +37,7 @@ export interface RequestOptions {
   /**
    * Request body data
    */
-  readonly body?: JsonData;
+  readonly body?: T;
 
   /**
    * Stream of a file
@@ -60,7 +60,7 @@ export interface RequestOptions {
   readonly retries?: number;
 }
 
-export interface HttpOptions extends RequestOptions {
+export interface HttpOptions<T> extends RequestOptions<T> {
   /**
    * Client configuration.
    */
@@ -100,7 +100,7 @@ export interface HttpResponse<T = JsonData> {
 }
 
 export interface Interceptor {
-  beforeRequest?(options: HttpOptions): HttpOptions;
+  beforeRequest?<T>(options: HttpOptions<T>): HttpOptions<T>;
   afterRequest?<T>(response: HttpResponse<T>): HttpResponse<T>;
 }
 
@@ -115,7 +115,7 @@ export function getRetryTimeout(retries: number, baseInterval: number = 1): numb
   return Math.ceil(retries * baseInterval * 1000 * randomization);
 }
 
-async function createRequestInit(options: HttpOptions): Promise<RequestInit> {
+async function createRequestInit<T>(options: HttpOptions<T>): Promise<RequestInit> {
   const {
     method = 'GET',
     headers = {},
@@ -215,11 +215,14 @@ async function readStream(stream: ByteStream): Promise<Buffer> {
   });
 }
 
-export async function _fetch<T = JsonData>(resource: string, options: HttpOptions): Promise<HttpResponse<T>> {
+export async function _fetch<Req = JsonData, Resp = JsonData>(
+  resource: string,
+  options: HttpOptions<Req>,
+): Promise<HttpResponse<Resp>> {
   // Apply beforeRequest interceptors if any.
   const fetchOptions: typeof options = options.config.hasInterceptors
     ? Array.from(options.config.interceptors).reduce(
-        (o: HttpOptions, i: Interceptor) => i.beforeRequest?.(o) ?? o,
+        (o: HttpOptions<Req>, i: Interceptor) => i.beforeRequest?.(o) ?? o,
         options,
       )
     : options;
@@ -241,15 +244,15 @@ export async function _fetch<T = JsonData>(resource: string, options: HttpOption
   const contentType = response.headers.get('content-type') ?? '';
   const responseBytesBuffer = await response.arrayBuffer();
   const content = Streamer.fromBuffer(responseBytesBuffer);
-  const jsonData = ((): T => {
+  const jsonData = ((): Resp => {
     if (contentType.includes('application/json')) {
       const text = new TextDecoder().decode(responseBytesBuffer);
       return Serializable.deserialize(text);
     }
-    return null as T;
+    return null as Resp;
   })();
 
-  let httpResponse: HttpResponse<T> = {
+  let httpResponse: HttpResponse<Resp> = {
     status: response.status,
     data: jsonData,
     buffer: content,
@@ -259,9 +262,9 @@ export async function _fetch<T = JsonData>(resource: string, options: HttpOption
   // Apply afterRequest interceptors if any.
   if (config?.hasInterceptors) {
     httpResponse = Array.from(config.interceptors).reduce(
-      (rsp: HttpResponse<T>, i: Interceptor) => i.afterRequest?.(rsp) ?? rsp,
+      (rsp: HttpResponse<Resp>, i: Interceptor) => i.afterRequest?.(rsp) ?? rsp,
       httpResponse,
-    ) as HttpResponse<T>;
+    ) as HttpResponse<Resp>;
   }
 
   // Should retry the request?
@@ -276,11 +279,11 @@ export async function _fetch<T = JsonData>(resource: string, options: HttpOption
 
     // when rate limit exceeded
     if (httpResponse.status === 429 && retries < config.maxRetries) {
-      const retryTimeout = httpResponse.headers['x-retry-after']
+      const retryDelay = httpResponse.headers['x-retry-after']
         ? parseFloat(httpResponse.headers['x-retry-after']!) * 1000
         : getRetryTimeout(retries);
 
-      await new Promise((resolve) => setTimeout(resolve, retryTimeout));
+      await Utils.sleep(retryDelay);
       return _fetch(resource, { ...fetchOptions, retries: retries + 1 });
     }
 

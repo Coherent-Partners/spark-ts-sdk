@@ -29,9 +29,9 @@ export class ImpEx {
   }
 
   /**
-   * Export Spark entities such as versions, services, or folders.
+   * Exports Spark entities such as versions, services, or folders.
    * @param {ExportParams} params - what to export
-   * @returns {Promise<HttpResponse[]>} - a list of exported files
+   * @returns {Promise<HttpResponse[]>} a list of exported files
    * @throws {SparkError} when the export job fails
    *
    * @transactional
@@ -40,8 +40,8 @@ export class ImpEx {
    * consider using the `exports` resource directly.
    */
   async export(params: ExportParams): Promise<HttpResponse[]> {
+    const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params ?? {};
     const exporter = this.exports;
-    const { maxRetries = this.config.maxRetries, retryInterval } = params ?? {};
     const response = await exporter.initiate(params);
 
     const status = await exporter.getStatus(response.data.id, { maxRetries, retryInterval });
@@ -66,8 +66,8 @@ export class ImpEx {
    * consider using the `imports` resource directly.
    */
   async import(params: ImportParams): Promise<HttpResponse<ImportResult>> {
+    const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params ?? {};
     const importer = this.imports;
-    const { maxRetries = this.config.maxRetries, retryInterval } = params ?? {};
     const response = await importer.initiate(params);
 
     const status = await importer.getStatus(response.data.id, { maxRetries, retryInterval });
@@ -97,9 +97,13 @@ export class Migration {
   }
 
   /**
-   * Migrate Spark entities from one platform to another (experimental feature).
+   * Migrates Spark entities from one platform to another (experimental feature).
    * @param {MigrateParams} params - which entities to migrate and where
    * @throws {SparkError} when the migration fails
+   *
+   * @transactional
+   * @see {@link ImpEx.export} and {@link ImpEx.import} for more control over the
+   * migration process
    */
   async migrate(params: MigrateParams) {
     const importables = await ImpEx.only(this.configs.exports).export(params);
@@ -123,9 +127,9 @@ class Export extends ApiResource {
   }
 
   /**
-   * Initiate an export job to export Spark entities such as versions, services, or folders.
+   * Initiates an export job to export Spark entities such as versions, services, or folders.
    * @param {ExportParams} params - what to export
-   * @returns {Promise<HttpResponse<ExportInit>>} - the export job details
+   * @returns {Promise<HttpResponse<ExportInit>>} the export job details
    */
   async initiate(params: ExportParams = {}): Promise<HttpResponse<ExportInit>> {
     const url = Uri.from(undefined, { base: this.config.baseUrl.full, version: 'api/v4', endpoint: 'export' });
@@ -146,20 +150,20 @@ class Export extends ApiResource {
       throw error;
     }
 
-    return this.request<ExportInit>(url.value, { method: 'POST', body: { inputs, ...metadata } }).then((response) => {
+    return this.request<ExportInit>(url, { method: 'POST', body: { inputs, ...metadata } }).then((response) => {
       this.logger.log(`export job created <${response.data.id}>`);
       return response;
     });
   }
 
   /**
-   * Check the status of an export job.
+   * Checks the status of an export job.
    * @param {string} jobId - the export job ID
    * @param {StatusParams} params - optional parameters
-   * @returns {Promise<HttpResponse<ExportResult>>} - the export job results when completed
+   * @returns {Promise<HttpResponse<ExportResult>>} the export job results when completed
    */
   async getStatus(jobId: string, params: StatusParams = {}): Promise<HttpResponse<ExportResult>> {
-    const { url: statusUrl, maxRetries = this.config.maxRetries, retryInterval = 2 } = params;
+    const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
     const url = Uri.from(undefined, {
       base: this.config.baseUrl.full,
       version: 'api/v4',
@@ -168,7 +172,7 @@ class Export extends ApiResource {
 
     let retries = 0;
     while (retries < maxRetries) {
-      const response = await this.request<ExportResult>(statusUrl ?? url.value);
+      const response = await this.request<ExportResult>(params.url ?? url);
       if (response.data?.status === 'closed' || response.data?.status === 'completed') {
         this.logger.log(`export job <${jobId}> completed`);
         return response;
@@ -176,8 +180,7 @@ class Export extends ApiResource {
 
       retries++;
       this.logger.log(`waiting for export job to complete (attempt ${retries} of ${maxRetries})`);
-      const timeout = getRetryTimeout(retries, retryInterval);
-      await new Promise((resolve) => setTimeout(resolve, timeout));
+      await Utils.sleep(getRetryTimeout(retries, retryInterval));
     }
 
     const error = SparkError.sdk({ message: `export job status timed out after ${retries} retries` });
@@ -186,9 +189,9 @@ class Export extends ApiResource {
   }
 
   /**
-   * Download the exported files from an export job.
+   * Downloads the exported files from an export job.
    * @param {string | ExportResult} exported - the export job ID or results
-   * @returns {Promise<HttpResponse[]>} - a list of exported files
+   * @returns {Promise<HttpResponse[]>} a list of exported files
    */
   async download(exported: string): Promise<HttpResponse[]>;
   async download(exported: ExportResult): Promise<HttpResponse[]>;
@@ -222,9 +225,9 @@ class Import extends ApiResource {
   }
 
   /**
-   * Initiate an import job to import Spark entities into the platform.
+   * Initiates an import job to import Spark entities into the platform.
    * @param {ImportParams} params - what to import
-   * @returns {Promise<HttpResponse<ImportInit>>} - the import job details
+   * @returns {Promise<HttpResponse<ImportInit>>} the import job details
    */
   async initiate(params: ImportParams): Promise<HttpResponse<ImportInit>> {
     const url = Uri.from(undefined, { base: this.config.baseUrl.full, version: 'api/v4', endpoint: 'import' });
@@ -239,20 +242,20 @@ class Import extends ApiResource {
       { name: 'file', fileStream: params.file, fileName: 'package.zip', contentType: 'application/zip' },
     ];
 
-    return this.request<ImportInit>(url.value, { method: 'POST', multiparts }).then((response) => {
+    return this.request<ImportInit>(url, { method: 'POST', multiparts }).then((response) => {
       this.logger.log(`import job created <${response.data.id}>`);
       return response;
     });
   }
 
   /**
-   * Check the status of an import job.
+   * Checks the status of an import job.
    * @param {string} jobId - the import job ID
    * @param {StatusParams} params - optional parameters
-   * @returns {Promise<HttpResponse<ImportResult>>} - the import job results when completed
+   * @returns {Promise<HttpResponse<ImportResult>>} the import job results when completed
    */
   async getStatus(jobId: string, params: StatusParams = {}): Promise<HttpResponse<ImportResult>> {
-    const { url: statusUrl, maxRetries = this.config.maxRetries, retryInterval = 2 } = params;
+    const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
     const url = Uri.from(undefined, {
       base: this.config.baseUrl.full,
       version: 'api/v4',
@@ -261,7 +264,7 @@ class Import extends ApiResource {
 
     let retries = 0;
     while (retries < maxRetries) {
-      const response = await this.request<ImportResult>(statusUrl ?? url.value);
+      const response = await this.request<ImportResult>(params.url ?? url);
       if (response.data?.status === 'closed' || response.data?.status === 'completed') {
         this.logger.log(`import job <${jobId}> completed`);
         return response;
@@ -269,8 +272,7 @@ class Import extends ApiResource {
 
       retries++;
       this.logger.log(`waiting for import job to complete (attempt ${retries} of ${maxRetries})`);
-      const timeout = getRetryTimeout(retries, retryInterval);
-      await new Promise((resolve) => setTimeout(resolve, timeout));
+      await Utils.sleep(getRetryTimeout(retries, retryInterval));
     }
 
     const error = SparkError.sdk({ message: `import job status timed out after ${retries} retries` });
@@ -281,9 +283,9 @@ class Import extends ApiResource {
 
 export class Wasm extends ApiResource {
   /**
-   * Download a service's WebAssembly module.
-   * @param {string | UriParams} uri - how to locate the service
-   * @returns {Promise<HttpResponse>} - a buffer of the WASM module as a zip file
+   * Downloads a service's WebAssembly module.
+   * @param {string | UriParams} uri - where the service is located
+   * @returns {Promise<HttpResponse>} a buffer of the WASM module as a zip file
    *
    * NOTE: As of now, only `serviceUri` made out of versionId downloads a wasm
    * successfully. This issue is being tracked in the platform and will be fixed soon.
@@ -296,7 +298,7 @@ export class Wasm extends ApiResource {
     const endpoint = `getnodegenzipbyId/${serviceUri}`;
     const url = Uri.partial(`nodegen${isPublic ? '/public' : ''}`, { base: this.config.baseUrl.full, endpoint });
 
-    return this.request(url.value);
+    return this.request(url);
   }
 }
 

@@ -5,7 +5,7 @@ import { HttpResponse, Multipart, getRetryTimeout } from '../http';
 import Utils, { StringUtils, DateUtils } from '../utils';
 
 import { History } from './history';
-import { BatchService } from './batch';
+import { Batch } from './batch';
 import { ImpEx, ImportResult } from './impex';
 import { ApiResource, ApiResponse, Uri, UriParams } from './base';
 import { GetSwaggerParams, GetVersionsParams, GetSchemaParams, GetMetadataParams } from './types';
@@ -18,7 +18,7 @@ export class Service extends ApiResource {
   }
 
   get batch() {
-    return new BatchService(this.config);
+    return new Batch(this.config);
   }
 
   get log() {
@@ -26,10 +26,13 @@ export class Service extends ApiResource {
   }
 
   /**
-   * Create a new service by uploading a file and publishing it.
+   * Creates a new service by uploading a file and publishing it.
    * @param {CreateParams} params - the service creation parameters
    * @returns a summary of the upload, compilation, and publication process
-   * @throws {SparkError} - if the service creation fails
+   * @throws {SparkError} if the service creation fails
+   *
+   * @transactional
+   * See {@link Service.compile} and {@link Service.publish} for individual steps.
    */
   async create(params: CreateParams) {
     const { upload, compilation } = await this.compile(params);
@@ -41,9 +44,13 @@ export class Service extends ApiResource {
   }
 
   /**
-   * Compile a service after uploading it.
+   * Compiles a service after uploading it.
    * @param {CreateParams} params - the service creation parameters
    * @returns a summary of the upload, compilation, and publication process
+   *
+   * @transactional
+   * See {@link Compilation.initiate} and {@link Compilation.getStatus} for individual
+   * steps.
    */
   async compile(params: CompileParams) {
     const compilation = this.compilation;
@@ -55,9 +62,9 @@ export class Service extends ApiResource {
   }
 
   /**
-   * Publish a service after uploading and compiling it.
+   * Publishes a service after uploading and compiling it.
    * @param {PublishParams} params - the publication parameters
-   * @returns {Promise<HttpResponse<ServicePublished>>} - the publication response
+   * @returns {Promise<HttpResponse<ServicePublished>>} the publication response
    */
   async publish(params: PublishParams): Promise<HttpResponse<ServicePublished>> {
     const { folder, service } = params;
@@ -75,18 +82,18 @@ export class Service extends ApiResource {
       },
     };
 
-    return this.request<ServicePublished>(url.value, { method: 'POST', body }).then((response) => {
+    return this.request<ServicePublished>(url, { method: 'POST', body }).then((response) => {
       this.logger.log(`service published with version id <${response.data.response_data.version_id}>`);
       return response;
     });
   }
 
   /**
-   * Execute a service with the given inputs.
-   * @param {string | UriParams} uri - how to locate the service
+   * Executes a service with the given inputs.
+   * @param {string | UriParams} uri - where the service is located
    * @param {ExecuteParams<Inputs>} params - optionally the execution parameters (inputs, metadata, etc.)
-   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>>} - the service execution response
-   * @throws {SparkError} - if the service execution fails
+   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>>} the service execution response
+   * @throws {SparkError} if the service execution fails
    */
   execute<Inputs, Outputs>(
     uri: string,
@@ -101,15 +108,15 @@ export class Service extends ApiResource {
     const url = Uri.from(uri, { base: this.config.baseUrl.full, endpoint: 'execute' });
     const body = this.#buildExecuteBody(uri, params);
 
-    return this.request<ServiceExecuted<Outputs>>(url.value, { method: 'POST', body });
+    return this.request<ServiceExecuted<Outputs>>(url, { method: 'POST', body });
   }
 
   /**
-   * Validate the inputs for a service.
-   * @param {string | UriParams} uri - how to locate the service
+   * Validates the inputs for a service.
+   * @param {string | UriParams} uri - where the service is located
    * @param {ExecuteParams<Inputs>} params - optionally the validation parameters (inputs, metadata, etc.)
-   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>>} - the validation response
-   * @throws {SparkError} - if the validation fails
+   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>>} the validation response
+   * @throws {SparkError} if the validation fails
    */
   validate<Inputs, Outputs>(
     uri: string,
@@ -124,13 +131,13 @@ export class Service extends ApiResource {
     const url = Uri.from(uri, { base: this.config.baseUrl.full, endpoint: 'validation' });
     const body = this.#buildExecuteBody(uri, params);
 
-    return this.request<ServiceExecuted<Outputs>>(url.value, { method: 'POST', body });
+    return this.request<ServiceExecuted<Outputs>>(url, { method: 'POST', body });
   }
 
   /**
-   * Get the schema for a service.
+   * Gets the schema for a service.
    * @param {string | GetSchemaParams} uri - how to locate the service
-   * @returns {Promise<HttpResponse>} - the service schema
+   * @returns {Promise<HttpResponse>} the service schema
    */
   getSchema(uri: string): Promise<HttpResponse>;
   getSchema(params: GetSchemaParams): Promise<HttpResponse>;
@@ -139,26 +146,26 @@ export class Service extends ApiResource {
     const endpoint = `product/${folder}/engines/get/${service}`;
     const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
 
-    return this.request(url.value);
+    return this.request(url);
   }
 
   /**
-   * Get the metadata for a service.
+   * Gets the metadata of a Spark service.
    * @param {string | GetMetadataParams} uri - how to locate the service
-   * @returns {Promise<HttpResponse<MetadataFound>>} - the service metadata.
+   * @returns {Promise<HttpResponse<MetadataFound>>} the service metadata.
    */
   getMetadata(uri: string): Promise<HttpResponse<MetadataFound>>;
   getMetadata(params: GetMetadataParams): Promise<HttpResponse<MetadataFound>>;
   getMetadata(uri: string | GetMetadataParams): Promise<HttpResponse<MetadataFound>> {
     const url = Uri.from(Uri.toParams(uri), { base: this.config.baseUrl.full, endpoint: 'metadata' });
 
-    return this.request(url.value);
+    return this.request(url);
   }
 
   /**
-   * Get the list of versions for a service.
+   * Gets the list of versions of a Spark service.
    * @param {string | GetVersionsParams} uri - how to locate the service
-   * @returns {Promise<HttpResponse<VersionListed>>} - the list of versions
+   * @returns {Promise<HttpResponse<VersionListed>>} the list of versions
    */
   getVersions(uri: string): Promise<HttpResponse<VersionListed>>;
   getVersions(params: GetVersionsParams): Promise<HttpResponse<VersionListed>>;
@@ -167,13 +174,13 @@ export class Service extends ApiResource {
     const endpoint = `product/${folder}/engines/getversions/${service}`;
     const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
 
-    return this.request(url.value);
+    return this.request(url);
   }
 
   /**
-   * Get the Swagger documentation for a service.
+   * Gets the Swagger documentation of a Spark service.
    * @param {string | GetSwaggerParams} uri - how to locate the service
-   * @returns {Promise<HttpResponse>} - the Swagger documentation as binary data
+   * @returns {Promise<HttpResponse>} the Swagger documentation as binary data
    * via the `HttpResponse.buffer` property.
    */
   getSwagger(uri: string): Promise<HttpResponse>;
@@ -183,13 +190,13 @@ export class Service extends ApiResource {
     const endpoint = `downloadswagger/${subservice}/${downloadable}/${versionId}`;
     const url = Uri.from({ folder, service }, { base: this.config.baseUrl.full, endpoint });
 
-    return this.request(url.value);
+    return this.request(url);
   }
 
   /**
-   * Download the original (Excel) or configured file.
+   * Downloads the original (Excel) or configured file.
    * @param {string | DownloadParams} uri - how to locate the service
-   * @returns {Promise<HttpResponse>} - the file as binary data via the `HttpResponse.buffer` property.
+   * @returns {Promise<HttpResponse>} the file as binary data via the `HttpResponse.buffer` property.
    */
   download(uri: string): Promise<HttpResponse>;
   download(params: DownloadParams): Promise<HttpResponse>;
@@ -199,13 +206,18 @@ export class Service extends ApiResource {
     const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
     const params = { filename, type: type === 'configured' ? 'withmetadata' : '' };
 
-    return this.request(url.value, { params });
+    return this.request(url, { params });
   }
 
   /**
-   * Recompile a service using a specific compiler version.
+   * Recompiles a service using a specific compiler version.
    * @param {string | RecompileParams} uri - how to locate the service
-   * @returns {Promise<HttpResponse<ServiceRecompiled>>} - the recompilation status.
+   * @returns {Promise<HttpResponse<ServiceRecompiled>>} the recompilation status.
+   *
+   * Unlike {@link Service.compile}, this method does not upload a new service file.
+   * It only recompiles the existing service with the specified parameters. You
+   * may want to check the {@link Compilation.getStatus} method to monitor the
+   * recompilation job before subsequent actions.
    */
   recompile(uri: string): Promise<HttpResponse<ServiceRecompiled>>;
   recompile(params: RecompileParams): Promise<HttpResponse<ServiceRecompiled>>;
@@ -224,13 +236,13 @@ export class Service extends ApiResource {
       effectiveEndDate: endDate.toISOString(),
     };
 
-    return this.request(url.value, { method: 'POST', body: { request_data: data } });
+    return this.request(url, { method: 'POST', body: { request_data: data } });
   }
 
   /**
-   * Export a Spark service as a zip file.
+   * Exports a Spark service as a zip file.
    * @param {string | ExportParams} uri - service to export
-   * @returns {Promise<HttpResponse[]>} - a list of exported files
+   * @returns {Promise<HttpResponse[]>} a list of exported files
    * @throws {SparkError} when the export job fails
    */
   async export(uri: string): Promise<HttpResponse[]>;
@@ -247,9 +259,9 @@ export class Service extends ApiResource {
   }
 
   /**
-   * Import a Spark service from a zip file.
+   * Imports a Spark service from a zip file.
    * @param {ImportParams} params - the import parameters
-   * @returns {Promise<HttpResponse<ImportResult>>} - the import results
+   * @returns {Promise<HttpResponse<ImportResult>>} the import results
    * @throws {SparkError} when the import job fails
    */
   async import(params: ImportParams): Promise<HttpResponse<ImportResult>> {
@@ -257,9 +269,9 @@ export class Service extends ApiResource {
   }
 
   /**
-   * Migrate of a Spark service from one workspace to another.
+   * Migrates a Spark service from one workspace to another.
    * @param {MigrateParams} params - the migration parameters
-   * @returns - the migration results
+   * @returns the migration results
    *
    * Currently in Beta, please use experimentally.
    */
@@ -267,7 +279,7 @@ export class Service extends ApiResource {
     const exported = await this.export(params);
     if (exported.length === 0) {
       this.logger.warn('no service entities to migrate');
-      return { exports: exported, imports: [] };
+      return { exports: exported, imports: null };
     }
 
     const imported = await this.import({ ...params, file: exported[0].buffer });
@@ -319,9 +331,9 @@ export class Service extends ApiResource {
 
 class Compilation extends ApiResource {
   /**
-   * Upload a service file and initiate the compilation process.
+   * Uploads a service file and initiate the compilation process.
    * @param {CompileParams} params - the compilation parameters
-   * @returns {Promise<HttpResponse<ServiceCompiled>>} - the upload response
+   * @returns {Promise<HttpResponse<ServiceCompiled>>} the upload response
    */
   async initiate(params: CompileParams): Promise<HttpResponse<ServiceCompiled>> {
     const url = Uri.from(params, { base: this.config.baseUrl.full, endpoint: 'upload' });
@@ -338,32 +350,32 @@ class Compilation extends ApiResource {
       { name: 'serviceFile', fileStream: params.file, fileName: params.fileName ?? `${params.service}.xlsx` },
     ];
 
-    return this.request<ServiceCompiled>(url.value, { method: 'POST', multiparts }).then((response) => {
+    return this.request<ServiceCompiled>(url, { method: 'POST', multiparts }).then((response) => {
       this.logger.log(`service file uploaded <${response.data.response_data.original_file_documentid}>`);
       return response;
     });
   }
 
   /**
-   * Get the status of a compilation job.
+   * Gets the status of a compilation job.
    * @param {GetStatusParams} params - how to locate the compilation job.
-   * @returns {Promise<HttpResponse<CompilationStatus>>} - the compilation status.
+   * @returns {Promise<HttpResponse<CompilationStatus>>} the compilation status.
    */
   async getStatus(params: GetStatusParams): Promise<HttpResponse<CompilationStatus>> {
-    const { jobId, maxRetries = this.config.maxRetries, retryInterval = 2 } = params;
+    const { jobId, maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
     const url = Uri.from(params, { base: this.config.baseUrl.full, endpoint: `getcompilationprogess/${jobId}` });
 
     let retries = 0;
-    let response = await this.request<CompilationStatus>(url.value);
+    let response = await this.request<CompilationStatus>(url);
     do {
       const { progress } = response.data.response_data;
       this.logger.log(`waiting for compilation job to complete - ${progress || 0}%`);
       if (progress == 100) return response;
 
-      await new Promise((resolve) => setTimeout(resolve, getRetryTimeout(retries, retryInterval)));
+      await Utils.sleep(getRetryTimeout(retries, retryInterval));
 
       retries++;
-      response = await this.request<CompilationStatus>(url.value);
+      response = await this.request<CompilationStatus>(url);
     } while (response.data.response_data.progress < 100 && retries < maxRetries);
 
     if (response.data.response_data.status === 'Success') return response;

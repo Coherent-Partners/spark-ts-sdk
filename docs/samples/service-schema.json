@@ -263,6 +263,6 @@
   "isLambdaExist": false,
   "parameterset_version_id": "",
   "isAutoJsonFormExists": false,
-  "engineInfos": [{ "key": "This service version was compiled using Neuron_v1.16.0.", "value": [] }],
+  "engineInfos": [{ "key": "This service version was compiled using Neuron_v1.12.0.", "value": [] }],
   "engineErrors": null
 }

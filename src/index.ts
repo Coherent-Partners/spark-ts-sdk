@@ -1,5 +1,5 @@
 // Public API
-export { version } from './version';
+export { version, about } from './version';
 export { Authorization } from './auth';
 export { Uri, UriParams, ApiResource } from './resources';
 export { Logger, LoggerOptions, LogLevel, LoggerService } from './logger';

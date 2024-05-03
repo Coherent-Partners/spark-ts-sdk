@@ -203,7 +203,7 @@ export class OAuth {
    */
   async retrieveToken(config: Config): Promise<AccessToken> {
     const logger = Logger.of(config.logger);
-    logger.log('refreshing OAuth2 access token...');
+    logger.log('retrieving OAuth2 access token...');
 
     try {
       const manager = new OAuthManager(config);

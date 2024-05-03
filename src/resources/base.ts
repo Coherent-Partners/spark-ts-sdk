@@ -3,7 +3,7 @@ import { Config } from '../config';
 import { JsonData } from '../data';
 import { SparkError } from '../error';
 import { Logger } from '../logger';
-import { userAgentHeader, sdkUaHeader } from '../version';
+import { about as sdkInfo, sdkUaHeader } from '../version';
 import { _fetch, _download, HttpOptions, HttpResponse } from '../http';
 import Utils, { StringUtils, Maybe, sanitizeUri } from '../utils';
 
@@ -25,22 +25,68 @@ export abstract class ApiResource {
     this.logger = Logger.of(config.logger);
   }
 
+  /**
+   * The default headers for all requests.
+   *
+   * It does not include the `Authorization` header. It's added during the request
+   * phase, which allows the possibility of changing the token dynamically, such
+   * as when refreshing the token.
+   *
+   * Extra headers can be added to the configuration options. Given that some
+   * other headers are added to perform analytics, it's recommended to use the
+   * avoid overwriting/erasing the default headers if you choose to override this
+   * getter field in a subclass.
+   *
+   * The `x-request-id` header is used to track requests across the Spark platform
+   * and is useful for debugging and monitoring purposes. It's also part of the
+   * `SparkApiError.requestId` field.
+   * @see SparkError
+   *
+   * Older versions of the Spark APIs require the `x-tenant-name` header to be set.
+   *
+   * If you intend to override this getter field, use it carefully, for it may
+   * affect the behavior of your new API resource. Otherwise, simply call
+   * `super.defaultHeaders` to inherit the default headers.
+   */
   protected get defaultHeaders(): Record<string, string> {
     return {
       ...this.config.extraHeaders,
-      'User-Agent': userAgentHeader,
+      'User-Agent': sdkInfo,
       'x-spark-ua': sdkUaHeader,
       'x-request-id': Utils.getUuid(),
       'x-tenant-name': this.config.baseUrl.tenant,
     };
   }
 
-  protected request<T = JsonData>(
-    url: string,
-    { method = 'GET', headers = {}, ...opts }: Omit<HttpOptions, 'config'> = {},
-  ): Promise<HttpResponse<T>> {
+  /**
+   * Makes an HTTP request to the Spark API.
+   * @param url - The URL to make the request to.
+   * @param options - The HTTP options for the request.
+   *
+   * This method is the core of the entire SDK and is responsible for making HTTP
+   * requests to the Spark API. It uses the `node-fetch` module to perform the
+   * actual request.
+   *
+   * Key features of this method include:
+   * - By default, it makes a GET request, but the `method` option can be used to specify other HTTP methods.
+   * - It dynamically injects the authorization header extracted from the `Config` object.
+   * - It concatenates the URL with any query parameters specified in the `options` object.
+   * - If enabled, it prints out the method and URL (without query parameters) for debugging purposes.
+   * - It supports interceptors to modify the request and response.
+   * - It automatically performs retries under certain conditions, such as unauthorized errors or exceeded rate limits.
+   * - It wraps any error into a `SparkError` object for better error handling,
+   *   except for AbortSignal errors, which are rethrown.
+   *
+   * It is recommended to use this method for all API requests in the SDK, as it
+   * provides a consistent and reliable way to interact with the Spark API.
+   */
+  protected request<Result = JsonData, Body = JsonData>(
+    url: string | Uri,
+    { method = 'GET', headers = {}, ...opts }: Omit<HttpOptions<Body>, 'config'> = {},
+  ): Promise<HttpResponse<Result>> {
+    url = StringUtils.isString(url) ? url : url.value;
     this.logger.debug(`${method} ${url}`);
-    return _fetch<T>(url, {
+    return _fetch<Body, Result>(url, {
       ...opts,
       method,
       headers: { ...headers, ...this.defaultHeaders },
@@ -116,9 +162,9 @@ export class Uri {
    * Builds a Spark URI from UriParams.
    *
    * @param {UriParams} uri - the distinct parameters to build a Spark URI from.
-   * @param {UriOptions} - the base URL, version, and endpoint options.
-   * @returns {Uri} - a Spark URI
-   * @throws {SparkError} - if a final URL cannot be built from the given
+   * @param {UriOptions} options - the base URL, version, and endpoint options.
+   * @returns {Uri} a Spark URI
+   * @throws {SparkError} if a final URL cannot be built from the given
    * parameters.
    *
    * NOTE:
@@ -142,10 +188,10 @@ export class Uri {
 
   /**
    * Builds a Spark URI from a partial resource.
-   * @param resource - the partial resource to build a Spark URI from.
+   * @param {string} resource - the partial resource to build a Spark URI from.
    * @param {UriOptions} - the base URL, version, and endpoint options.
-   * @returns {Uri} - a Spark URI
-   * @throws {SparkError} - if a final URL cannot be built from the given
+   * @returns {Uri} a Spark URI locator.
+   * @throws {SparkError} if a final URL cannot be built from the given resource.
    */
   static partial(resource: string, { base, version = 'api/v3', endpoint = '' }: UriOptions): Uri {
     try {
@@ -161,6 +207,15 @@ export class Uri {
     }
   }
 
+  /**
+   * Transforms a Spark-friendly service locator into `UriParams`.
+   * @param {string | T} uri - Spark-friendly service locator
+   * @returns {UriParams} the decoded parameters if any to build a Spark URI.
+   *
+   * This is a convenience method to handle string-based URIs and `UriParams` objects
+   * interchangeably. This improves the user experience by allowing them to pass in
+   * URIs in different formats without worrying about the underlying implementation.
+   */
   static toParams<T extends UriParams>(uri: string | T): T {
     return (StringUtils.isString(uri) ? Uri.decode(uri as string) : uri) as T;
   }
@@ -169,14 +224,14 @@ export class Uri {
    * Decodes a Spark-friendly service locator into `UriParams`.
    *
    * @param {string} uri - Spark-friendly service locator
-   * @returns {UriParams} - the decoded parameters if any to build a Spark URI.
+   * @returns {UriParams} the decoded parameters if any to build a Spark URI.
    *
    * This can understand a uri only in the following formats:
    * 1. `folder/service[version?]` or `folders/folder/services/service[version?]`
    * 2. `service/serviceId`
    * 3. `version/versionId`
    *
-   * Otherwise, it is considered an invalid service locator.
+   * Otherwise, it is considered an invalid service URI locator.
    */
   static decode(uri: string): UriParams {
     uri = Utils.sanitizeUri(uri).replace('folders/', '').replace('services/', '');
@@ -192,9 +247,14 @@ export class Uri {
   /**
    * Encodes `UriParams` into a Spark-friendly service locator.
    * @param {UriParams} uri - the parameters to encode
-   * @param long whether to use long format or not (e.g., "folders/folder/services/service[version]")
+   * @param {boolean} long whether to use long format or not (e.g., "folders/folder/services/service[version]")
+   * This long format is from older versions of the Spark APIs. It's still supported
+   * but not recommended for new implementations.
+   * @returns {string} the encoded service locator or an empty string if no parameters
+   * are provided. It is expected to be appended to the base URL to locate a specific
+   * resource.
    */
-  static encode(uri: UriParams, long = true): string {
+  static encode(uri: UriParams, long: boolean = true): string {
     const { folder, service, version, serviceId, versionId } = uri;
     if (versionId) return `version/${versionId}`;
     if (serviceId) return `service/${serviceId}`;
@@ -219,7 +279,7 @@ export class Uri {
   }
 }
 
-type UriOptions = { base: string; version?: string; endpoint?: string };
+export type UriOptions = { base: string; version?: string; endpoint?: string };
 
 /**
  * Downloads a resource from the given URL.
