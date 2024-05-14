@@ -412,6 +412,12 @@ format (aka v4 format).
 }
 ```
 
+> [!IMPORTANT]
+> This operation is synchronous and may take some time to complete. The default
+> timeout is 60 seconds. If you have a large batch of records, you may want to
+> increase the timeout to avoid any issues. Another good practice is to split
+> the batch into small chunks and submit separate requests.
+
 Check out the [API reference](https://docs.coherent.global/spark-apis/execute-api/execute-api-v4#sample-request)
 to learn more about the API v4 format of the inputs and outputs.
 

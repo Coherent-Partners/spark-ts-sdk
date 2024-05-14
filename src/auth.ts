@@ -105,8 +105,8 @@ export class Authorization {
     return {};
   }
 
-  static from(props: OAuthMethod): Authorization {
-    const auth = new this(props);
+  static from(which: OAuthMethod): Authorization {
+    const auth = new this(which);
     if (auth.isEmpty) {
       throw SparkError.sdk({
         message: ''.concat(
@@ -114,7 +114,7 @@ export class Authorization {
           'provide a valid API key, bearer token, or OAuth credentials to proceed.\n',
           'If you will be fetching public APIs, set API key as "open".',
         ),
-        cause: Utils.isObject(props) ? JSON.stringify(props) : props.toString(),
+        cause: JSON.stringify(which ?? {}),
       });
     }
     return auth;
@@ -151,7 +151,7 @@ export class OAuth {
           'Provide a JSON object including cliendId and clientSecret ',
           'or a string with the path to a JSON file containing the client ID and secret.',
         ),
-        cause: Utils.isObject(props) ? JSON.stringify(props) : (props as string)?.toString(),
+        cause: JSON.stringify(props ?? {}),
       });
     }
   }

@@ -10,14 +10,19 @@ export class History extends ApiResource {
 
   /**
    * Rehydrates the executed model into the original excel file.
-   * @param {string | RehydrateParams} uri - how to locate the service
-   * @param {string} callId - optional callId to rehydrate if not provided in the params.
+   * @param {string} uri - how to locate the service
+   * @param {string} callId - callId to rehydrate if not provided in the params.
+   * @returns {Promise<HttpResponse<LogRehydrated>>} the rehydrated log
+   */
+  async rehydrate(uri: string, callId: string): Promise<HttpResponse<LogRehydrated>>;
+  /**
+   * Rehydrates the executed model into the original excel file.
+   * @param {RehydrateParams} params - uri, callId and other optional params
    * @returns {Promise<HttpResponse<LogRehydrated>>} the rehydrated log
    *
    * @throws {SparkError} if the callId is missing or the rehydration fails
    * to produce a downloadable Excel file.
    */
-  async rehydrate(uri: string, callId: string): Promise<HttpResponse<LogRehydrated>>;
   async rehydrate(params: RehydrateParams): Promise<HttpResponse<LogRehydrated>>;
   async rehydrate(uri: string | RehydrateParams, callId?: string): Promise<HttpResponse<LogRehydrated>> {
     const { folder, service, ...params } = Uri.toParams(uri);
@@ -44,19 +49,26 @@ export class History extends ApiResource {
 
   /**
    * Downloads service execution logs as csv or json file.
-   * @param {string | DownloadParams} uri - how to locate the service
-   * @param {'csv' | 'json'} type - the file format to download
+   * @param {string} uri - how to locate the service
+   * @param {'csv' | 'json'} type - optional file format to download
    * @returns {Promise<HttpResponse<LogStatus>>} the downloaded file
    * @throws {SparkError} if the download job fails to produce a downloadable file.
    */
   async download(uri: string, type: DownloadFileType): Promise<HttpResponse<LogStatus>>;
+  /**
+   * Downloads service execution logs as csv or json file.
+   * @param {DownloadParams} params - uri, type and other optional params
+   * @returns {Promise<HttpResponse<LogStatus>>} the downloaded file
+   * @throws {SparkError} if the download job fails to produce a downloadable file.
+   */
   async download(params: DownloadParams): Promise<HttpResponse<LogStatus>>;
   async download(uri: string | DownloadParams, type?: DownloadFileType): Promise<HttpResponse<LogStatus>> {
     const { folder, service, ...params } = Uri.toParams(uri);
     const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
     type = (type ?? params?.type ?? 'json').toLowerCase() as DownloadFileType;
 
-    const response = await this.downloads.initiate(uri, type);
+    const downloads = this.downloads;
+    const response = await downloads.initiate(uri, type);
     const jobId = response.data?.response_data?.job_id;
     if (!jobId) {
       const error = new SparkError('failed to produce a download job', response);
@@ -64,7 +76,7 @@ export class History extends ApiResource {
       throw error;
     }
 
-    const job = await this.downloads.getStatus({ folder, service, jobId, type, maxRetries, retryInterval });
+    const job = await downloads.getStatus({ folder, service, jobId, type, maxRetries, retryInterval });
     const downloadUrl = job.data.response_data.download_url;
     if (!downloadUrl) {
       const error = new SparkError(`failed to produce a download URL for <${jobId}>`, job);
@@ -143,7 +155,7 @@ class LogDownload extends ApiResource {
       response = await this.request<LogStatus>(url);
     } while (response.data.response_data.progress < 100 && retries < maxRetries);
 
-    if (response.data.response_data.download_url) return response;
+    if (response.data.response_data.progress == 100) return response;
 
     const error = SparkError.sdk({ message: 'log download job status check timed out', cause: response });
     this.logger.error(error.message);

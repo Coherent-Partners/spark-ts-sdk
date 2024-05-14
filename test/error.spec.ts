@@ -1,5 +1,5 @@
 import { SparkError, SparkSdkError, SparkApiError } from '@cspark/sdk';
-import { BadRequestError, InternetError, UnauthorizedError } from '@cspark/sdk/error';
+import { BadRequestError, UnauthorizedError } from '@cspark/sdk/error';
 
 describe('SparkError', () => {
   it('should be of base error', () => {
@@ -38,13 +38,7 @@ describe('SparkError', () => {
   });
 
   it('should create API error from status code', () => {
-    let error = SparkApiError.when(0, { message: 'retry later' });
-
-    expect(error).toBeInstanceOf(InternetError);
-    expect(error.details).toBe('no internet access');
-    expect(error.toString()).toContain('retry later');
-
-    error = SparkApiError.when(401, {
+    const error = SparkApiError.when(401, {
       message: 'authentication required',
       cause: { request: { url: 'url', method: 'GET', headers: { 'x-request-id': 'uuidv4' }, body: 'data' } },
     });

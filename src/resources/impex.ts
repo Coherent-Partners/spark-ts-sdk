@@ -183,7 +183,7 @@ class Export extends ApiResource {
       await Utils.sleep(getRetryTimeout(retries, retryInterval));
     }
 
-    const error = SparkError.sdk({ message: `export job status timed out after ${retries} retries` });
+    const error = SparkError.sdk(`export job status timed out after ${retries} retries`);
     this.logger.error(error.message);
     throw error;
   }
@@ -275,7 +275,7 @@ class Import extends ApiResource {
       await Utils.sleep(getRetryTimeout(retries, retryInterval));
     }
 
-    const error = SparkError.sdk({ message: `import job status timed out after ${retries} retries` });
+    const error = SparkError.sdk(`import job status timed out after ${retries} retries`);
     this.logger.error(error.message);
     throw error;
   }

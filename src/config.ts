@@ -5,7 +5,8 @@ import { Authorization } from './auth';
 import { Interceptor } from './http';
 import { ClientOptions } from './client';
 import { Logger, LoggerOptions } from './logger';
-import { DEFAULT_MAX_RETRIES, DEFAULT_RETRY_INTERVAL, DEFAULT_TIMEOUT_IN_MS, ENV_VARS } from './constants';
+import { DEFAULT_TIMEOUT_IN_MS, ENV_VARS } from './constants';
+import { DEFAULT_MAX_RETRIES, DEFAULT_RETRY_INTERVAL } from './constants';
 
 export class Config {
   readonly #options!: string;
@@ -28,18 +29,20 @@ export class Config {
     timeout = DEFAULT_TIMEOUT_IN_MS,
     maxRetries = DEFAULT_MAX_RETRIES,
     retryInterval = DEFAULT_RETRY_INTERVAL,
+    tenant,
+    env,
     ...options
   }: ClientOptions = {}) {
     const numberValidator = Validators.positiveInteger.getInstance();
 
-    this.baseUrl = url instanceof BaseUrl ? url : BaseUrl.from({ url, tenant: options?.tenant, env: options?.env });
+    this.baseUrl = url instanceof BaseUrl ? url : BaseUrl.from({ url, tenant, env });
     this.auth = Authorization.from({ apiKey, token, oauth: options?.oauth });
     this.timeout = numberValidator.isValid(timeout) ? timeout! : DEFAULT_TIMEOUT_IN_MS;
     this.maxRetries = numberValidator.isValid(maxRetries) ? maxRetries! : DEFAULT_MAX_RETRIES;
     this.retryInterval = numberValidator.isValid(retryInterval) ? retryInterval! : DEFAULT_RETRY_INTERVAL;
     this.allowBrowser = this.auth.isOpen || !!options.allowBrowser;
-    this.logger = Logger.of(options.logger).options;
-    this.environment = options.env;
+    this.logger = Logger.for(options.logger);
+    this.environment = env;
 
     this.#options = JSON.stringify({
       baseUrl: this.baseUrl.toString(),
@@ -73,12 +76,9 @@ export class Config {
   }
 
   copyWith(options: ClientOptions = {}): Config {
-    const { baseUrl: url, tenant, env = this.environment } = options;
+    const { baseUrl: url = this.baseUrl.value, tenant = this.baseUrl.tenant, env = this.environment } = options;
     return new Config({
-      baseUrl:
-        url instanceof BaseUrl
-          ? url
-          : BaseUrl.from({ url: url ?? this.baseUrl.value, tenant: tenant ?? this.baseUrl.tenant, env }),
+      baseUrl: url instanceof BaseUrl ? url : BaseUrl.from({ url, tenant, env }),
       apiKey: options.apiKey ?? this.auth.apiKey,
       token: options.token ?? this.auth.token,
       oauth: options.oauth ?? this.auth.oauth,
@@ -163,7 +163,7 @@ export class BaseUrl {
    * @returns the base URL for the given service (e.g., "https://entitystore.us.coherent.global")
    */
   to(service: 'excel' | 'keycloak' | 'utility' | 'entitystore', withTenant = false): string {
-    return withTenant ? this.full.replace(/excel/, service) : this.value.replace(/excel/, service);
+    return (withTenant ? this.full : this.value).replace(/excel/, service);
   }
 
   toString(): string {

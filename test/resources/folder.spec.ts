@@ -1,5 +1,5 @@
 import Spark from '@cspark/sdk';
-import LocalServer, { TestBaseUrl } from './server';
+import LocalServer, { TestBaseUrl } from './_server';
 
 describe('Spark.folder', () => {
   const localSever = new LocalServer();

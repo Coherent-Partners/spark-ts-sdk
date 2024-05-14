@@ -379,17 +379,19 @@ export class Logger implements LoggerService {
     this.options.logLevels = logLevels ?? this.options.logLevels;
   }
 
-  static of(options?: boolean | LogLevel | LogLevel[] | LoggerOptions): Logger {
-    const loggerOptions = ((options?: boolean | LogLevel | LogLevel[] | LoggerOptions): LoggerOptions => {
-      const defaultOptions: LoggerOptions = DEFAULT_LOGGER_OPTIONS;
+  static for(options?: boolean | LogLevel | LogLevel[] | LoggerOptions): LoggerOptions {
+    const defaultOptions: LoggerOptions = DEFAULT_LOGGER_OPTIONS;
 
-      if (typeof options === 'boolean') return { logLevels: options ? defaultOptions.logLevels : ['none'] };
-      if (typeof options === 'string') return { ...defaultOptions, logLevels: [options.toLowerCase() as LogLevel] };
-      if (Array.isArray(options)) return { ...defaultOptions, logLevels: options };
-      if (typeof options === 'object' && options !== null) return { ...defaultOptions, ...options };
-      return defaultOptions;
-    })(options);
-    return new Logger(loggerOptions);
+    if (typeof options === 'boolean') return { logLevels: options ? defaultOptions.logLevels : ['none'] };
+    if (typeof options === 'string') return { ...defaultOptions, logLevels: [options.toLowerCase() as LogLevel] };
+    if (Array.isArray(options)) return { ...defaultOptions, logLevels: options };
+    if (typeof options === 'object' && options !== null) return { ...defaultOptions, ...options };
+
+    return defaultOptions;
+  }
+
+  static of(options?: boolean | LogLevel | LogLevel[] | LoggerOptions): Logger {
+    return new Logger(this.for(options));
   }
 
   static error(message: any, ...optionalParams: any[]) {

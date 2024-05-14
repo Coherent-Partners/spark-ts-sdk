@@ -55,15 +55,15 @@ export class SparkError extends Error {
       name: this.name,
       message: this.message,
       cause: this.cause,
-    };
+    } as const;
   }
 
-  static sdk<T>(error: ErrorMessage<T>): SparkSdkError {
-    return new SparkSdkError(error);
+  static sdk<T>(error: string | ErrorMessage<T>): SparkSdkError {
+    return new SparkSdkError(typeof error === 'string' ? { message: error } : error);
   }
 
-  static api<TReq, TResp>(status: number, error: ErrorMessage<ApiErrorCause<TReq, TResp>>): SparkApiError {
-    return SparkApiError.when(status, error);
+  static api<TReq, TResp>(status: number, error: string | ErrorMessage<ApiErrorCause<TReq, TResp>>): SparkApiError {
+    return SparkApiError.when(status, typeof error === 'string' ? { message: error } : error);
   }
 }
 
@@ -90,7 +90,7 @@ export class SparkSdkError extends SparkError {
     return {
       ...super.toJson(),
       timestamp: this.timestamp,
-    };
+    } as const;
   }
 }
 
@@ -106,7 +106,7 @@ export class SparkApiError extends SparkError {
     error: ErrorMessage<ApiErrorCause>,
     readonly status: number | undefined = undefined,
   ) {
-    super(`${status || ''} ${error.message}`.trim(), error.cause as ApiErrorCause);
+    super(`${status || ''} ${error.message}`.trim(), error.cause);
     this.status = status;
   }
 
@@ -118,7 +118,7 @@ export class SparkApiError extends SparkError {
     return {
       ...super.toJson(),
       status: this.status,
-    };
+    } as const;
   }
 
   static when<TReq, TResp>(status: number, error: ErrorMessage<ApiErrorCause<TReq, TResp>>): SparkApiError {
@@ -155,106 +155,54 @@ export class SparkApiError extends SparkError {
 
 export class InternetError extends SparkApiError {
   override readonly status = 0;
-
-  get details(): string {
-    return super.details || 'no internet access';
-  }
 }
 
 export class BadRequestError extends SparkApiError {
   override readonly status = 400;
-
-  get details(): string {
-    return super.details || 'bad request';
-  }
 }
 
 export class UnauthorizedError extends SparkApiError {
   override readonly status = 401;
-
-  get details(): string {
-    return super.details || 'access unauthorized';
-  }
 }
 
 export class ForbiddenError extends SparkApiError {
   override readonly status = 403;
-
-  get details(): string {
-    return super.details || 'permission denied';
-  }
 }
 
 export class NotFoundError extends SparkApiError {
   override readonly status = 404;
-
-  get details(): string {
-    return super.details || 'content not found';
-  }
 }
 
 export class ConflictError extends SparkApiError {
   override readonly status = 409;
-
-  get details(): string {
-    return super.details || 'resource conflict';
-  }
 }
 
 export class UnsupportedMediaTypeError extends SparkApiError {
   override readonly status = 415;
-
-  get details(): string {
-    return super.details || 'unsupported media type';
-  }
 }
 
 export class UnprocessableEntityError extends SparkApiError {
   override readonly status = 422;
-
-  get details(): string {
-    return super.details || 'unprocessable entity';
-  }
 }
 
 export class RateLimitError extends SparkApiError {
   override readonly status = 429;
-
-  get details(): string {
-    return super.details || 'rate limit exceeded';
-  }
 }
 
 export class InternalServerError extends SparkApiError {
   override readonly status = 500;
-
-  get details(): string {
-    return super.details || 'internal server error';
-  }
 }
 
 export class ServiceUnavailableError extends SparkApiError {
   override readonly status = 503;
-
-  get details(): string {
-    return super.details || 'service unavailable';
-  }
 }
 
 export class GatewayTimeoutError extends SparkApiError {
   override readonly status = 504;
-
-  get details(): string {
-    return super.details || 'gateway timeout';
-  }
 }
 
 export class ApiUnknownError extends SparkApiError {
   override readonly status = undefined;
-
-  get details(): string {
-    return super.details || 'unknown error';
-  }
 }
 
 export default SparkError;

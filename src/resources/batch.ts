@@ -9,13 +9,20 @@ import { ApiResource, Uri, UriOptions, UriParams } from './base';
 
 export class Batch extends ApiResource {
   /**
-   * Execute multiple records synchronously.
-   * @param {string | UriParams} uri - how to locate the service
+   * Executes multiple records synchronously.
+   * @param {string} uri - how to locate the service
    * @param {ExecuteParams<Inputs>} params - the execution parameters (inputs, metadata, etc.)
    * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>} the executed service outputs
-   * @throws {SparkError} if the service execution fails
+   * @throws {SparkError} if the service execution fails or no inputs are provided.
    */
   execute<Inputs, Outputs>(uri: string, params: ExecuteParams<Inputs>): Promise<HttpResponse<ServiceExecuted<Outputs>>>;
+  /**
+   * Executes multiple records synchronously.
+   * @param {UriParams} uri - use fine-grained details to locate the service
+   * @param {ExecuteParams<Inputs>} params - the execution parameters (inputs, metadata, etc.)
+   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>} the executed service outputs
+   * @throws {SparkError} if the service execution fails or no inputs are provided.
+   */
   execute<Inputs, Outputs>(
     uri: Omit<UriParams, 'proxy'>,
     params: ExecuteParams<Inputs>,
@@ -35,17 +42,17 @@ export class Batch extends ApiResource {
       throw error;
     }
 
-    return this.request<ServiceExecuted<Outputs>>(url, { method: 'POST', body });
+    return this.request<ServiceExecuted<Outputs>, ExecuteBody<Inputs>>(url, { method: 'POST', body });
   }
 
   /**
-   * Create a batch pipeline for asynchronous execution.
+   * Creates a batch pipeline for asynchronous execution.
    * @param {string} uri - where the service is located
    * @returns {Promise<HttpResponse<BatchCreated>>} the batch pipeline details
    */
   create(uri: string): Promise<HttpResponse<BatchCreated>>;
   /**
-   * Create a batch pipeline for asynchronous execution.
+   * Creates a batch pipeline for asynchronous execution.
    * @param {CreateParams} params - where the service is located and additional metadata
    * @returns {Promise<HttpResponse<BatchCreated>>} the batch pipeline details
    */
@@ -62,8 +69,8 @@ export class Batch extends ApiResource {
       version_by_timestamp: DateUtils.isDate(params?.activeSince) ? params.activeSince.toISOString() : undefined,
       subservice: Array.isArray(params.subservices) ? params.subservices.join(',') : params.subservices,
       output: params.output,
-      call_purpose: params.callPurpose ?? SPARK_SDK,
-      source_system: params.sourceSystem,
+      call_purpose: params.callPurpose ?? 'Async Batch Execution',
+      source_system: params.sourceSystem ?? SPARK_SDK,
       correlation_id: params.correlationId,
       unique_record_key: params.inputKey,
     };
@@ -72,14 +79,14 @@ export class Batch extends ApiResource {
   }
 
   /**
-   * Handle a batch pipeline.
+   * Handles a batch pipeline.
    * @param {string} batchId - the batch pipeline identifier
    */
   of(batchId: string): Pipeline {
     return new Pipeline(batchId, this.config);
   }
 
-  #buildExecuteBody<T>(uri: { serviceUri: string; versionId?: string }, params: ExecuteParams<T>): ExecuteBody {
+  #buildExecuteBody<T>(uri: { serviceUri: string; versionId?: string }, params: ExecuteParams<T>): ExecuteBody<T> {
     this.#validateUri(uri);
     const { data, raw } = params;
     const metadata = {
@@ -88,8 +95,8 @@ export class Batch extends ApiResource {
       version_by_timestamp: DateUtils.isDate(data?.activeSince) ? data.activeSince.toISOString() : undefined,
       subservice: Array.isArray(data?.subservices) ? data.subservices.join(',') : data?.subservices,
       output: data?.output,
-      call_purpose: data?.callPurpose ?? SPARK_SDK,
-      source_system: data?.sourceSystem,
+      call_purpose: data?.callPurpose ?? 'Sync Batch Execution',
+      source_system: data?.sourceSystem ?? SPARK_SDK,
       correlation_id: data?.correlationId,
     };
 
@@ -134,7 +141,7 @@ class Pipeline extends ApiResource {
     this.baseUri = { base: this.config.baseUrl.full, version: 'api/v4' };
 
     if (StringUtils.isEmpty(this.id)) {
-      const error = SparkError.sdk({ message: 'batch pipeline id is required to proceed' });
+      const error = SparkError.sdk('batch pipeline id is required to proceed');
       this.logger.error(error.message);
       throw error;
     }
@@ -160,7 +167,7 @@ class Pipeline extends ApiResource {
   }
 
   /**
-   * Get the status of a batch pipeline.
+   * Gets the status of a batch pipeline.
    * @returns {Promise<HttpResponse<BatchStatus>>} the batch status
    */
   getStatus(): Promise<HttpResponse<BatchStatus>> {
@@ -168,22 +175,22 @@ class Pipeline extends ApiResource {
   }
 
   /**
-   * Push data to a batch pipeline.
+   * Pushes data to a batch pipeline.
    * @param {PushDataParams<Inputs>} params - the data to push to the batch pipeline.
    * @param {PushDataOptions} options - the options to consider when multiple chunks are provided.
    * @returns a record submission summary.
    * @throws {SparkError} if the data params are invalid.
    *
    * There are three convenient ways to push data to a batch pipeline:
-   * 1. Provide an array of `params.chunks`, each with a unique id and data.
-   * 2. Provide an object with `params.data`, including inputs, parameters, and summary.
-   * 3. Provide an array of `params.inputs` to be processed.
+   * 1. array of `params.chunks`, each with a unique id and data.
+   * 2. object with `params.data`, including inputs, parameters, and summary.
+   * 3. array of `params.inputs` to be processed.
    *
    * When working with an array of `params.chunks`, you can specify how to handle
    * duplicated ids:
    * - 'ignore': warns you about any duplication before proceeding.
-   * - 'replace' (default): replace the duplicated id with a new one generated by the SDK.
-   * - 'throw': throw an error indicating which chunk as part of the `SparkError.cause`.
+   * - 'replace' (default): replaces the duplicated id with a new one generated by the SDK.
+   * - 'throw': throws an error indicating which chunk is duplicated (as part of the `SparkError.cause`).
    */
   async push<Inputs>(params: PushDataParams<Inputs>, options?: PushDataOptions) {
     this.#assertState(['closed', 'cancelled']);
@@ -197,7 +204,7 @@ class Pipeline extends ApiResource {
   }
 
   /**
-   * Get the results of a batch pipeline.
+   * Pulls the results from a batch pipeline.
    * @param {number} max - the maximum number of chunks to pull (default: 100)
    * @returns {Promise<HttpResponse<BatchResult<Outputs>>} the batch results
    */
@@ -212,7 +219,7 @@ class Pipeline extends ApiResource {
   }
 
   /**
-   * Close a batch pipeline.
+   * Closes a batch pipeline.
    *
    * Closing a batch means you don't want to add any more data or chunks to batch
    * and you want to close the batch. After closing a batch, batch will still process
@@ -231,7 +238,7 @@ class Pipeline extends ApiResource {
   }
 
   /**
-   * Cancel a batch pipeline.
+   * Cancels a batch pipeline.
    *
    * Cancelling a batch is helpful when batch is not working as expected or you
    * have made a mistake and you want to immediately stop the batch processing.
@@ -252,7 +259,7 @@ class Pipeline extends ApiResource {
 
   #assertState(states: PipelineState[], throwable = true): boolean {
     if (states.includes(this.#state)) {
-      const error = SparkError.sdk({ message: `batch pipeline <${this.id}> is already ${this.#state}` });
+      const error = SparkError.sdk(`batch pipeline <${this.id}> is already ${this.#state}`);
       this.logger.error(error.message);
       if (throwable) throw error;
       return true;
@@ -288,8 +295,9 @@ class Pipeline extends ApiResource {
 
   #assessChunks<T>(chunks: BatchChunk<T>[], ifIdDuplicated: IfChunkIdDuplicated) {
     for (const chunk of chunks) {
-      const id = chunk.id?.trim();
-      if (StringUtils.isNotEmpty(id) && this.#chunks.has(id)) {
+      const id = StringUtils.isEmpty(chunk.id) ? getUuid() : chunk.id.trim();
+
+      if (this.#chunks.has(id)) {
         if (ifIdDuplicated === 'ignore') {
           this.logger.warn(
             ''.concat(
@@ -317,7 +325,8 @@ class Pipeline extends ApiResource {
           );
         }
       }
-      this.#chunks.set(chunk.id, chunk?.data?.inputs?.length ?? 0);
+
+      this.#chunks.set(chunk.id, (chunk.data.size = chunk.data?.inputs?.length ?? 0));
     }
     return chunks;
   }

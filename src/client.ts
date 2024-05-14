@@ -130,12 +130,12 @@ export class Client {
   }
 
   /**
-   * Download a file from the given URL.
+   * Downloads a file from the given URL.
    * @param url - valid URL
    */
   static download(url: string): ReturnType<typeof API.download>;
   /**
-   * Download a file from the given URL.
+   * Downloads a file from the given URL.
    * @param url - valid URL
    * @param auth - optional authorization
    */
@@ -144,14 +144,14 @@ export class Client {
   }
 
   /**
-   * Prepare migration data from one tenant to another.
+   * Prepares migration data from one tenant to another.
    * @param {ClientOptions} from - source tenant options.
    * @param {ClientOptions} to - target tenant options
    * @throws {SparkError} if invalid options are provided.
    */
   static migration(from: ClientOptions, to: ClientOptions): API.Migration;
   /**
-   * Prepare migration data from one tenant to another.
+   * Prepares migration data from one tenant to another.
    * @param {Config} from - source tenant configuration.
    * @param {Config} to - target tenant configuration
    */
@@ -163,20 +163,20 @@ export class Client {
   }
 
   /**
-   * Prepare migration data from one tenant to another.
+   * Prepares migration data from one tenant to another.
    * @param {ClientOptions} to - target tenant options
    * The current tenant configuration will be used as the source.
    * @throws {SparkError} if invalid options are provided.
    */
   migration(to: ClientOptions): API.Migration;
   /**
-   * Prepare migration data from one tenant to another.
+   * Prepares migration data from one tenant to another.
    * @param {Config} to - target tenant configuration
    * The current tenant configuration will be used as the source.
    */
   migration(to: Config): API.Migration;
   /**
-   * Prepare migration data from one tenant to another.
+   * Prepares migration data from one tenant to another.
    * @param {Config} to - target tenant configuration
    * @param {Config} from - optional source tenant configuration; if not provided,
    * the current tenant configuration will be used as the source.

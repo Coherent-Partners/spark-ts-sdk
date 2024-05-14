@@ -56,5 +56,33 @@ export default class LocalServer {
         }),
       );
     }
+
+    // Spark.service.execute('my-folder/my-service')
+    if (pathname === '/my-tenant/api/v3/folders/my-folder/services/my-service/execute') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          status: 'Success',
+          response_data: { outputs: { my_output: 42 } },
+          response_meta: {},
+          error: null,
+        }),
+      );
+    }
+
+    // Spark.service.execute('my-folder/my-service', inputs)
+    if (pathname === '/my-tenant/api/v3/public/folders/my-folder/services/my-service/execute') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          status: 'Success',
+          response_data: { outputs: { my_output: 44 } },
+          response_meta: {},
+          error: null,
+        }),
+      );
+    }
   }
 }

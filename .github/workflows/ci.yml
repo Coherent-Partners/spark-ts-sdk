@@ -10,11 +10,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
         node: ['14.15.0', '16.0.0']
+        exclude:
+          - os: macOS-latest
+            node: '14.15.0'
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
 

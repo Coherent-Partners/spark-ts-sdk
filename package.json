@@ -52,6 +52,7 @@
     "@types/jest": "^29.5.1",
     "@types/node": "*",
     "@types/node-fetch": "^2.6.11",
+    "@types/papaparse": "^5.3.14",
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
     "eslint": "^8.57.0",

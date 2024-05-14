@@ -41,17 +41,23 @@ documentation, the ESM format will be used in all the code snippets.
 
 ### Spark URI Locator
 
-You may notice by now that the `folder` and `service` when combined together
-form a base identifier to locate a resource in the Spark platform for a particular
+You may notice by now that `folder` and `service` when combined together form a
+base identifier to locate a resource in the Spark platform for a particular
 environment and tenant. I term this _Spark URI Locator_.
 
-Given that the locator may be part of both the final URL or the request payload,
-it is recommended to use non-URL encoded strings when referring its identifiers.
-The SDK will take care of encoding them when necessary. Otherwise, you risk
-encountering issues when trying to locate a resource.
+Given that this locator may be part of either the final URL or the request payload,
+it is recommended to use plain strings (i.e., non-URL encoded) when referring to
+these identifiers.
+The SDK will take care of encoding them when necessary. Otherwise, you risk running
+into issues when trying to locate a resource.
 
-Let's say you want to execute a Spark service using the `my folder` and `my service`
-identifiers.
+For instance, executing a Spark service using these identifiers
+
+- folder => `my folder` (when encoded => `my%20folder`)
+- service => `my service` (when encoded => `my%20service`)
+
+can be tricky if they are URL encoded. See in the example below how the URI loccator
+formed by these identifiers can be used in different contexts:
 
 ```ts
 const folder = 'my%20folder'; // encoding equivalent to 'my folder'
@@ -65,7 +71,7 @@ await spark.service.execute(
   },
 );
 
-// Use case 2: as part of the payload
+// Use case 2: as part of the payload (will fail to locate the service)
 await spark.service.batch.execute(
   { folder, service },
   {
@@ -78,8 +84,8 @@ Behind the scenes, the `Spark.service.execute` uses the URI locator as part of
 the final URL to locate the service to execute. Hence, it works fine whether the
 identifiers are URL encoded or not. However, when using the `Spark.service.batch.execute`,
 the method uses the URI locator as part of the payload, which will fail to locate
-the service if the identifiers are URL encoded. Therefore, it is recommended to
-use non-URL encoded strings when referring to these identifiers.
+the service if the identifiers are URL-encoded. Therefore, it is recommended to
+use plain strings when referring to these identifiers.
 
 ### Transactional vs Non-Transactional Methods
 

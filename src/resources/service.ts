@@ -89,20 +89,44 @@ export class Service extends ApiResource {
   }
 
   /**
-   * Executes a service with the given inputs.
-   * @param {string | UriParams} uri - where the service is located
-   * @param {ExecuteParams<Inputs>} params - optionally the execution parameters (inputs, metadata, etc.)
+   * Executes a service using default inputs.
+   * @param {string} uri - where the service is located
    * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>>} the service execution response
-   * @throws {SparkError} if the service execution fails
+   *
+   * Obviously, the SDK ignores what those default values are. Under the hood,
+   * the SDK uses an empty object `{}` as the input data, which is an indicator for
+   * Spark to use the default inputs defined in the Excel file.
    */
-  execute<Inputs, Outputs>(
-    uri: string,
-    params?: ExecuteParams<Inputs>,
-  ): Promise<HttpResponse<ServiceExecuted<Outputs>>>;
-  execute<Inputs, Outputs>(
-    uri: UriParams,
-    params?: ExecuteParams<Inputs>,
-  ): Promise<HttpResponse<ServiceExecuted<Outputs>>>;
+  execute<Outputs>(uri: string): Promise<HttpResponse<ServiceExecuted<Outputs>>>;
+  /**
+   * Executes a service using default inputs.
+   * @param {UriParams} uri - use fine-grained details to locate the service
+   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>>} the service execution response
+   *
+   * The `UriParams` object can be used to specify the service location and additional
+   * parameters like the version ID, service ID, proxy service URI, etc.
+   * @see {@link UriParams} for more details.
+   */
+  execute<Outputs>(uri: UriParams): Promise<HttpResponse<ServiceExecuted<Outputs>>>;
+  /**
+   * Executes a service with the given inputs.
+   * @param {string} uri - where the service is located
+   * @param {ExecuteParams<Inputs>} params - the execution parameters (inputs, metadata, etc.)
+   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>>} the service execution response
+   *
+   * The inputs can be provided the following ways:
+   * - `params.inputs` - the input data to use for the calculation, which assumes the default metadata.
+   * - `params.data` - the full metadata and input data to use for the calculation.
+   * - `params.raw` - a JSON string to parse as the full metadata and input data.
+   */
+  execute<Inputs, Outputs>(uri: string, params: ExecuteParams<Inputs>): Promise<HttpResponse<ServiceExecuted<Outputs>>>;
+  /**
+   * Executes a service with the given inputs.
+   * @param {UriParams} uri - use fine-grained details to locate the service
+   * @param {ExecuteParams<Inputs>} params - the execution parameters (inputs, metadata, etc.)
+   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>>} the service execution response
+   */
+  execute<Input, Output>(uri: UriParams, params: ExecuteParams<Input>): Promise<HttpResponse<ServiceExecuted<Output>>>;
   execute<Inputs, Outputs>(uri: string | UriParams, params?: ExecuteParams<Inputs>) {
     uri = Uri.toParams(uri);
     const url = Uri.from(uri, { base: this.config.baseUrl.full, endpoint: 'execute' });
@@ -244,6 +268,8 @@ export class Service extends ApiResource {
    * @param {string | ExportParams} uri - service to export
    * @returns {Promise<HttpResponse[]>} a list of exported files
    * @throws {SparkError} when the export job fails
+   *
+   * @transactional
    */
   async export(uri: string): Promise<HttpResponse[]>;
   async export(params: ExportParams): Promise<HttpResponse[]>;
@@ -263,6 +289,7 @@ export class Service extends ApiResource {
    * @param {ImportParams} params - the import parameters
    * @returns {Promise<HttpResponse<ImportResult>>} the import results
    * @throws {SparkError} when the import job fails
+   * @transactional
    */
   async import(params: ImportParams): Promise<HttpResponse<ImportResult>> {
     return ImpEx.only(params.config ?? this.config).import(params);
@@ -273,6 +300,7 @@ export class Service extends ApiResource {
    * @param {MigrateParams} params - the migration parameters
    * @returns the migration results
    *
+   * @transactional
    * Currently in Beta, please use experimentally.
    */
   async migrate(params: MigrateParams) {
@@ -287,14 +315,14 @@ export class Service extends ApiResource {
   }
 
   #buildExecuteBody<T>(uri: UriParams, { data = {}, inputs: initialInputs, raw }: ExecuteParams<T> = {}): ExecuteBody {
-    const defaultValues = { callPurpose: SPARK_SDK, compilerType: 'Neuron', version: uri.version };
+    const defaultValues = { callPurpose: 'Single Execution', compilerType: 'Neuron', version: uri.version };
     const metadata = {
       service_uri: data?.serviceUri,
       service_id: data?.serviceId ?? uri.serviceId,
       version: data?.version ?? defaultValues.version,
       version_id: data?.versionId ?? uri.versionId,
       transaction_date: DateUtils.isDate(data?.activeSince) ? data.activeSince.toISOString() : undefined,
-      source_system: data?.sourceSystem,
+      source_system: data?.sourceSystem ?? SPARK_SDK,
       correlation_id: data?.correlationId,
       call_purpose: data?.callPurpose ?? defaultValues.callPurpose,
       array_outputs: Array.isArray(data?.outputs) ? data.outputs.join(',') : data?.outputs,

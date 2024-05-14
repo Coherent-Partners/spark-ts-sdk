@@ -4,13 +4,13 @@ import nodeFetch, { RequestInit, FetchError } from 'node-fetch';
 import { Config } from './config';
 import { Streamer } from './streaming';
 import { JsonData, Serializable } from './data';
-import { SparkApiError, SparkSdkError } from './error';
+import { SparkError, SparkApiError, SparkSdkError } from './error';
 import { RETRY_RANDOMIZATION_FACTOR } from './constants';
 import Utils, { loadModule } from './utils';
 
 export interface Multipart {
   readonly name: string;
-  readonly data?: JsonData;
+  readonly data?: JsonData | Serializable;
   readonly fileStream?: ByteStream;
   readonly fileName?: string;
   readonly contentType?: string;
@@ -144,7 +144,10 @@ async function createRequestInit<T>(options: HttpOptions<T>): Promise<RequestIni
             });
           }
         } else if (item.data) {
-          formData.append(item.name, Serializable.serialize(item.data));
+          formData.append(
+            item.name,
+            item.data instanceof Serializable ? item.data.serialize() : Serializable.serialize(item.data),
+          );
         } else {
           throw new SparkSdkError({
             message: 'Multipart item must have either serializable body or fileStream',
@@ -163,19 +166,25 @@ async function createRequestInit<T>(options: HttpOptions<T>): Promise<RequestIni
     switch (contentType) {
       case 'application/json':
       case 'application/json-patch+json':
-        return { contentType, body: Serializable.serialize(data ?? null) };
+        return {
+          contentType,
+          body: data instanceof Serializable ? data.serialize() : Serializable.serialize(data ?? null),
+        };
 
       case 'application/x-www-form-urlencoded':
-        return { contentType, body: Serializable.toUrlParams(data ?? null) };
+        return {
+          contentType,
+          body: data instanceof Serializable ? data.serialize() : Serializable.toUrlParams(data ?? null),
+        };
 
       case 'application/octet-stream':
         if (!fileStream) {
-          throw new SparkSdkError({ message: 'fileStream required for application/octet-stream content type' });
+          throw SparkError.sdk('fileStream required for application/octet-stream content type');
         }
         return { contentType, body: fileStream };
 
       default:
-        throw new SparkSdkError({ message: `Unsupported content type: ${contentType}` });
+        throw SparkError.sdk(`Unsupported content type: ${contentType}`);
     }
   })();
 

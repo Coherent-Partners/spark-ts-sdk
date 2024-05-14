@@ -121,11 +121,16 @@ export class Folder extends ApiResource {
   /**
    * Deletes a folder by ID.
    * @param {string} id - Folder ID
-   * @returns {Promise<HttpResponse<FolderDeleted>>}
+   * @returns {Promise<HttpResponse<FolderDeleted>>} a successful status
+   *
+   * IMPORTANT:
+   * Deleting a folder will also delete all its services. Use this method with
+   * caution.
    */
   delete(id: string): Promise<HttpResponse<FolderDeleted>> {
     const endpoint = `product/delete/${id?.trim()}`;
     const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
+    this.logger.warn(`deleting folder will also delete all its services.`);
     return this.request(url, { method: 'DELETE' });
   }
 
@@ -151,7 +156,7 @@ export class File extends ApiResource {
   /**
    * Download a Spark file from a protected URL.
    * @param {string} url - Spark URL.
-   * @returns {Promise<HttpResponse>} - File should be a binary stream available
+   * @returns {Promise<HttpResponse>} a binary file stream available
    * for reading via `HttpResponse.buffer`.
    */
   download(url: string): Promise<HttpResponse> {
