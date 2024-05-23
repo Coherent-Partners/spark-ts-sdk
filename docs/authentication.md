@@ -41,14 +41,15 @@ without providing any authentication mechanism by setting the `apiKey` to `open`
 const spark = new Spark({ apiKey: 'open' });
 ```
 
-> [!TIP]
-> You may read that API key later from the `SparkClient` instance if needed:
+> [!WARNING]
+> You will not be able to read that API key later from the `SparkClient` instance
+> if needed. It's masked for security reasons.
 
 ```ts
 const spark = new Spark();
 
 // the client options are available in the `config`uration property
-console.log(spark.config.auth.apiKey);
+console.log(spark.config.auth.apiKey); // '****-rest-of-key'
 ```
 
 ### Setting the API Key in Browser Environments

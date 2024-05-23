@@ -53,7 +53,7 @@ export interface OAuthMethod {
  * NOTE: The order of precedence is API key > Bearer token > OAuth.
  */
 export class Authorization {
-  readonly apiKey!: Maybe<string>;
+  readonly #apiKey!: Maybe<string>;
   readonly token!: Maybe<string>;
   readonly oauth!: Maybe<OAuth>;
 
@@ -62,7 +62,7 @@ export class Authorization {
     const clientSecret = Utils.readEnv(ENV_VARS.CLIENT_SECRET);
     const oauthPath = Utils.readEnv(ENV_VARS.OAUTH_PATH);
 
-    this.apiKey = apiKey;
+    this.#apiKey = apiKey;
     this.token = token?.replace(/bearer/i, '')?.trim();
     this.oauth = oauth
       ? OAuth.from(oauth!)
@@ -73,6 +73,11 @@ export class Authorization {
           : undefined;
   }
 
+  get apiKey(): string | undefined {
+    if (this.#apiKey && !this.isOpen) return Utils.mask(this.#apiKey);
+    return this.#apiKey;
+  }
+
   /**
    * Returns `true` if the client is authorized to use the API without any credentials.
    *
@@ -80,14 +85,14 @@ export class Authorization {
    * @see https://docs.coherent.global/spark-apis/public-apis for more information.
    */
   get isOpen(): boolean {
-    return this.apiKey === 'open' || this.token === 'open';
+    return this.#apiKey === 'open' || this.token === 'open';
   }
 
   /**
    * Whether any authorization method is defined.
    */
   get isEmpty(): boolean {
-    return !this.apiKey && !this.token && !this.oauth;
+    return !this.#apiKey && !this.token && !this.oauth;
   }
 
   /**
@@ -95,12 +100,12 @@ export class Authorization {
    * @returns {'apiKey' | 'token' | 'oauth'}
    */
   get type(): keyof OAuthMethod | undefined {
-    return this.apiKey ? 'apiKey' : this.token ? 'token' : this.oauth ? 'oauth' : undefined;
+    return this.#apiKey ? 'apiKey' : this.token ? 'token' : this.oauth ? 'oauth' : undefined;
   }
 
   get asHeader(): Record<string, string> {
-    if (this.apiKey) return { 'x-synthetic-key': this.apiKey };
-    if (this.token) return { Authorization: `Bearer ${this.token}` };
+    if (this.#apiKey && !this.isOpen) return { 'x-synthetic-key': this.#apiKey };
+    if (this.token && !this.isOpen) return { Authorization: `Bearer ${this.token}` };
     if (this.oauth) return { Authorization: `Bearer ${this.oauth.accessToken}` };
     return {};
   }
@@ -123,18 +128,18 @@ export class Authorization {
 
 export class OAuth {
   readonly clientId: string;
-  readonly clientSecret: string;
+  readonly #clientSecret: string;
   readonly filePath?: string | undefined;
   #accessToken?: AccessToken;
 
   constructor(props: Readonly<{ clientId: string; clientSecret: string }>) {
     this.clientId = props.clientId;
-    this.clientSecret = props.clientSecret;
+    this.#clientSecret = props.clientSecret;
 
-    if (StringUtils.isEmpty(this.clientId) || StringUtils.isEmpty(this.clientSecret)) {
+    if (StringUtils.isEmpty(this.clientId) || StringUtils.isEmpty(this.#clientSecret)) {
       throw SparkError.sdk({
         message: 'OAuth client ID and secret are required',
-        cause: JSON.stringify({ clientId: this.clientId, clientSecret: this.clientSecret }),
+        cause: JSON.stringify({ clientId: this.clientId, clientSecret: this.#clientSecret }),
       });
     }
   }
@@ -174,6 +179,10 @@ export class OAuth {
     }
   }
 
+  get clientSecret(): string {
+    return Utils.mask(this.#clientSecret);
+  }
+
   get version(): string {
     return '2.0';
   }
@@ -187,11 +196,15 @@ export class OAuth {
   }
 
   toString(): string {
-    return JSON.stringify(this.toJson());
+    return JSON.stringify({
+      clientId: this.clientId,
+      clientSecret: this.#clientSecret,
+      accessToken: this.accessToken,
+    });
   }
 
   toJson(): Pick<OAuth, 'clientId' | 'clientSecret'> {
-    return { clientId: this.clientId, clientSecret: this.clientSecret };
+    return { clientId: this.clientId, clientSecret: this.#clientSecret };
   }
 
   /**

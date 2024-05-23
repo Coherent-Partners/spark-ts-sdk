@@ -14,7 +14,7 @@ describe('Authorization', () => {
   it('should create an authorization with API key', () => {
     const auth = Authorization.from({ apiKey: API_KEY });
     expect(auth).toBeDefined();
-    expect(auth.apiKey).toBe(API_KEY);
+    expect(auth.apiKey).toBe('********-key');
     expect(auth.isEmpty).toBe(false);
     expect(auth.isOpen).toBe(false);
     expect(auth.type).toBe('apiKey');
@@ -42,7 +42,7 @@ describe('Authorization', () => {
     expect(auth).toBeDefined();
     expect(auth.oauth).toBeInstanceOf(OAuth);
     expect(auth.oauth?.clientId).toBe(OAUTH.clientId);
-    expect(auth.oauth?.clientSecret).toBe(OAUTH.clientSecret);
+    expect(auth.oauth?.clientSecret).toBe('*******cret');
     expect(auth.isEmpty).toBe(false);
     expect(auth.isOpen).toBe(false);
     expect(auth.type).toBe('oauth');
@@ -55,7 +55,7 @@ describe('Authorization', () => {
     expect(auth).toBeDefined();
     expect(auth.oauth).toBeInstanceOf(OAuth);
     expect(auth.oauth?.clientId).toBe(OAUTH.clientId);
-    expect(auth.oauth?.clientSecret).toBe(OAUTH.clientSecret);
+    expect(auth.oauth?.clientSecret).toBe('*******cret');
     expect(auth.isEmpty).toBe(false);
     expect(auth.isOpen).toBe(false);
     expect(auth.type).toBe('oauth');

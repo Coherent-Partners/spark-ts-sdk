@@ -1,5 +1,5 @@
 import { type Readable as ByteStream } from 'stream';
-import nodeFetch, { RequestInit, FetchError } from 'node-fetch';
+import nodeFetch, { RequestInit, AbortError } from 'node-fetch';
 
 import { Config } from './config';
 import { Streamer } from './streaming';
@@ -237,15 +237,15 @@ export async function _fetch<Req = JsonData, Resp = JsonData>(
     : options;
   const { config } = fetchOptions;
 
-  // prepare and make request using fetch API
+  // Prepare and make request using fetch API
   const requestInit = await createRequestInit(fetchOptions);
   const url = Utils.formatUrl(resource, fetchOptions.params);
   const response = await (async () => {
     try {
       return await nodeFetch(url, { ...requestInit, redirect: 'manual', timeout: config.timeout });
     } catch (cause) {
-      if (cause instanceof FetchError) throw new SparkSdkError({ message: `failed to fetch <${resource}>`, cause });
-      throw cause; // may be abort signal
+      if (cause instanceof AbortError) throw cause;
+      throw new SparkSdkError({ message: `failed to fetch <${resource}>`, cause });
     }
   })();
 

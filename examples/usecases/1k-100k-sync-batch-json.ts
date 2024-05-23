@@ -42,6 +42,7 @@ async function main() {
   const writer = createWriteStream(join(basePath, new Date().toISOString() + '_results.json'));
   const logger = new Logger('sync-batch');
   const spark = new Spark({ ...sparkOptions, logger: { logger } });
+  const batch = spark.service.batch;
 
   // This helps keep track of the request ID for each API call (not required).
   spark.config.interceptors.add({
@@ -67,7 +68,7 @@ async function main() {
     const chunk = dataset.slice(start, end);
 
     try {
-      const response = await spark.service.batch.execute<Inputs, Outputs>(serviceUri, { inputs: chunk });
+      const response = await batch.execute<Inputs, Outputs>(serviceUri, { inputs: chunk });
 
       writer.write(JSON.stringify({ inputs: chunk, ...response.data }, null, 2) + (i < batchSize - 1 ? ',\n' : ''));
       logger.log(`chunk ${i + 1} (${chunk.length} records) processed successfully`);

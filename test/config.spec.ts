@@ -15,6 +15,7 @@ describe('Config', () => {
 
   it('should throw an SDK error if tenant is missing', () => {
     expect(() => new Config({ baseUrl: BASE_URL, apiKey: 'some key' })).toThrow(SparkSdkError);
+    expect(() => new Config({ env: 'test', apiKey: 'some key' })).toThrow(SparkSdkError);
   });
 
   it('should create a client config from correct base URL and API key', () => {
@@ -22,7 +23,7 @@ describe('Config', () => {
     expect(config).toBeDefined();
     expect(config.baseUrl.value).toBe(BASE_URL);
     expect(config.baseUrl.tenant).toBe(TENANT_NAME);
-    expect(config.auth.apiKey).toBe(API_KEY);
+    expect(config.auth.apiKey).toBe('********-key');
   });
 
   it('should infer tenant name from base URL', () => {
@@ -30,7 +31,7 @@ describe('Config', () => {
     expect(config).toBeDefined();
     expect(config.baseUrl.value).toBe(BASE_URL);
     expect(config.baseUrl.tenant).toBe(TENANT_NAME);
-    expect(config.auth.apiKey).toBe(API_KEY);
+    expect(config.auth.apiKey).toBe('********-key');
   });
 
   it('should build base URL from other url parts', () => {
@@ -38,7 +39,7 @@ describe('Config', () => {
     expect(config).toBeDefined();
     expect(config.baseUrl.value).toBe(BASE_URL);
     expect(config.baseUrl.tenant).toBe(TENANT_NAME);
-    expect(config.auth.apiKey).toBe(API_KEY);
+    expect(config.auth.apiKey).toBe('********-key');
   });
 
   it('should be created with default values if not provided', () => {
@@ -54,7 +55,7 @@ describe('Config', () => {
     const newConfig = config.copyWith({ apiKey: 'new-key', tenant: 'new-tenant' });
     expect(newConfig).toBeDefined();
     expect(newConfig.baseUrl.value).toBe(BASE_URL);
-    expect(newConfig.auth.apiKey).toBe('new-key');
+    expect(newConfig.auth.apiKey).toBe('***-key');
     expect(newConfig.baseUrl.tenant).toBe('new-tenant');
   });
 });

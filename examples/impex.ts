@@ -14,10 +14,10 @@ function downloadWasm(spark: SparkClient) {
 function exportEntities(spark: SparkClient) {
   spark.impex
     .export({ services: ['my-folder/my-service'], maxRetries: 5, retryInterval: 3 })
-    .then((downloables) => {
-      for (const count in downloables) {
+    .then((downloadables) => {
+      for (const count in downloadables) {
         const file = createWriteStream(`exported-${count}.zip`);
-        downloables[count].buffer.pipe(file);
+        downloadables[count].buffer.pipe(file);
       }
     })
     .catch(console.error);

@@ -124,6 +124,11 @@ export function sanitizeUri(url: string, leading = false): string {
   return leading ? sanitized : sanitized.replace(/^\//, '');
 }
 
+export function mask(value: string, start = 0, end = 4, char = '*'): string {
+  if (StringUtils.isEmpty(value) || start < 0 || end < 0) return value;
+  return value.slice(0, start) + char.repeat(value.length - start - end) + value.slice(-end);
+}
+
 export abstract class StringUtils {
   static isString(text: unknown): text is string {
     return typeof text === 'string' || text instanceof String;
@@ -196,4 +201,5 @@ export default {
   formatUrl,
   getUuid,
   sleep,
+  mask,
 };

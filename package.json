@@ -1,6 +1,6 @@
 {
   "name": "@cspark/sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A Node.js SDK for interacting with Coherent Spark APIs",
   "author": "Ralph Florent",
   "homepage": "https://github.com/c-spark/cspark-ts-sdk/blob/main/docs/readme.md",

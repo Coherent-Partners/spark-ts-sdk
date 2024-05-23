@@ -48,7 +48,7 @@ export class Config {
       baseUrl: this.baseUrl.toString(),
       apiKey: this.auth.apiKey,
       token: this.auth.token,
-      oauth: this.auth.oauth?.toJson(),
+      oauth: this.auth.oauth?.toString(),
       timeout: this.timeout,
       maxRetries: this.maxRetries,
       retryInterval: this.retryInterval,

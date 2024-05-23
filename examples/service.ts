@@ -90,10 +90,10 @@ function recompile(spark: SparkClient) {
 function exportAsZip(spark: SparkClient) {
   spark.service
     .export({ folder: 'my-folder', service: 'my-service', filters: { version: 'latest' } })
-    .then((downloables) => {
-      for (const count in downloables) {
+    .then((downloadables) => {
+      for (const count in downloadables) {
         const file = createWriteStream(`export-${count}.zip`);
-        downloables[count].buffer.pipe(file);
+        downloadables[count].buffer.pipe(file);
       }
     })
     .catch(console.error);

@@ -167,11 +167,21 @@ class Pipeline extends ApiResource {
   }
 
   /**
+   * Gets batch information.
+   * @returns {Promise<HttpResponse<BatchInfo>>} the batch info.
+   *
+   * IMPORTANT: This method is experimental and may change in future releases.
+   */
+  getInfo(): Promise<HttpResponse<BatchInfo>> {
+    return this.request(Uri.from(undefined, { ...this.baseUri, endpoint: `batch/${this.id}` }));
+  }
+
+  /**
    * Gets the status of a batch pipeline.
    * @returns {Promise<HttpResponse<BatchStatus>>} the batch status
    */
   getStatus(): Promise<HttpResponse<BatchStatus>> {
-    return this.request(Uri.from(undefined, { ...this.baseUri, endpoint: `batch/${this.id}` }));
+    return this.request(Uri.from(undefined, { ...this.baseUri, endpoint: `batch/${this.id}/status` }));
   }
 
   /**
@@ -233,6 +243,7 @@ class Pipeline extends ApiResource {
     const url = Uri.from(undefined, { ...this.baseUri, endpoint: `batch/${this.id}` });
     return this.request<BatchDisposed>(url, { method: 'PATCH', body: { batch_status: 'closed' } }).then((response) => {
       this.#state = 'closed';
+      this.logger.log(`batch pipeline <${this.id}> has been closed`);
       return response;
     });
   }
@@ -252,6 +263,7 @@ class Pipeline extends ApiResource {
     return this.request<BatchDisposed>(url, { method: 'PATCH', body: { batch_status: 'cancelled' } }).then(
       (response) => {
         this.#state = 'cancelled';
+        this.logger.log(`batch pipeline <${this.id}> has been cancelled`);
         return response;
       },
     );
@@ -435,6 +447,31 @@ type BatchStatus = {
   records_completed: number;
   record_submitted: number;
   request_timestamp: string;
+};
+
+type BatchInfo = {
+  object: string;
+  id: string;
+  batch_status: string;
+  data: {
+    unique_record_key: string;
+    service_id: string;
+    version_id: string;
+    version: string;
+    call_id: string | null;
+    compiler_version: string;
+    request_timestamp: string;
+    correlation_id: string;
+    summary: {
+      total_chunks: number;
+      total_records: number;
+      total_input_size: number;
+      total_output_size: number;
+      total_calc_time: number;
+      batch_created_timestamp: string;
+      batch_updated_timestamp: string;
+    };
+  };
 };
 
 type BatchResult<Outputs = any> = {

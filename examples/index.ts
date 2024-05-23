@@ -39,6 +39,7 @@ Service.recompile(spark);
 Service.export(spark);
 Service.validate(spark);
 
+History.find(spark);
 History.rehydrate(spark);
 History.download(spark);
 

@@ -549,4 +549,4 @@ interface VersionInfo {
   originalFileName: string;
 }
 
-export type VersionListed = VersionApiResponse<VersionInfo>;
+export type VersionListed = VersionApiResponse<VersionInfo[]>;

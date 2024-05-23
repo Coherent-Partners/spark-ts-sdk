@@ -46,7 +46,7 @@ base identifier to locate a resource in the Spark platform for a particular
 environment and tenant. I term this _Spark URI Locator_.
 
 Given that this locator may be part of either the final URL or the request payload,
-it is recommended to use plain strings (i.e., non-URL encoded) when referring to
+it is recommended to use plain strings (i.e., not URL-encoded) when referring to
 these identifiers.
 The SDK will take care of encoding them when necessary. Otherwise, you risk running
 into issues when trying to locate a resource.
@@ -56,7 +56,7 @@ For instance, executing a Spark service using these identifiers
 - folder => `my folder` (when encoded => `my%20folder`)
 - service => `my service` (when encoded => `my%20service`)
 
-can be tricky if they are URL encoded. See in the example below how the URI loccator
+can be tricky if they are URL-encoded. See in the example below how the URI locator
 formed by these identifiers can be used in different contexts:
 
 ```ts

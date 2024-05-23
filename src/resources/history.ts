@@ -9,6 +9,28 @@ export class History extends ApiResource {
   }
 
   /**
+   * Finds logs by date range, call id, username, call purpose, etc.
+   * @param {string | SearchParams} uri - Search parameters
+   * @param {Paging} paging - Paging options (page, size, sort)
+   * @returns {Promise<HttpResponse<LogListed>>}
+   *
+   * Be mindful of the date range, as it may return a large number of logs. If only
+   * the `endDate` is provided, the `startDate` will be set to 7 days before the `endDate`.
+   * Additionally, the parameters `callId`, `sourceSystem`, and `correlationId` are
+   * interchangeable and will be used as a search term if provided.
+   */
+  find(uri: string | SearchParams, paging: Paging = {}): Promise<HttpResponse<LogListed>> {
+    const { folder, service, ...params } = Uri.toParams(uri);
+    const endpoint = `product/${folder}/engines/${service}/logs`;
+    const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
+    const body = this.#buildSearchBody(params, paging);
+
+    console.log('body', body);
+
+    return this.request(url, { method: 'POST', body });
+  }
+
+  /**
    * Rehydrates the executed model into the original excel file.
    * @param {string} uri - how to locate the service
    * @param {string} callId - callId to rehydrate if not provided in the params.
@@ -86,6 +108,32 @@ export class History extends ApiResource {
 
     const download = await this.request(downloadUrl);
     return { ...download, status: job.status, data: { ...job.data, status: 'Success' } };
+  }
+
+  #buildSearchBody(params: Omit<SearchParams, 'folder' | 'service'>, paging: Paging): Record<string, any> {
+    const { startDate, endDate, versionId, callId, sourceSystem, correlationId, callPurpose, username } = params;
+
+    const search = [];
+    if (DateUtils.isDate(startDate) && DateUtils.isDate(endDate)) {
+      const [from, until] = DateUtils.parse(startDate, endDate, { years: 0, days: 7 }); // 7 days gap if anachronistic
+      search.push({ field: 'StartDate', value: from.toISOString() });
+      search.push({ field: 'EndDate', value: until.toISOString() });
+    } else if (DateUtils.isDate(endDate)) {
+      const [until, from] = DateUtils.parse(endDate, undefined, { years: 0, days: -7 }); // 7 days back
+      search.push({ field: 'StartDate', value: from.toISOString() });
+      search.push({ field: 'EndDate', value: until.toISOString() });
+    } else {
+      search.push({ field: 'StartDate', value: DateUtils.parse(startDate)[0].toISOString() }); // now if none
+    }
+
+    if (versionId) search.push({ field: 'version', id: versionId });
+    if (callPurpose) search.push({ field: 'CallPurpose', value: callPurpose });
+    if (username) search.push({ field: 'username', value: username });
+    if (callId || sourceSystem || correlationId)
+      search.push({ field: 'search', value: callId ?? sourceSystem ?? correlationId });
+
+    const { page = 1, size: pageSize = 100, sort = '-updated' } = paging;
+    return { search, page, pageSize, sort };
   }
 }
 
@@ -207,6 +255,50 @@ interface GetStatusParams extends Pick<UriParams, 'folder' | 'service'> {
   retryInterval?: number;
 }
 
+interface SearchParams extends Pick<UriParams, 'folder' | 'service'> {
+  folder: string;
+  service: string;
+  callId?: string;
+  versionId?: string;
+  startDate?: number | string | Date;
+  endDate?: number | string | Date;
+  username?: string;
+  callPurpose?: string;
+  sourceSystem?: string;
+  correlationId?: string;
+}
+
+interface Paging {
+  page?: number;
+  size?: number;
+  sort?: string;
+}
+
+interface LogInfo {
+  id: string;
+  transactionDate: string;
+  timeStamp: string;
+  callGUID: string;
+  engineGUID: string;
+  engineHASH: string | null;
+  serviceName: string;
+  serviceVersion: string;
+  calcTime: string; // in milliseconds
+  callPurpose: string;
+  sourceSystem: string;
+  log: string | null;
+  totalTime: string; // in milliseconds
+  username: string;
+  isBatchCall: boolean | null;
+  correlationId: string | null;
+}
+
+interface LogApiResponse<T> extends Pick<ApiResponse, 'status'> {
+  data: T;
+  errorCode: string | null;
+  message: string | null;
+}
+
 type HistoryApiResponse<T = Record<string, any>> = ApiResponse & { response_data: T };
 
 type LogRehydrated = HistoryApiResponse<{ download_url: string }>;
@@ -214,3 +306,5 @@ type LogRehydrated = HistoryApiResponse<{ download_url: string }>;
 type JobCreated = HistoryApiResponse<{ job_id: string }>;
 
 type LogStatus = HistoryApiResponse<{ progress: number; download_url: string }>;
+
+type LogListed = LogApiResponse<LogInfo[]> & { count: number; next: number; previous: number };

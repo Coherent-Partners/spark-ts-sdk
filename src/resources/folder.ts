@@ -86,13 +86,8 @@ export class Folder extends ApiResource {
       .filter(([, value]) => !!value)
       .map(([field, value]) => (field === 'favorite' ? { field: 'isstarred', value } : { field, value }));
 
-    const body = {
-      search,
-      page: paging?.page ?? 1,
-      pageSize: paging?.size ?? 100,
-      sort: paging?.sort ?? '-updated',
-      shouldFetchActiveServicesCount: true,
-    };
+    const { page = 1, size: pageSize = 100, sort = '-updated' } = paging;
+    const body = { search, page, pageSize, sort, shouldFetchActiveServicesCount: true };
 
     return this.request(url, { method: 'POST', body });
   }

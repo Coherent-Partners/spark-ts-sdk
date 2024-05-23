@@ -3,7 +3,7 @@ import { type SparkClient } from '@cspark/sdk';
 function create(spark: SparkClient) {
   spark.service.batch
     .create('my-folder/my-service')
-    .then((resp) => console.log(JSON.stringify(resp.data, null, 2)))
+    .then((resp) => console.log(JSON.stringify(resp.data, undefined, 2)))
     .catch(console.error);
 }
 
@@ -22,33 +22,22 @@ async function createAndRun(spark: SparkClient) {
   });
 
   const pipeline = spark.batch.of(batch.data.id);
-  const submission = await pipeline.push(
-    {
-      chunks: [
-        {
-          id: 'uuid',
-          data: {
-            parameters: {},
-            inputs: [
-              /* json or columnar data */
-            ],
-          },
-        },
-      ],
-    },
-    { ifChunkIdDuplicated: 'replace' },
-  );
+  const submission = await pipeline.push({
+    inputs: [
+      /* json or columnar data */
+    ],
+  });
 
   console.log(submission.data);
-  await sleep(3);
+  await sleep(2);
 
   let status = await pipeline.getStatus();
   console.log(status.data);
 
-  while (status.data.record_submitted < status.data.records_available) {
+  while (status.data.records_available < status.data.record_submitted) {
     status = await pipeline.getStatus();
     console.log(status.data);
-    await sleep(5);
+    await sleep(3);
   }
 
   const result = await pipeline.pull();
