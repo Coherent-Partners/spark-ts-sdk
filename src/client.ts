@@ -96,7 +96,7 @@ export interface ClientOptions extends OAuthMethod {
  * the `folder`, and `service` APIs, as well as the `impex` and `wasm` utilities.
  *
  * Visit the main documentation page for more details on how to use the SDK.
- * @see https://github.com/c-spark/cspark-ts-sdk/blob/main/docs
+ * @see https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/docs
  */
 export class Client {
   readonly config!: Config;

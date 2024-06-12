@@ -25,8 +25,6 @@ export class History extends ApiResource {
     const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
     const body = this.#buildSearchBody(params, paging);
 
-    console.log('body', body);
-
     return this.request(url, { method: 'POST', body });
   }
 

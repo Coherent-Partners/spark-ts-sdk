@@ -28,6 +28,6 @@ jobs:
       - name: Persist build results
         uses: actions/upload-artifact@v3
         with:
-          name: cspark-ts-sdk
+          name: spark-ts-sdk
           path: lib
           retention-days: 1

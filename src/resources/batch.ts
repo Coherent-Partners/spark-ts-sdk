@@ -442,8 +442,8 @@ type BatchStatus = {
   input_buffer_remaining_bytes: number;
   output_buffer_used_bytes: number;
   output_buffer_remaining_bytes: number;
-  records_available: number;
   compute_time_ms: number;
+  records_available: number;
   records_completed: number;
   record_submitted: number;
   request_timestamp: string;

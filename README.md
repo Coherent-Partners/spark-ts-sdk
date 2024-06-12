@@ -7,12 +7,9 @@ experience and provide a convenient access to the Coherent Spark APIs.
 
 👋 **Just a heads-up:**
 
-This SDK isn't officially supported by Coherent. It originally started as a collection
-of code snippets I built for demo purposes. I then thought, "Why not share it
-with the community?" So, here we are!
-
-If you encounter any bumps while using it, please report them
-[here](https://github.com/c-spark/cspark-ts-sdk/issues) by creating a new issue.
+This SDK is supported by the community. If you encounter any bumps while using it,
+please report them [here](https://github.com/Coherent-Partners/spark-ts-sdk/issues)
+by creating a new issue.
 
 ## Installation
 
@@ -47,7 +44,7 @@ Hence, there are various ways to indicate a Spark service URI:
 - `service/{serviceId}`
 - `version/{versionId}`
 
-> **IMPORTANT:** Do **not** use URL-encoded characters in the service URI.
+> **IMPORTANT:** Avoid using URL-encoded characters in the service URI.
 
 Here's an example of how to execute a Spark service:
 
@@ -55,10 +52,14 @@ Here's an example of how to execute a Spark service:
 import Spark from '@cspark/sdk';
 
 function main() {
-  const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'my-api-key' });
+  const spark = new Spark({
+    env: 'my-env',
+    tenant: 'my-tenant',
+    apiKey: 'my-api-key',
+  });
 
   spark.service
-    .execute('my-folder/my-service', { inputs: { value: 'Hello, Spark SDK!' } })
+    .execute('my-folder/my-service', { inputs: { value: 42 } })
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
@@ -86,7 +87,7 @@ environments:
         });
 
         spark.service
-          .execute('my-folder/my-service', { inputs: { value: 'Hello, Spark SDK!' } })
+          .execute('my-folder/my-service', { inputs: { value: 42 } })
           .then((response) => console.log(response.data))
           .catch(console.error);
       }
@@ -277,13 +278,14 @@ OAuth2.0 Client Credentials flow:
 ```ts
 const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'open' });
 const uri = { folder: 'my-folder', service: 'my-service', public: true };
-const inputs = { value: 'Hello, Spark SDK!' };
+const inputs = { value: 42 };
 
 spark.service
   .execute(uri, { inputs })
   .then((response) => console.log(response.data))
   .catch(console.error);
-// The final URI in this case is: 'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
+// The final URI in this case is:
+//    'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
 ```
 
 See the [Uri](./src/resources/base.ts) class for more details.

@@ -33,8 +33,8 @@ export abstract class ApiResource {
    * as when refreshing the token.
    *
    * Extra headers can be added to the configuration options. Given that some
-   * other headers are added to perform analytics, it's recommended to use the
-   * avoid overwriting/erasing the default headers if you choose to override this
+   * other headers are added to perform analytics, it's recommended to avoid
+   * overwriting or erasing the default headers if you choose to override this
    * getter field in a subclass.
    *
    * The `x-request-id` header is used to track requests across the Spark platform
