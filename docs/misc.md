@@ -2,10 +2,10 @@
 
 # Other APIs
 
-| Verb                       | Description                                                                         |
-| -------------------------- | ----------------------------------------------------------------------------------- |
-| `Spark.wasm.download(uri)` | [Download a service's WebAssembly module](#download-a-services-webassembly-module). |
-| `Spark.file.download(url)` | [Download a Spark file](#download-a-spark-file).                                    |
+| Verb                        | Description                                                                         |
+| --------------------------- | ----------------------------------------------------------------------------------- |
+| `Spark.wasm.download(uri)`  | [Download a service's WebAssembly module](#download-a-services-webassembly-module). |
+| `Spark.files.download(url)` | [Download a Spark file](#download-a-spark-file).                                    |
 
 ## Download a service's WebAssembly module
 
@@ -96,7 +96,7 @@ download these files, which oftentimes require a valid token for access.
 This method requires a valid URL as a `string`.
 
 ```ts
-await spark.file.download('https://my-spark-file-url');
+await spark.files.download('https://my-spark-file-url');
 ```
 
 Some of the generated files carry a token for access in the URL. In such cases, you

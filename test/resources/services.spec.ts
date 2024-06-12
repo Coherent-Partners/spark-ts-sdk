@@ -37,7 +37,7 @@ describe('Spark.service', () => {
   });
 
   it('should execute a service with default inputs', async () => {
-    const res = await spark.service.execute<Outputs>('my-folder/my-service');
+    const res = await spark.services.execute<Outputs>('my-folder/my-service');
 
     expect(apiRequest).toHaveBeenCalledWith(
       expect.anything(),
@@ -58,7 +58,7 @@ describe('Spark.service', () => {
   });
 
   it('should execute a service with inputs', async () => {
-    const res = await spark.service.execute<Inputs, Outputs>(
+    const res = await spark.services.execute<Inputs, Outputs>(
       {
         folder: 'my-folder',
         service: 'my-service',

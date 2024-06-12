@@ -94,9 +94,9 @@ class Logger {
   constructor(private context: string) {}
 
   log(message: string) {
-    const msg = `[${this.context}] ${new Date().toISOString()} - ${message}`;
-    this.messages.push(msg);
-    console.log(msg);
+    message = `[${this.context}] ${new Date().toISOString()} - ${message}`;
+    this.messages.push(message);
+    console.log(message);
   }
 
   debug(message: string) {
@@ -150,7 +150,7 @@ main();
 //   });
 
 //   try {
-//     const response = await spark.service.batch.execute<Inputs, Outputs>(serviceUri, { inputs });
+//     const response = await spark.services.batches.execute<Inputs, Outputs>(serviceUri, { inputs });
 //     parentPort?.postMessage({ ok: true, chunkId, data: { inputs, ...response.data } });
 //   } catch (error) {
 //     parentPort?.postMessage({ ok: false, chunkId, data: { inputs, error } });

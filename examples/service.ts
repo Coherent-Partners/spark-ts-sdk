@@ -27,7 +27,7 @@ function execute(spark: SparkClient) {
 
 export function executeAll(spark: SparkClient) {
   const batch = [{ value: 1 }, { value: 2 }, { value: 3 }];
-  spark.service.batch
+  spark.services.batch
     .execute({ folder: 'my-folder', service: 'my-service' }, { inputs: batch })
     .then((response) => console.log(response.data))
     .catch(console.error);

@@ -64,7 +64,7 @@ const folder = 'my%20folder'; // encoding equivalent to 'my folder'
 const service = 'my%20service'; // encoding equivalent to 'my service'
 
 // Use case 1: as part of the URL
-await spark.service.execute(
+await spark.services.execute(
   { folder, service },
   {
     /* data */
@@ -72,7 +72,7 @@ await spark.service.execute(
 );
 
 // Use case 2: as part of the payload (will fail to locate the service)
-await spark.service.batch.execute(
+await spark.services.batch.execute(
   { folder, service },
   {
     /* data */
@@ -80,9 +80,9 @@ await spark.service.batch.execute(
 );
 ```
 
-Behind the scenes, the `Spark.service.execute` uses the URI locator as part of
+Behind the scenes, the `Spark.services.execute` uses the URI locator as part of
 the final URL to locate the service to execute. Hence, it works fine whether the
-identifiers are URL encoded or not. However, when using the `Spark.service.batch.execute`,
+identifiers are URL encoded or not. However, when using the `Spark.services.batch.execute`,
 the method uses the URI locator as part of the payload, which will fail to locate
 the service if the identifiers are URL-encoded. Therefore, it is recommended to
 use plain strings when referring to these identifiers.
@@ -98,9 +98,9 @@ tasks, handle their internal states, and return the final result in a single cal
 
 For example:
 
-- `Spark.folder.create(data)` will create a folder and upload a cover image (if any)
+- `Spark.folders.create(data)` will create a folder and upload a cover image (if any)
   in separate requests.
-- `Spark.service.create(data)` will upload an excel file, check its status until
+- `Spark.services.create(data)` will upload an excel file, check its status until
   completion, and publish it as a Spark service.
 - `Spark.impex.export(data)` will initiate an export job, check its status until
   completion, and download a zip containing all the necessary files associated
@@ -285,7 +285,7 @@ import Spark, { SparkError } from '@cspark/sdk';
 async function main(folderName) {
   try {
     const spark = new Spark(); // settings are loaded from the environment variables
-    const response = await spark.folder.create(folderName);
+    const response = await spark.folders.create(folderName);
 
     // when successful, do something with the response
     console.log(response.data);
@@ -333,7 +333,7 @@ const file = createReadStream('path/to/image.png'); // be mindful of the OS.
 const cover = { image: file, fileName: 'image.png' };
 
 // omit Spark initialization for brevity
-await spark.folder.create({ name: 'my-folder', cover });
+await spark.folders.create({ name: 'my-folder', cover });
 ```
 
 - **In Browser environments**, you may use the `File` object to read files. Here's
@@ -352,7 +352,7 @@ await spark.folder.create({ name: 'my-folder', cover });
       const cover = { image: file, fileName: file.name };
 
       // omit Spark initialization for brevity
-      await spark.folder.create({ name: 'my-folder', cover });
+      await spark.folders.create({ name: 'my-folder', cover });
     }
   </script>
 </body>

@@ -2,7 +2,7 @@ import { createWriteStream } from 'fs';
 import { type SparkClient } from '@cspark/sdk';
 
 function find(spark: SparkClient) {
-  spark.service.log
+  spark.logs
     .find('my-folder/my-service')
     .then((response) => {
       console.log(JSON.stringify(response.data, null, 2));
@@ -11,7 +11,7 @@ function find(spark: SparkClient) {
 }
 
 function rehydrate(spark: SparkClient) {
-  spark.service.log
+  spark.logs
     .rehydrate('my-folder/my-service', 'uuid')
     .then((response) => {
       console.log(JSON.stringify(response.data, null, 2));
@@ -22,7 +22,7 @@ function rehydrate(spark: SparkClient) {
 }
 
 function download(spark: SparkClient) {
-  spark.service.log
+  spark.logs
     .download({
       folder: 'my-folder',
       service: 'my-service',

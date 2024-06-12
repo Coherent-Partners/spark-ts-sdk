@@ -41,7 +41,7 @@ async function main() {
   const writer = createWriteStream(join(basePath, new Date().toISOString() + '_results.json'));
   const logger = new Logger('sync-batch');
   const spark = new Spark({ ...sparkOptions, logger: { logger } });
-  const service = spark.service;
+  const services = spark.services;
 
   // This helps keep track of the request ID for each API call (not required).
   spark.config.interceptors.add({
@@ -62,7 +62,7 @@ async function main() {
   for (let i = 0; i < dataset.length; i++) {
     const inputs = dataset[i];
     try {
-      const response = await service.execute<Inputs, Outputs>(serviceUri, { inputs });
+      const response = await services.execute<Inputs, Outputs>(serviceUri, { inputs });
       const result = { inputs, result: response.data };
 
       writer.write(JSON.stringify(result, null, 2) + (i < total - 1 ? ',\n' : ''));
@@ -85,9 +85,9 @@ class Logger implements LoggerService {
   constructor(private context: string) {}
 
   log(message: string) {
-    const msg = `[${this.context}] ${new Date().toISOString()} - ${message}`;
-    this.messages.push(msg);
-    console.log(msg);
+    message = `[${this.context}] ${new Date().toISOString()} - ${message}`;
+    this.messages.push(message);
+    console.log(message);
   }
 
   debug(message: string) {

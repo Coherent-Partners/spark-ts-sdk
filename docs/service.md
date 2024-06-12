@@ -2,20 +2,20 @@
 
 # Service API
 
-| Verb                                     | Description                                                                        |
-| ---------------------------------------- | ---------------------------------------------------------------------------------- |
-| `Spark.service.create(data)`             | [Create a new Spark service](#create-a-new-spark-service).                         |
-| `Spark.service.execute(uri, data)`       | [Execute a Spark service](#execute-a-spark-service).                               |
-| `Spark.service.batch.execute(uri, data)` | [Execute multiple records synchronously](#execute-multiple-records-synchronously). |
-| `Spark.service.getVersions(uri)`         | [Get all the versions of a service](#get-all-the-versions-of-a-service).           |
-| `Spark.service.getSwagger(uri)`          | [Get the Swagger documentation of a service](#get-the-swagger-documentation).      |
-| `Spark.service.getSchema(uri)`           | [Get the schema for a given service](#get-the-schema-for-a-service).               |
-| `Spark.service.getMetadata(uri)`         | [Get the metadata of a service](#get-the-metadata-of-a-service).                   |
-| `Spark.service.download(uri)`            | [Download the excel file of a service](#download-the-excel-file-of-a-service).     |
-| `Spark.service.recompile(uri)`           | [Recompile a service using specific compiler version](#recompile-a-service).       |
-| `Spark.service.validate(uri, data)`      | [Validate input data using static or dynamic validations](#validate-input-data).   |
-| `Spark.service.export(uri)`              | [Export Spark services as a zip file](#export-spark-services).                     |
-| `Spark.service.import(data)`             | [Import a Spark service from a zip file](#import-spark-services).                  |
+| Verb                                      | Description                                                                        |
+| ----------------------------------------- | ---------------------------------------------------------------------------------- |
+| `Spark.services.create(data)`             | [Create a new Spark service](#create-a-new-spark-service).                         |
+| `Spark.services.execute(uri, data)`       | [Execute a Spark service](#execute-a-spark-service).                               |
+| `Spark.services.batch.execute(uri, data)` | [Execute multiple records synchronously](#execute-multiple-records-synchronously). |
+| `Spark.services.getVersions(uri)`         | [Get all the versions of a service](#get-all-the-versions-of-a-service).           |
+| `Spark.services.getSwagger(uri)`          | [Get the Swagger documentation of a service](#get-the-swagger-documentation).      |
+| `Spark.services.getSchema(uri)`           | [Get the schema for a given service](#get-the-schema-for-a-service).               |
+| `Spark.services.getMetadata(uri)`         | [Get the metadata of a service](#get-the-metadata-of-a-service).                   |
+| `Spark.services.download(uri)`            | [Download the excel file of a service](#download-the-excel-file-of-a-service).     |
+| `Spark.services.recompile(uri)`           | [Recompile a service using specific compiler version](#recompile-a-service).       |
+| `Spark.services.validate(uri, data)`      | [Validate input data using static or dynamic validations](#validate-input-data).   |
+| `Spark.services.export(uri)`              | [Export Spark services as a zip file](#export-spark-services).                     |
+| `Spark.services.import(data)`             | [Import a Spark service from a zip file](#import-spark-services).                  |
 
 ## Create a new Spark service
 
@@ -51,7 +51,7 @@ This method accepts an extended version of `UriParams` object as an argument.
 | _retryInterval_ | `number`                   | The interval between retries in seconds (defaults to `1` second).          |
 
 ```ts
-await spark.service.create({
+await spark.services.create({
   folder: 'my-folder',
   service: 'my-service',
   file: fs.createReadStream('path/to/my-service.xlsx'),
@@ -70,15 +70,15 @@ help you manage the process.
 
 Here's a hierarchy of the service creation process:
 
-- `Spark.service.create` (1)
-  - `Spark.service.compile` (2)
-    - `Spark.service.compilation.initiate` (3)
-    - `Spark.service.compilation.getStatus` (4)
-  - `Spark.service.publish` (5)
+- `Spark.services.create` (1)
+  - `Spark.services.compile` (2)
+    - `Spark.services.compilation.initiate` (3)
+    - `Spark.services.compilation.getStatus` (4)
+  - `Spark.services.publish` (5)
 
 If you want to have more control, you can call the methods in the hierarchy
 individually. For example, if you only want to compile the service, you can call
-`Spark.service.compile` directly, which will only execute steps (3) and (4).
+`Spark.services.compile` directly, which will only execute steps (3) and (4).
 
 ### Returns
 
@@ -167,9 +167,9 @@ with the input data as arguments. See the use cases below.
   use the default inputs defined in the Excel file.
 
 ```ts
-await spark.service.execute('my-folder/my-service');
+await spark.services.execute('my-folder/my-service');
 // or
-await spark.service.execute({ folder: 'my-folder', service: 'my-service' });
+await spark.services.execute({ folder: 'my-folder', service: 'my-service' });
 ```
 
 - **Inputs only**:
@@ -179,9 +179,9 @@ await spark.service.execute({ folder: 'my-folder', service: 'my-service' });
 
 ```ts
 const inputs = { my_input: 13 };
-await spark.service.execute('my-folder/my-service', { inputs });
+await spark.services.execute('my-folder/my-service', { inputs });
 // or
-await spark.service.execute('my-folder/my-service', { data: { inputs } });
+await spark.services.execute('my-folder/my-service', { data: { inputs } });
 ```
 
 - **Inputs with metadata**: you can also provide metadata along with the input data.
@@ -189,7 +189,7 @@ await spark.service.execute('my-folder/my-service', { data: { inputs } });
 ```ts
 const inputs = { my_input: 13 };
 const metadata = { subservices: 'sum,product', callPurpose: 'Demo' };
-await spark.service.execute('my-folder/my-service', { data: { inputs, ...metadata } });
+await spark.services.execute('my-folder/my-service', { data: { inputs, ...metadata } });
 ```
 
 - **Raw data**:
@@ -203,7 +203,7 @@ const raw = `{
   "request_meta": { "version_id": "uuid", "call_purpose": "Demo" }
 }`;
 
-await spark.service.execute('my-folder/my-service', { raw });
+await spark.services.execute('my-folder/my-service', { raw });
 ```
 
 The previous examples will execute the latest version of a service. If you want
@@ -213,40 +213,40 @@ to execute a specific version, you can do the following:
   `versionId` is the UUID of a particular version of the service.
 
 ```ts
-await spark.service.execute('version/uuid');
+await spark.services.execute('version/uuid');
 // or
-await spark.service.execute({ folder: 'my-folder', service: 'my-service', versionId: 'uuid' });
+await spark.services.execute({ folder: 'my-folder', service: 'my-service', versionId: 'uuid' });
 // or
-await spark.service.execute('my-folder/my-service', { data: { versionId: 'uuid' } });
+await spark.services.execute('my-folder/my-service', { data: { versionId: 'uuid' } });
 ```
 
 - using **serviceId**:
   `serviceId` is the UUID of the service. It will execute the latest version of the service.
 
 ```ts
-await spark.service.execute('service/uuid');
+await spark.services.execute('service/uuid');
 // or
-await spark.service.execute({ folder: 'my-folder', service: 'my-service', serviceId: 'uuid' });
+await spark.services.execute({ folder: 'my-folder', service: 'my-service', serviceId: 'uuid' });
 // or
-await spark.service.execute('my-folder/my-service', { data: { serviceId: 'uuid' } });
+await spark.services.execute('my-folder/my-service', { data: { serviceId: 'uuid' } });
 ```
 
 - using semantic **version**:
   `version` also known as revision number is the semantic version of the service.
 
 ```ts
-await spark.service.execute('my-folder/my-service[0.1.0]');
+await spark.services.execute('my-folder/my-service[0.1.0]');
 // or
-await spark.service.execute({ folder: 'my-folder', service: 'my-service', version: '0.1.0' });
+await spark.services.execute({ folder: 'my-folder', service: 'my-service', version: '0.1.0' });
 // or
-await spark.service.execute('my-folder/my-service', { data: { version: '0.1.0' } });
+await spark.services.execute('my-folder/my-service', { data: { version: '0.1.0' } });
 ```
 
 - using **proxy** endpoints:
   `proxy` is the custom endpoint associated with the service.
 
 ```ts
-await spark.service.execute('my-proxy/endpoint');
+await spark.services.execute('my-proxy/endpoint');
 ```
 
 As you can tell, there are multiple flavors when it comes to locating a Spark
@@ -336,7 +336,7 @@ interface Outputs {
 }
 
 const inputs: Inputs = { my_input: 13 };
-const response = await spark.service.execute<Inputs, Outputs>('my-folder/my-service', { inputs });
+const response = await spark.services.execute<Inputs, Outputs>('my-folder/my-service', { inputs });
 console.log(response.data.response_data.outputs.my_output); // 42
 ```
 
@@ -344,7 +344,7 @@ console.log(response.data.response_data.outputs.my_output); // 42
 
 This method helps you execute multiple records synchronously. It's useful when you
 have a batch of records to process and you want to execute them all at once. This
-operation is similar to the `Spark.service.execute` method but with multiple records.
+operation is similar to the `Spark.services.execute` method but with multiple records.
 
 ### Arguments
 
@@ -357,7 +357,7 @@ const data = {
   callPurpose: 'Batch execution',
 };
 
-await spark.service.batch.execute('my-folder/my-service', { data });
+await spark.services.batch.execute('my-folder/my-service', { data });
 ```
 
 To have a full overview of the parameters, see the `UriParams` and `ExecuteParams<Inputs>`
@@ -430,9 +430,9 @@ This method returns all the versions of a service.
 The method accepts a string or a `UriParams` object as an argument.
 
 ```ts
-await spark.service.getVersions('my-folder/my-service');
+await spark.services.getVersions('my-folder/my-service');
 // or
-await spark.service.getVersions({ folder: 'my-folder', service: 'my-service' });
+await spark.services.getVersions({ folder: 'my-folder', service: 'my-service' });
 ```
 
 ### Returns
@@ -490,9 +490,9 @@ This method returns the JSON content or downloads the swagger file of a particul
 The method accepts a string or a `UriParams` object as an argument.
 
 ```ts
-await spark.service.getSwagger('my-folder/my-service');
+await spark.services.getSwagger('my-folder/my-service');
 // or
-await spark.service.getSwagger({ folder: 'my-folder', service: 'my-service' });
+await spark.services.getSwagger({ folder: 'my-folder', service: 'my-service' });
 ```
 
 When using the `UriParams` object, you can also specify additional options:
@@ -506,7 +506,7 @@ When using the `UriParams` object, you can also specify additional options:
 | _subservice_   | `string`  | The list of the subservices being requested or `all` subservices.         |
 
 ```ts
-await spark.service.getSwagger({
+await spark.services.getSwagger({
   folder: 'my-folder',
   service: 'my-service',
   downloadable: true,
@@ -534,9 +534,9 @@ but not limited to the following information:
 The method accepts a string or a `UriParams` object as an argument.
 
 ```ts
-await spark.service.getSchema('my-folder/my-service');
+await spark.services.getSchema('my-folder/my-service');
 // or
-await spark.service.getSchema({ folder: 'my-folder', service: 'my-service' });
+await spark.services.getSchema({ folder: 'my-folder', service: 'my-service' });
 ```
 
 ### Returns
@@ -552,9 +552,9 @@ This method returns the metadata of a service.
 The method accepts a string or a `UriParams` object as an argument.
 
 ```ts
-await spark.service.getMetadata('my-folder/my-service');
+await spark.services.getMetadata('my-folder/my-service');
 // or
-await spark.service.getMetadata({ folder: 'my-folder', service: 'my-service' });
+await spark.services.getMetadata({ folder: 'my-folder', service: 'my-service' });
 ```
 
 ### Returns
@@ -606,9 +606,9 @@ file of a service.
 The method accepts a string or a `UriParams` object as an argument.
 
 ```ts
-await spark.service.download('my-folder/my-service[0.4.2]');
+await spark.services.download('my-folder/my-service[0.4.2]');
 // or
-await spark.service.download({ folder: 'my-folder', service: 'my-service', version: '0.4.2' });
+await spark.services.download({ folder: 'my-folder', service: 'my-service', version: '0.4.2' });
 ```
 
 > **Note:** The version piece is optional. If not provided, the latest version
@@ -623,7 +623,7 @@ original Excel file or the configured version of it.
 | _type_     | `original \| configured` | The type of the file to download (defaults to `original`) |
 
 ```ts
-await spark.service.download({
+await spark.services.download({
   folder: 'my-folder',
   service: 'my-service',
   version: '0.4.2',
@@ -649,9 +649,9 @@ itself.
 The method accepts a string or a `UriParams` object as an argument.
 
 ```ts
-await spark.service.recompile('my-folder/my-service');
+await spark.services.recompile('my-folder/my-service');
 // or
-await spark.service.recompile({ folder: 'my-folder', service: 'my-service' });
+await spark.services.recompile({ folder: 'my-folder', service: 'my-service' });
 ```
 
 When using `string`-based service URIs, the method recompiles the service using the
@@ -677,7 +677,7 @@ The supported compiler versions include but not limited to:
 - `ReleaseCandidate`
 
 ```ts
-await spark.service.recompile({
+await spark.services.recompile({
   folder: 'my-folder',
   service: 'my-service',
   versionId: '123e4567-e89b-12d3-a456-426614174000',
@@ -725,7 +725,7 @@ to Spark services.
 Check out the [API reference](https://docs.coherent.global/spark-apis/validation-api)
 to learn more about validation of the inputs and outputs.
 
-> **Note:** This method works similarly to the `Spark.service.execute` method but
+> **Note:** This method works similarly to the `Spark.services.execute` method but
 > with a different purpose. If you want to know more about the input and output
 > data format, check the [excute(...)](#execute-a-spark-service) method.
 
@@ -738,7 +738,7 @@ the `ExecuteParams` object.
 ```ts
 const inputs = { my_input: 13 };
 const metadata = { validationType: 'dynamic', callPurpose: 'Demo' };
-await spark.service.validate('my-folder/my-service', { data: { inputs, ...metadata } });
+await spark.services.validate('my-folder/my-service', { data: { inputs, ...metadata } });
 ```
 
 ### Returns
@@ -804,9 +804,9 @@ that it only exports services.
 You may pass in the service URI as a string or a `UriParams` object.
 
 ```ts
-await spark.service.export('my-folder/my-service');
+await spark.services.export('my-folder/my-service');
 // or
-await spark.service.export({ folder: 'my-folder', service: 'my-service' });
+await spark.services.export({ folder: 'my-folder', service: 'my-service' });
 ```
 
 Additionally, you can specify optional parameters to customize the export process.
@@ -830,7 +830,7 @@ For example, the example below exports the latest version of a service and packa
 all its associated files into a zip file.
 
 ```ts
-await spark.service.export({
+await spark.services.export({
   folder: 'my-folder',
   service: 'my-service',
   filters: { version: 'latest' },
@@ -880,7 +880,7 @@ process.
 ```ts
 import { createReadStream } from 'fs';
 
-await spark.service.import({
+await spark.services.import({
   destination: { source: 'my-folder-source/my-service', target: 'my-folder-target/my-service' },
   file: createReadStream('path/to/my-service.zip'),
   maxRetries: 5,

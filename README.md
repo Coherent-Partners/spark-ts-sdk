@@ -233,31 +233,31 @@ OAuth2.0 Client Credentials flow:
 
 [Folder API](./docs/folder.md) - manages folders:
 
-- `Spark.folder.getCategories()` gets the list of folder categories.
-- `Spark.folder.create(data)` creates a new folder using info such as name, description, category, etc.
-- `Spark.folder.find(name)` finds folders by name, status, category, or favorite.
-- `Spark.folder.update(id, data)` updates a folder's information by id.
-- `Spark.folder.delete(id)` deletes a folder by id.
+- `Spark.folders.getCategories()` gets the list of folder categories.
+- `Spark.folders.create(data)` creates a new folder using info such as name, description, category, etc.
+- `Spark.folders.find(name)` finds folders by name, status, category, or favorite.
+- `Spark.folders.update(id, data)` updates a folder's information by id.
+- `Spark.folders.delete(id)` deletes a folder by id.
 
 [Service API](./docs/service.md) - manages Spark services:
 
-- `Spark.service.create(data)` creates a new Spark service.
-- `Spark.service.execute(uri, data)` executes a Spark service.
-- `Spark.service.batch.execute(uri, data)` executes multiple records synchronously.
-- `Spark.service.getVersions(uri)` lists all the versions of a service.
-- `Spark.service.getSwagger(uri)` gets the Swagger documentation of a service.
-- `Spark.service.getSchema(uri)` gets the schema of a service.
-- `Spark.service.getMetadata(uri)` gets the metadata of a service.
-- `Spark.service.download(uri)` downloads the excel file of a service.
-- `Spark.service.recompile(uri)` recompiles a service using specific compiler versions.
-- `Spark.service.validate(uri, data)` validates input data using static or dynamic validations.
-- `Spark.service.export(uri)` exports Spark services as a zip file.
-- `Spark.service.import(data)` imports Spark services from a zip file into the Spark platform.
+- `Spark.services.create(data)` creates a new Spark service.
+- `Spark.services.execute(uri, data)` executes a Spark service.
+- `Spark.services.batch.execute(uri, data)` executes multiple records synchronously.
+- `Spark.services.getVersions(uri)` lists all the versions of a service.
+- `Spark.services.getSwagger(uri)` gets the Swagger documentation of a service.
+- `Spark.services.getSchema(uri)` gets the schema of a service.
+- `Spark.services.getMetadata(uri)` gets the metadata of a service.
+- `Spark.services.download(uri)` downloads the excel file of a service.
+- `Spark.services.recompile(uri)` recompiles a service using specific compiler versions.
+- `Spark.services.validate(uri, data)` validates input data using static or dynamic validations.
+- `Spark.services.export(uri)` exports Spark services as a zip file.
+- `Spark.services.import(data)` imports Spark services from a zip file into the Spark platform.
 
 [Log History API](./docs/history.md) - manages service execution logs:
 
-- `Spark.service.log.rehydrate(uri, callId)` rehydrates the executed model into the original Excel file.
-- `Spark.service.log.download(uri, [type])` downloads service execution logs as `csv` or `json` file.
+- `Spark.logs.rehydrate(uri, callId)` rehydrates the executed model into the original Excel file.
+- `Spark.logs.download(uri, [type])` downloads service execution logs as `csv` or `json` file.
 
 [ImpEx API](./docs/impex.md) - imports and exports Spark services:
 
@@ -267,7 +267,7 @@ OAuth2.0 Client Credentials flow:
 [Other APIs](./docs/misc.md) - for other functionalities:
 
 - `Spark.wasm.download(uri)` downloads a service's WebAssembly module.
-- `Spark.file.download(url)` downloads temporary files issued by the Spark platform.
+- `Spark.files.download(url)` downloads temporary files issued by the Spark platform.
 
 > **PRO TIP:**
 > A service URI locator can be combined with other parameters to locate a specific

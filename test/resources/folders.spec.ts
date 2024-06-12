@@ -1,7 +1,7 @@
 import Spark from '@cspark/sdk';
 import LocalServer, { TestBaseUrl } from './_server';
 
-describe('Spark.folder', () => {
+describe('Spark.folders', () => {
   const localSever = new LocalServer();
   let spark: Spark;
 
@@ -33,7 +33,7 @@ describe('Spark.folder', () => {
   });
 
   it('should retrieve a list of folder categories', async () => {
-    const res = await spark.folder.getCategories();
+    const res = await spark.folders.getCategories();
     expect(res.status).toBe(200);
     expect(res.data).toBeDefined();
     expect(res.data.status).toBe('Success');

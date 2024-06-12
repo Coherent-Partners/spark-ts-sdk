@@ -2,13 +2,13 @@
 
 # Folder API
 
-| Verb                            | Description                                                                       |
-| ------------------------------- | --------------------------------------------------------------------------------- |
-| `Spark.folder.getCategories()`  | [Get the list of folder categories](#get-the-folder-categories).                  |
-| `Spark.folder.create(data)`     | [Create a new folder with additional info](#create-a-new-folder).                 |
-| `Spark.folder.find(name)`       | [Find folders by name, status, category, or favorite](#find-folders-by-criteria). |
-| `Spark.folder.update(id, data)` | [Update a folder's information by id](#update-a-folders-information).             |
-| `Spark.folder.delete(id)`       | [Delete a folder by id](#delete-a-folder-by-id).                                  |
+| Verb                             | Description                                                                       |
+| -------------------------------- | --------------------------------------------------------------------------------- |
+| `Spark.folders.getCategories()`  | [Get the list of folder categories](#get-the-folder-categories).                  |
+| `Spark.folders.create(data)`     | [Create a new folder with additional info](#create-a-new-folder).                 |
+| `Spark.folders.find(name)`       | [Find folders by name, status, category, or favorite](#find-folders-by-criteria). |
+| `Spark.folders.update(id, data)` | [Update a folder's information by id](#update-a-folders-information).             |
+| `Spark.folders.delete(id)`       | [Delete a folder by id](#delete-a-folder-by-id).                                  |
 
 ## Get the folder categories
 
@@ -33,7 +33,7 @@ However, there's a chance that the platform will add more categories in the futu
 To get the list of folder categories, you can use the following method:
 
 ```ts
-await spark.folder.getCategories();
+await spark.folders.getCategories();
 ```
 
 ### Returns
@@ -80,7 +80,7 @@ This method allows you to create a new folder by providing a folder name.
 You may pass in the folder name as a `string`.
 
 ```ts
-await spark.folder.create('my-folder');
+await spark.folders.create('my-folder');
 ```
 
 Alternatively, you can pass in the following parameters as an `object`, which
@@ -99,7 +99,7 @@ will create a folder with some additional information.
 | _cover.fileName_  | `string`                   | The name of the image file (including the extension).   |
 
 ```ts
-await spark.folder.create({
+await spark.folders.create({
   name: 'my-folder',
   // Optional parameters
   description: 'This is a folder description',
@@ -167,7 +167,7 @@ This method helps find folders by name, status, category, or favorite.
 You may search a folder by its id.
 
 ```ts
-await spark.folder.find('uuid');
+await spark.folders.find('uuid');
 ```
 
 Alternatively, you can pass in the following parameters as an `object` to filter
@@ -180,7 +180,7 @@ the folders.
 | _favorite_ | `boolean`        | Whether the folder is marked as favorite. |
 
 ```ts
-await spark.folder.find({ category: 'Medical', favorite: true });
+await spark.folders.find({ category: 'Medical', favorite: true });
 ```
 
 Additional search parameters are available:
@@ -192,7 +192,7 @@ Additional search parameters are available:
 | _sort_   | `string` | The field to sort the folders by.     |
 
 ```ts
-await spark.folder.find({ favorite: true }, { page: 1, size: 10, sort: 'productName' });
+await spark.folders.find({ favorite: true }, { page: 1, size: 10, sort: 'productName' });
 ```
 
 The above example will return the first 10 favorite folders sorted alphabetically
@@ -264,7 +264,7 @@ You must provide the folder id and the updated folder information, just as in
 [creating a new folder](#create-a-new-folder).
 
 ```ts
-await spark.folder.update('uuid', { description: 'Updated description' });
+await spark.folders.update('uuid', { description: 'Updated description' });
 ```
 
 ### Returns
@@ -293,7 +293,7 @@ This method allows you to delete a folder by its id.
 You must provide the folder id as `string`.
 
 ```ts
-await spark.folder.delete('uuid');
+await spark.folders.delete('uuid');
 ```
 
 ### Returns
