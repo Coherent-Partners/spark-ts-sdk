@@ -58,7 +58,7 @@ function main() {
     apiKey: 'my-api-key',
   });
 
-  spark.service
+  spark.services
     .execute('my-folder/my-service', { inputs: { value: 42 } })
     .then((response) => console.log(response.data))
     .catch(console.error);
@@ -86,7 +86,7 @@ environments:
           allowBrowser: true,
         });
 
-        spark.service
+        spark.services
           .execute('my-folder/my-service', { inputs: { value: 42 } })
           .then((response) => console.log(response.data))
           .catch(console.error);
@@ -280,7 +280,7 @@ const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'open' });
 const uri = { folder: 'my-folder', service: 'my-service', public: true };
 const inputs = { value: 42 };
 
-spark.service
+spark.services
   .execute(uri, { inputs })
   .then((response) => console.log(response.data))
   .catch(console.error);

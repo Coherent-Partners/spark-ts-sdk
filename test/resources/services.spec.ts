@@ -1,7 +1,7 @@
 import Spark, { ApiResource } from '@cspark/sdk';
 import LocalServer, { TestBaseUrl } from './_server';
 
-describe('Spark.service', () => {
+describe('Spark.services', () => {
   const localSever = new LocalServer();
   const apiRequest = jest.spyOn(ApiResource.prototype as any, 'request');
   let spark: Spark;

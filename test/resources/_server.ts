@@ -21,7 +21,7 @@ export default class LocalServer {
   constructor(readonly hostname: string = 'localhost') {
     this.server = http.createServer(this.router);
     this.server.keepAliveTimeout = 1000;
-    this.server.on('error', (err) => console.log(err.stack));
+    this.server.on('error', (err) => console.error(err.stack));
     this.server.on('connection', (socket) => socket.setTimeout(1500));
   }
 

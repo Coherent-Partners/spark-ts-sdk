@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.0 (2024-06-15)
+
+- Breaking change: pluralize collection names in the SDK
+  - `Spark.folder` -> `Spark.folders`
+  - `Spark.service` -> `Spark.services`
+  - `Spark.service.batch` -> `Spark.services.batches`
+  - `Spark.service.log` -> `Spark.services.logs`
+  - `Spark.batch` -> `Spark.batches`
+- Apply minor improvements to the base Uri options
+
 ## 0.1.2 (2024-05-15)
 
 - Fix get status of batch pipeline

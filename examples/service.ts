@@ -3,7 +3,7 @@ import { type SparkClient } from '@cspark/sdk';
 
 function create(spark: SparkClient) {
   const file = createReadStream('my-service.xlsx');
-  spark.service
+  spark.services
     .create({
       file: file,
       folder: 'my-folder',
@@ -19,7 +19,7 @@ function create(spark: SparkClient) {
 
 function execute(spark: SparkClient) {
   const data = { inputs: { value: 'Hello, Spark SDK' }, versionId: 'uuid' };
-  spark.service
+  spark.services
     .execute('my-folder/my-service', { data })
     .then((response) => console.log(response.data))
     .catch((err) => console.error(JSON.stringify(err.cause, null, 2)));
@@ -27,42 +27,42 @@ function execute(spark: SparkClient) {
 
 export function executeAll(spark: SparkClient) {
   const batch = [{ value: 1 }, { value: 2 }, { value: 3 }];
-  spark.services.batch
+  spark.services.batches
     .execute({ folder: 'my-folder', service: 'my-service' }, { inputs: batch })
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
 
 function getVersions(spark: SparkClient) {
-  spark.service
+  spark.services
     .getVersions('my-folder/my-service')
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
 
 function getSchema(spark: SparkClient) {
-  spark.service
+  spark.services
     .getSchema('my-folder/my-service')
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
 
 function getSwagger(spark: SparkClient) {
-  spark.service
+  spark.services
     .getSwagger('my-folder/my-service')
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
 
 function getMetadata(spark: SparkClient) {
-  spark.service
+  spark.services
     .getMetadata('my-folder/my-service')
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
 
 function validate(spark: SparkClient) {
-  spark.service
+  spark.services
     .validate('my-folder/my-service', {
       data: { inputs: { letter: 'b', number: 23 }, validationType: 'dynamic' },
     })
@@ -71,7 +71,7 @@ function validate(spark: SparkClient) {
 }
 
 function download(spark: SparkClient) {
-  spark.service
+  spark.services
     .download({ folder: 'my-folder', service: 'my-service', type: 'configured' })
     .then((response) => {
       const file = createWriteStream('my-configured-subservices.xlsx');
@@ -81,14 +81,14 @@ function download(spark: SparkClient) {
 }
 
 function recompile(spark: SparkClient) {
-  spark.service
+  spark.services
     .recompile({ folder: 'my-folder', service: 'my-service', compiler: 'Neuron_v1.16.0' })
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
 
 function exportAsZip(spark: SparkClient) {
-  spark.service
+  spark.services
     .export({ folder: 'my-folder', service: 'my-service', filters: { version: 'latest' } })
     .then((downloadables) => {
       for (const count in downloadables) {
@@ -101,7 +101,7 @@ function exportAsZip(spark: SparkClient) {
 
 function importFromZip(spark: SparkClient) {
   const file = createReadStream('package.zip');
-  spark.service
+  spark.services
     .import({
       destination: { source: 'my-folder-source/my-service', target: 'my-folder-target/my-service' },
       file,
@@ -112,7 +112,7 @@ function importFromZip(spark: SparkClient) {
 
 function migrate(spark: SparkClient) {
   const config = spark.config.copyWith({ env: 'prod', apiKey: 'other-key' }); // my import config
-  spark.service
+  spark.services
     .migrate({
       destination: { source: 'my-folder-source/my-service', target: 'my-folder-target/my-service' },
       config,
