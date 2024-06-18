@@ -1,12 +1,12 @@
 import { type Readable } from 'stream';
 
 import Utils, { StringUtils } from '../utils';
-import { Config } from '../config';
+import { type Config } from '../config';
 import { Logger } from '../logger';
 import { SparkError } from '../error';
 import { SPARK_SDK } from '../constants';
 import { HttpResponse, Multipart, getRetryTimeout } from '../http';
-import { ApiResource, Uri, UriParams } from './base';
+import { ApiResource, Uri, UriOptions, UriParams } from './base';
 import { UpgradeType, ExportFilters, IfEntityPresent } from './types';
 
 export class ImpEx {
@@ -119,11 +119,13 @@ export class Migration {
 }
 
 class Export extends ApiResource {
+  readonly baseUri!: UriOptions;
   declare readonly logger: Logger;
 
   constructor(config: Config) {
     super(config);
     this.logger = Logger.of(config.logger);
+    this.baseUri = { base: this.config.baseUrl.full, version: 'api/v4' };
   }
 
   /**
@@ -132,7 +134,7 @@ class Export extends ApiResource {
    * @returns {Promise<HttpResponse<ExportInit>>} the export job details
    */
   async initiate(params: ExportParams = {}): Promise<HttpResponse<ExportInit>> {
-    const url = Uri.from(undefined, { base: this.config.baseUrl.full, version: 'api/v4', endpoint: 'export' });
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'export' });
     const metadata = {
       file_filter: params?.filters?.file ?? 'migrate',
       version_filter: params?.filters?.version ?? 'all',
@@ -164,11 +166,7 @@ class Export extends ApiResource {
    */
   async getStatus(jobId: string, params: StatusParams = {}): Promise<HttpResponse<ExportResult>> {
     const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
-    const url = Uri.from(undefined, {
-      base: this.config.baseUrl.full,
-      version: 'api/v4',
-      endpoint: `export/${jobId}/status`,
-    });
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint: `export/${jobId}/status` });
 
     let retries = 0;
     while (retries < maxRetries) {
@@ -217,11 +215,13 @@ class Export extends ApiResource {
 }
 
 class Import extends ApiResource {
+  readonly baseUri!: UriOptions;
   declare readonly logger: Logger;
 
   constructor(config: Config) {
     super(config);
     this.logger = Logger.of(config.logger);
+    this.baseUri = { base: this.config.baseUrl.full, version: 'api/v4' };
   }
 
   /**
@@ -230,7 +230,7 @@ class Import extends ApiResource {
    * @returns {Promise<HttpResponse<ImportInit>>} the import job details
    */
   async initiate(params: ImportParams): Promise<HttpResponse<ImportInit>> {
-    const url = Uri.from(undefined, { base: this.config.baseUrl.full, version: 'api/v4', endpoint: 'import' });
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'import' });
     const metadata = {
       inputs: { services_modify: buildServiceMappings(params.destination) },
       services_existing: params.ifPresent ?? 'abort',
@@ -256,11 +256,7 @@ class Import extends ApiResource {
    */
   async getStatus(jobId: string, params: StatusParams = {}): Promise<HttpResponse<ImportResult>> {
     const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
-    const url = Uri.from(undefined, {
-      base: this.config.baseUrl.full,
-      version: 'api/v4',
-      endpoint: `import/${jobId}/status`,
-    });
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint: `import/${jobId}/status` });
 
     let retries = 0;
     while (retries < maxRetries) {

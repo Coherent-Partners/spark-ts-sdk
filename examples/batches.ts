@@ -1,7 +1,7 @@
 import { type SparkClient } from '@cspark/sdk';
 
 function create(spark: SparkClient) {
-  spark.service.batch
+  spark.services.batches
     .create('my-folder/my-service')
     .then((resp) => console.log(JSON.stringify(resp.data, undefined, 2)))
     .catch(console.error);
@@ -16,12 +16,12 @@ async function createAndRun(spark: SparkClient) {
     console.log(JSON.stringify(data, undefined, 2));
   }
 
-  const batch = await spark.batch.create({
+  const batch = await spark.batches.create({
     serviceUri: 'my-folder/my-service',
     subservices: ['my-subservice', 'my-other-subservice'],
   });
 
-  const pipeline = spark.batch.of(batch.data.id);
+  const pipeline = spark.batches.of(batch.data.id);
   const submission = await pipeline.push({
     inputs: [
       /* json or columnar data */

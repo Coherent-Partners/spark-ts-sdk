@@ -2,7 +2,7 @@ import { createWriteStream, createReadStream } from 'fs';
 import Spark, { type SparkClient } from '@cspark/sdk';
 
 function getCategories(spark: SparkClient) {
-  spark.folder
+  spark.folders
     .getCategories()
     .then((response) => console.log(response.data))
     .catch(console.error);
@@ -11,28 +11,28 @@ function getCategories(spark: SparkClient) {
 function create(spark: SparkClient) {
   const fileName = 'my-cover.png';
   const image = createReadStream(fileName);
-  spark.folder
+  spark.folders
     .create({ name: 'some-folder-name', cover: { image, fileName } })
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
 
 function find(spark: SparkClient) {
-  spark.folder
+  spark.folders
     .find({ favorite: true })
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
 
 function update(spark: SparkClient) {
-  spark.folder
+  spark.folders
     .update('uuid', { description: 'this has been updated.' })
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
 
 function deleteFolder(spark: SparkClient) {
-  spark.folder
+  spark.folders
     .delete('uuid')
     .then((response) => console.log(response.data))
     .catch(console.error);

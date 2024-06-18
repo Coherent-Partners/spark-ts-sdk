@@ -2,10 +2,10 @@
 
 # Log History API
 
-| Verb                                         | Description                                                                                 |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `Spark.service.log.rehydrate(uri, [callId])` | [Rehydrate the executed model into the original excel file](#rehydrate-the-executed-model). |
-| `Spark.service.log.download(uri, [type])`    | [Download service execution logs as csv or json file](#download-service-execution-logs).    |
+| Verb                                  | Description                                                                                 |
+| ------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `Spark.logs.rehydrate(uri, [callId])` | [Rehydrate the executed model into the original excel file](#rehydrate-the-executed-model). |
+| `Spark.logs.download(uri, [type])`    | [Download service execution logs as csv or json file](#download-service-execution-logs).    |
 
 > [!WARNING]
 > The service execution history is a good source of truth for auditing and
@@ -25,7 +25,7 @@ You may pass in the service URI, which is a combination of the folder name and t
 service name, and the call ID as `string`.
 
 ```ts
-await spark.service.log.rehydrate('my-folder/my-service', 'call-id');
+await spark.logs.rehydrate('my-folder/my-service', 'call-id');
 ```
 
 Alternatively, you can pass in the following parameters as an `object`, which
@@ -40,7 +40,7 @@ should include the service URI and the call ID. Otherwise, it will throw a `Spar
 > **NOTE**: The properties `folder`, `service`, and `callId` are required.
 
 ```ts
-await spark.service.log.rehydrate({ folder: 'my-folder', service: 'my-service', callId: 'call-id' });
+await spark.logs.rehydrate({ folder: 'my-folder', service: 'my-service', callId: 'call-id' });
 ```
 
 ### Returns
@@ -85,7 +85,7 @@ import Spark from '@cspark/sdk';
 
 const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', token: 'bearer token' });
 
-spark.service.log
+spark.services.log
   .rehydrate('my-folder/my-service', 'a-valid-call-id')
   .then((response) => {
     // write downloaded file to disk
@@ -107,8 +107,8 @@ the file. It throws a `SparkError` if the download job fails to produce a downlo
 file.
 
 If you want to have more granular control over the download process, you can use
-respectively the `Spark.service.log.downloads.initiate(uri, [type])` and
-`Spark.service.log.downloads.getStatus(uri, [type])` methods to initiate a download
+respectively the `Spark.logs.downloads.initiate(uri, [type])` and
+`Spark.logs.downloads.getStatus(uri, [type])` methods to initiate a download
 job and check its status until it's completed. Do note that the status check is
 subject to a timeout when it reaches the maximum number of retries.
 
@@ -117,7 +117,7 @@ subject to a timeout when it reaches the maximum number of retries.
 You may provide the service URI and the file type as `string`.
 
 ```ts
-await spark.service.log.download('my-folder/my-service', 'csv');
+await spark.logs.download('my-folder/my-service', 'csv');
 ```
 
 Alternatively, you can use the following parameters as an `object`, which should
@@ -139,7 +139,7 @@ download job.
 | _retryInterval_      | `number`                   | The interval between status check retries in seconds.            |
 
 ```ts
-await spark.service.log.download({
+await spark.logs.download({
   folder: 'my-folder',
   service: 'my-service',
   type: 'csv',

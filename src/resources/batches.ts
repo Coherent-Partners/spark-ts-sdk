@@ -7,7 +7,7 @@ import Utils, { DateUtils, StringUtils, getUuid } from '../utils';
 
 import { ApiResource, Uri, UriOptions, UriParams } from './base';
 
-export class Batch extends ApiResource {
+export class Batches extends ApiResource {
   /**
    * Executes multiple records synchronously.
    * @param {string} uri - how to locate the service
@@ -57,7 +57,7 @@ export class Batch extends ApiResource {
    * @returns {Promise<HttpResponse<BatchCreated>>} the batch pipeline details
    */
   create(params: CreateParams): Promise<HttpResponse<BatchCreated>>;
-  create(uri: string | CreateParams): Promise<HttpResponse<BatchCreated>> {
+  create(uri: string | CreateParams, options?: PipelineOptions): Promise<HttpResponse<BatchCreated>> {
     const { folder, service, version, serviceId, ...params } = Uri.toParams(uri);
     const serviceUri = serviceId ?? params?.serviceUri ?? Uri.encode({ folder, service, version }, false);
     const url = Uri.from(undefined, { base: this.config.baseUrl.full, version: 'api/v4', endpoint: 'batch' });
@@ -73,6 +73,14 @@ export class Batch extends ApiResource {
       source_system: params.sourceSystem ?? SPARK_SDK,
       correlation_id: params.correlationId,
       unique_record_key: params.inputKey,
+      // Experimental parameters (likely to change/be deprecated in future releases)
+      initial_workers: options?.minRunners,
+      max_workers: options?.maxRunners,
+      chunks_per_request: options?.chunksPerVM,
+      runner_thread_count: options?.runnersPerVM,
+      max_input_size: options?.maxInputSize,
+      max_output_size: options?.maxOutputSize,
+      acceptable_error_percentage: 1 - (options?.accuracy ?? 1) * 100,
     };
 
     return this.request<BatchCreated>(url, { method: 'POST', body });
@@ -405,6 +413,59 @@ interface CreateParams extends MetadataParams {
   inputKey?: string;
 }
 
+// Experimental parameters (likely to change/be deprecated in future releases)
+interface PipelineOptions {
+  /**
+   * The number of concurrent runners used to initialize a batch job in a VM before
+   * ramping up (defaults to 10).
+   */
+  minRunners?: number;
+  /**
+   * The maximum number of concurrent runners allowed in a VM (defaults to 100).
+   *
+   * This is a safety net to prevent a batch from consuming all resources in a tenant.
+   * If and when this limit is reached, the next batch request will have to wait until
+   * resources are available so that it can be processed.
+   */
+  maxRunners?: number;
+  /**
+   * The number of chunks to be processed by all VMs (defaults to 2).
+   *
+   * Every VM will pull this number of chunks at a time until all chunks are processed.
+   * Whichever VM finishes its chunks first will pull more chunks to process if any leftovers.
+   * This is a way to balance the load across all VMs and make the batch job more efficient.
+   */
+  chunksPerVM?: number;
+  /**
+   * The number of runners per VM (defaults to 2).
+   *
+   * These runners will be used to process the chunks pulled by the VM. Ideally,
+   * when this number matches the number of `chunksPerVM`, the batch job will be
+   * processed faster as each runner will process a separate chunk.
+   */
+  runnersPerVM?: number;
+  /**
+   * The size (in MB) of the maximum input buffer a batch pipeline can support.
+   */
+  maxInputSize?: number;
+  /**
+   * The size (in MB) of the maximum output buffer a batch pipeline can support.
+   */
+  maxOutputSize?: number;
+  /**
+   * The percentage of acceptable error rate (defaults to 1.0 aka 100).
+   *
+   * By nature, batch jobs are intended to process large amounts of data and it
+   * is possible that some records may fail to process as expected or throw errors.
+   * Keep in mind that there's no self-correction mechanism in place.
+   *
+   * With this parameter, you may choose a value between 0.0 and 1.0 to indicate
+   * how accurate you want the batch job to be. For instance, if you set this to
+   * 0.95, 5% of error rate is acceptable and the batch job will complete successfully.
+   */
+  accuracy?: number;
+}
+
 type BatchCreated = {
   object: string;
   id: string;
@@ -442,8 +503,8 @@ type BatchStatus = {
   input_buffer_remaining_bytes: number;
   output_buffer_used_bytes: number;
   output_buffer_remaining_bytes: number;
-  records_available: number;
   compute_time_ms: number;
+  records_available: number;
   records_completed: number;
   record_submitted: number;
   request_timestamp: string;

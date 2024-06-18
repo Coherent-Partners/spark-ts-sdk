@@ -96,7 +96,7 @@ export interface ClientOptions extends OAuthMethod {
  * the `folder`, and `service` APIs, as well as the `impex` and `wasm` utilities.
  *
  * Visit the main documentation page for more details on how to use the SDK.
- * @see https://github.com/c-spark/cspark-ts-sdk/blob/main/docs
+ * @see https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/docs
  */
 export class Client {
   readonly config!: Config;
@@ -105,20 +105,24 @@ export class Client {
     this.config = new Config(options);
   }
 
-  get folder(): API.Folder {
-    return new API.Folder(this.config);
+  get folders(): API.Folders {
+    return new API.Folders(this.config);
   }
 
-  get service(): API.Service {
-    return new API.Service(this.config);
+  get services(): API.Services {
+    return new API.Services(this.config);
   }
 
-  get batch(): API.Batch {
-    return new API.Batch(this.config);
+  get batches(): API.Batches {
+    return new API.Batches(this.config);
   }
 
-  get file(): API.File {
-    return new API.File(this.config);
+  get logs(): API.History {
+    return new API.History(this.config);
+  }
+
+  get files(): API.Files {
+    return new API.Files(this.config);
   }
 
   get impex(): API.ImpEx {

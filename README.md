@@ -7,12 +7,9 @@ experience and provide a convenient access to the Coherent Spark APIs.
 
 👋 **Just a heads-up:**
 
-This SDK isn't officially supported by Coherent. It originally started as a collection
-of code snippets I built for demo purposes. I then thought, "Why not share it
-with the community?" So, here we are!
-
-If you encounter any bumps while using it, please report them
-[here](https://github.com/c-spark/cspark-ts-sdk/issues) by creating a new issue.
+This SDK is supported by the community. If you encounter any bumps while using it,
+please report them [here](https://github.com/Coherent-Partners/spark-ts-sdk/issues)
+by creating a new issue.
 
 ## Installation
 
@@ -47,7 +44,7 @@ Hence, there are various ways to indicate a Spark service URI:
 - `service/{serviceId}`
 - `version/{versionId}`
 
-> **IMPORTANT:** Do **not** use URL-encoded characters in the service URI.
+> **IMPORTANT:** Avoid using URL-encoded characters in the service URI.
 
 Here's an example of how to execute a Spark service:
 
@@ -55,10 +52,14 @@ Here's an example of how to execute a Spark service:
 import Spark from '@cspark/sdk';
 
 function main() {
-  const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'my-api-key' });
+  const spark = new Spark({
+    env: 'my-env',
+    tenant: 'my-tenant',
+    apiKey: 'my-api-key',
+  });
 
-  spark.service
-    .execute('my-folder/my-service', { inputs: { value: 'Hello, Spark SDK!' } })
+  spark.services
+    .execute('my-folder/my-service', { inputs: { value: 42 } })
     .then((response) => console.log(response.data))
     .catch(console.error);
 }
@@ -85,8 +86,8 @@ environments:
           allowBrowser: true,
         });
 
-        spark.service
-          .execute('my-folder/my-service', { inputs: { value: 'Hello, Spark SDK!' } })
+        spark.services
+          .execute('my-folder/my-service', { inputs: { value: 42 } })
           .then((response) => console.log(response.data))
           .catch(console.error);
       }
@@ -232,31 +233,31 @@ OAuth2.0 Client Credentials flow:
 
 [Folder API](./docs/folder.md) - manages folders:
 
-- `Spark.folder.getCategories()` gets the list of folder categories.
-- `Spark.folder.create(data)` creates a new folder using info such as name, description, category, etc.
-- `Spark.folder.find(name)` finds folders by name, status, category, or favorite.
-- `Spark.folder.update(id, data)` updates a folder's information by id.
-- `Spark.folder.delete(id)` deletes a folder by id.
+- `Spark.folders.getCategories()` gets the list of folder categories.
+- `Spark.folders.create(data)` creates a new folder using info such as name, description, category, etc.
+- `Spark.folders.find(name)` finds folders by name, status, category, or favorite.
+- `Spark.folders.update(id, data)` updates a folder's information by id.
+- `Spark.folders.delete(id)` deletes a folder by id.
 
 [Service API](./docs/service.md) - manages Spark services:
 
-- `Spark.service.create(data)` creates a new Spark service.
-- `Spark.service.execute(uri, data)` executes a Spark service.
-- `Spark.service.batch.execute(uri, data)` executes multiple records synchronously.
-- `Spark.service.getVersions(uri)` lists all the versions of a service.
-- `Spark.service.getSwagger(uri)` gets the Swagger documentation of a service.
-- `Spark.service.getSchema(uri)` gets the schema of a service.
-- `Spark.service.getMetadata(uri)` gets the metadata of a service.
-- `Spark.service.download(uri)` downloads the excel file of a service.
-- `Spark.service.recompile(uri)` recompiles a service using specific compiler versions.
-- `Spark.service.validate(uri, data)` validates input data using static or dynamic validations.
-- `Spark.service.export(uri)` exports Spark services as a zip file.
-- `Spark.service.import(data)` imports Spark services from a zip file into the Spark platform.
+- `Spark.services.create(data)` creates a new Spark service.
+- `Spark.services.execute(uri, data)` executes a Spark service.
+- `Spark.services.batches.execute(uri, data)` executes multiple records synchronously.
+- `Spark.services.getVersions(uri)` lists all the versions of a service.
+- `Spark.services.getSwagger(uri)` gets the Swagger documentation of a service.
+- `Spark.services.getSchema(uri)` gets the schema of a service.
+- `Spark.services.getMetadata(uri)` gets the metadata of a service.
+- `Spark.services.download(uri)` downloads the excel file of a service.
+- `Spark.services.recompile(uri)` recompiles a service using specific compiler versions.
+- `Spark.services.validate(uri, data)` validates input data using static or dynamic validations.
+- `Spark.services.export(uri)` exports Spark services as a zip file.
+- `Spark.services.import(data)` imports Spark services from a zip file into the Spark platform.
 
 [Log History API](./docs/history.md) - manages service execution logs:
 
-- `Spark.service.log.rehydrate(uri, callId)` rehydrates the executed model into the original Excel file.
-- `Spark.service.log.download(uri, [type])` downloads service execution logs as `csv` or `json` file.
+- `Spark.logs.rehydrate(uri, callId)` rehydrates the executed model into the original Excel file.
+- `Spark.logs.download(uri, [type])` downloads service execution logs as `csv` or `json` file.
 
 [ImpEx API](./docs/impex.md) - imports and exports Spark services:
 
@@ -266,7 +267,7 @@ OAuth2.0 Client Credentials flow:
 [Other APIs](./docs/misc.md) - for other functionalities:
 
 - `Spark.wasm.download(uri)` downloads a service's WebAssembly module.
-- `Spark.file.download(url)` downloads temporary files issued by the Spark platform.
+- `Spark.files.download(url)` downloads temporary files issued by the Spark platform.
 
 > **PRO TIP:**
 > A service URI locator can be combined with other parameters to locate a specific
@@ -277,13 +278,14 @@ OAuth2.0 Client Credentials flow:
 ```ts
 const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'open' });
 const uri = { folder: 'my-folder', service: 'my-service', public: true };
-const inputs = { value: 'Hello, Spark SDK!' };
+const inputs = { value: 42 };
 
-spark.service
+spark.services
   .execute(uri, { inputs })
   .then((response) => console.log(response.data))
   .catch(console.error);
-// The final URI in this case is: 'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
+// The final URI in this case is:
+//    'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
 ```
 
 See the [Uri](./src/resources/base.ts) class for more details.

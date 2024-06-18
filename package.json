@@ -1,9 +1,9 @@
 {
   "name": "@cspark/sdk",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "A Node.js SDK for interacting with Coherent Spark APIs",
-  "author": "Ralph Florent",
-  "homepage": "https://github.com/c-spark/cspark-ts-sdk/blob/main/docs/readme.md",
+  "author": "Coherent <team@coherent.global>",
+  "homepage": "https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/docs/readme.md",
   "license": "Apache-2.0",
   "keywords": [
     "coherent",
@@ -12,7 +12,7 @@
     "restful",
     "api"
   ],
-  "repository": "github:c-spark/cspark-ts-sdk",
+  "repository": "github:Coherent-Partners/spark-ts-sdk",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
   "types": "./lib/esm/index.d.ts",
@@ -55,6 +55,7 @@
     "@types/papaparse": "^5.3.14",
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
+    "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",

@@ -59,7 +59,7 @@ async function main() {
 
   // 2. Execute sync batch and save results to a file
   try {
-    const response = await spark.service.batch.execute<Inputs, Outputs>(serviceUri, { inputs: dataset });
+    const response = await spark.services.batches.execute<Inputs, Outputs>(serviceUri, { inputs: dataset });
 
     writer.write(JSON.stringify({ inputs: dataset, ...response.data }, null, 2));
     logger.log(`bulk of ${total} records processed successfully`);
@@ -79,9 +79,9 @@ class Logger implements LoggerService {
   constructor(private context: string) {}
 
   log(message: string) {
-    const msg = `[${this.context}] ${new Date().toISOString()} - ${message}`;
-    this.messages.push(msg);
-    console.log(msg);
+    message = `[${this.context}] ${new Date().toISOString()} - ${message}`;
+    this.messages.push(message);
+    console.log(message);
   }
 
   debug(message: string) {

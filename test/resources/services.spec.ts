@@ -1,7 +1,7 @@
 import Spark, { ApiResource } from '@cspark/sdk';
 import LocalServer, { TestBaseUrl } from './_server';
 
-describe('Spark.service', () => {
+describe('Spark.services', () => {
   const localSever = new LocalServer();
   const apiRequest = jest.spyOn(ApiResource.prototype as any, 'request');
   let spark: Spark;
@@ -37,7 +37,7 @@ describe('Spark.service', () => {
   });
 
   it('should execute a service with default inputs', async () => {
-    const res = await spark.service.execute<Outputs>('my-folder/my-service');
+    const res = await spark.services.execute<Outputs>('my-folder/my-service');
 
     expect(apiRequest).toHaveBeenCalledWith(
       expect.anything(),
@@ -58,7 +58,7 @@ describe('Spark.service', () => {
   });
 
   it('should execute a service with inputs', async () => {
-    const res = await spark.service.execute<Inputs, Outputs>(
+    const res = await spark.services.execute<Inputs, Outputs>(
       {
         folder: 'my-folder',
         service: 'my-service',

@@ -178,7 +178,7 @@ class NodeLogger implements LoggerService {
       case 'debug':
         return `\x1B[95m${text}\x1B[39m`; // magenta
       case 'warn':
-        return `\x1B[33m${text}\x1B[39m`; // yellow
+        return `\x1B[93m${text}\x1B[39m`; // yellow
       case 'error':
         return `\x1B[31m${text}\x1B[39m`; // red
       case 'verbose':
@@ -248,6 +248,7 @@ class BrowserLogger implements LoggerService {
     ...args: any[]
   ) {
     const formattedMessages = this.formatMessage(message as string, logLevel);
+    // eslint-disable-next-line no-console
     console[methodName](...formattedMessages, ...args);
   }
 

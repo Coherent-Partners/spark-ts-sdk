@@ -1,25 +1,28 @@
 import { type Readable } from 'stream';
 
+import { type Config } from '../config';
 import { Serializable } from '../data';
 import { SparkApiError } from '../error';
 import { HttpResponse, Multipart } from '../http';
 import { DateUtils, StringUtils } from '../utils';
 import { SPARK_SDK } from '../constants';
 
-import { ApiResource, Uri, ApiResponse } from './base';
+import { ApiResource, Uri, UriOptions, ApiResponse } from './base';
 
-export class Folder extends ApiResource {
+export class Folders extends ApiResource {
+  readonly baseUri!: UriOptions;
+
+  constructor(config: Config) {
+    super(config);
+    this.baseUri = { base: this.config.baseUrl.value, version: 'api/v1' };
+  }
+
   /**
    * Gets the list of folder categories.
    * @returns {Promise<HttpResponse<FolderCategories>>}
    */
   getCategories(): Promise<HttpResponse<FolderCategories>> {
-    const url = Uri.from(undefined, {
-      base: this.config.baseUrl.value,
-      version: 'api/v1',
-      endpoint: 'lookup/getcategories',
-    });
-    return this.request(url);
+    return this.request(Uri.from(undefined, { ...this.baseUri, endpoint: 'lookup/getcategories' }));
   }
 
   /**
@@ -31,7 +34,7 @@ export class Folder extends ApiResource {
   async create(params: CreateParams): Promise<HttpResponse<FolderCreated>>;
   async create(name: string): Promise<HttpResponse<FolderCreated>>;
   async create(params: string | CreateParams): Promise<HttpResponse<FolderCreated>> {
-    const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint: 'product/create' });
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'product/create' });
     const createParams = (StringUtils.isString(params) ? { name: params } : params) as CreateParams;
     const { name, category = 'Other', description, status, cover } = createParams;
     const [startDate, launchDate] = DateUtils.parse(createParams.startDate, createParams.launchDate);
@@ -80,7 +83,7 @@ export class Folder extends ApiResource {
   find(name: string, paging?: Paging): Promise<HttpResponse<FolderListed>>;
   find(name: string): Promise<HttpResponse<FolderListed>>;
   find(params: string | SearchParams, paging: Paging = {}): Promise<HttpResponse<FolderListed>> {
-    const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint: 'product/list' });
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'product/list' });
     const searchParams = (StringUtils.isString(params) ? { name: params } : params) as SearchParams;
     const search = Object.entries(searchParams)
       .filter(([, value]) => !!value)
@@ -100,7 +103,7 @@ export class Folder extends ApiResource {
    */
   async update(id: string, params: Omit<CreateParams, 'name' | 'status'>): Promise<HttpResponse<FolderUpdated>> {
     const endpoint = `product/update/${id?.trim()}`;
-    const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint });
     const { cover, startDate, launchDate, ...rest } = params;
     if (cover) await this.uploadCover(id, cover);
 
@@ -124,7 +127,7 @@ export class Folder extends ApiResource {
    */
   delete(id: string): Promise<HttpResponse<FolderDeleted>> {
     const endpoint = `product/delete/${id?.trim()}`;
-    const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint });
     this.logger.warn(`deleting folder will also delete all its services.`);
     return this.request(url, { method: 'DELETE' });
   }
@@ -136,8 +139,7 @@ export class Folder extends ApiResource {
    * @returns {Promise<HttpResponse<CoverUploaded>>}
    */
   uploadCover(id: string, cover: CoverImage): Promise<HttpResponse<CoverUploaded>> {
-    const endpoint = `product/UploadCoverImage`;
-    const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'product/UploadCoverImage' });
     const multiparts: Multipart[] = [
       { name: 'id', data: id?.trim() },
       { name: 'coverImage', fileStream: cover.image, fileName: cover.fileName },
@@ -147,7 +149,7 @@ export class Folder extends ApiResource {
   }
 }
 
-export class File extends ApiResource {
+export class Files extends ApiResource {
   /**
    * Download a Spark file from a protected URL.
    * @param {string} url - Spark URL.

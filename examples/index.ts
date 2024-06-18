@@ -9,11 +9,11 @@
 import Spark from '@cspark/sdk';
 
 import Config from './config';
-import Folder from './folder';
+import Folder from './folders';
 import Service from './service';
 import History from './history';
 import ImpEx from './impex';
-import Batch from './batch';
+import Batch from './batches';
 
 const token = 'insert-my-access-token';
 const spark = new Spark({ token, env: 'my-env', tenant: 'my-tenant' });

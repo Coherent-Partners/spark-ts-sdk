@@ -5,23 +5,23 @@ import { HttpResponse, Multipart, getRetryTimeout } from '../http';
 import Utils, { StringUtils, DateUtils } from '../utils';
 
 import { History } from './history';
-import { Batch } from './batch';
+import { Batches } from './batches';
 import { ImpEx, ImportResult } from './impex';
 import { ApiResource, ApiResponse, Uri, UriParams } from './base';
 import { GetSwaggerParams, GetVersionsParams, GetSchemaParams, GetMetadataParams } from './types';
 import { CreateParams, CompileParams, PublishParams, GetStatusParams, DownloadParams, RecompileParams } from './types';
 import { ExportParams, ImportParams, MigrateParams } from './types';
 
-export class Service extends ApiResource {
+export class Services extends ApiResource {
   get compilation() {
     return new Compilation(this.config);
   }
 
-  get batch() {
-    return new Batch(this.config);
+  get batches() {
+    return new Batches(this.config);
   }
 
-  get log() {
+  get logs() {
     return new History(this.config);
   }
 
@@ -32,7 +32,7 @@ export class Service extends ApiResource {
    * @throws {SparkError} if the service creation fails
    *
    * @transactional
-   * See {@link Service.compile} and {@link Service.publish} for individual steps.
+   * See {@link Services.compile} and {@link Services.publish} for individual steps.
    */
   async create(params: CreateParams) {
     const { upload, compilation } = await this.compile(params);
@@ -181,9 +181,7 @@ export class Service extends ApiResource {
   getMetadata(uri: string): Promise<HttpResponse<MetadataFound>>;
   getMetadata(params: GetMetadataParams): Promise<HttpResponse<MetadataFound>>;
   getMetadata(uri: string | GetMetadataParams): Promise<HttpResponse<MetadataFound>> {
-    const url = Uri.from(Uri.toParams(uri), { base: this.config.baseUrl.full, endpoint: 'metadata' });
-
-    return this.request(url);
+    return this.request(Uri.from(Uri.toParams(uri), { base: this.config.baseUrl.full, endpoint: 'metadata' }));
   }
 
   /**
@@ -238,7 +236,7 @@ export class Service extends ApiResource {
    * @param {string | RecompileParams} uri - how to locate the service
    * @returns {Promise<HttpResponse<ServiceRecompiled>>} the recompilation status.
    *
-   * Unlike {@link Service.compile}, this method does not upload a new service file.
+   * Unlike {@link Services.compile}, this method does not upload a new service file.
    * It only recompiles the existing service with the specified parameters. You
    * may want to check the {@link Compilation.getStatus} method to monitor the
    * recompilation job before subsequent actions.

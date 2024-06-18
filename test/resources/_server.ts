@@ -21,7 +21,7 @@ export default class LocalServer {
   constructor(readonly hostname: string = 'localhost') {
     this.server = http.createServer(this.router);
     this.server.keepAliveTimeout = 1000;
-    this.server.on('error', (err) => console.log(err.stack));
+    this.server.on('error', (err) => console.error(err.stack));
     this.server.on('connection', (socket) => socket.setTimeout(1500));
   }
 
@@ -43,7 +43,7 @@ export default class LocalServer {
   router(req: http.IncomingMessage, res: http.ServerResponse) {
     const pathname = req.url;
 
-    // Spark.folder.getCategories()
+    // Spark.folders.getCategories()
     if (pathname === '/api/v1/lookup/getcategories') {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
@@ -57,7 +57,7 @@ export default class LocalServer {
       );
     }
 
-    // Spark.service.execute('my-folder/my-service')
+    // Spark.services.execute('my-folder/my-service')
     if (pathname === '/my-tenant/api/v3/folders/my-folder/services/my-service/execute') {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
@@ -71,7 +71,7 @@ export default class LocalServer {
       );
     }
 
-    // Spark.service.execute('my-folder/my-service', inputs)
+    // Spark.services.execute('my-folder/my-service', inputs)
     if (pathname === '/my-tenant/api/v3/public/folders/my-folder/services/my-service/execute') {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
