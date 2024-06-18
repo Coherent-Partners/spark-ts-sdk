@@ -243,7 +243,7 @@ OAuth2.0 Client Credentials flow:
 
 - `Spark.services.create(data)` creates a new Spark service.
 - `Spark.services.execute(uri, data)` executes a Spark service.
-- `Spark.services.batch.execute(uri, data)` executes multiple records synchronously.
+- `Spark.services.batches.execute(uri, data)` executes multiple records synchronously.
 - `Spark.services.getVersions(uri)` lists all the versions of a service.
 - `Spark.services.getSwagger(uri)` gets the Swagger documentation of a service.
 - `Spark.services.getSchema(uri)` gets the schema of a service.

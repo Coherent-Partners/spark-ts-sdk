@@ -72,7 +72,7 @@ await spark.services.execute(
 );
 
 // Use case 2: as part of the payload (will fail to locate the service)
-await spark.services.batch.execute(
+await spark.services.batches.execute(
   { folder, service },
   {
     /* data */
@@ -82,7 +82,7 @@ await spark.services.batch.execute(
 
 Behind the scenes, the `Spark.services.execute` uses the URI locator as part of
 the final URL to locate the service to execute. Hence, it works fine whether the
-identifiers are URL encoded or not. However, when using the `Spark.services.batch.execute`,
+identifiers are URL encoded or not. However, when using the `Spark.services.batches.execute`,
 the method uses the URI locator as part of the payload, which will fail to locate
 the service if the identifiers are URL-encoded. Therefore, it is recommended to
 use plain strings when referring to these identifiers.

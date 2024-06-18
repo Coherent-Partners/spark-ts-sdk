@@ -2,20 +2,20 @@
 
 # Service API
 
-| Verb                                      | Description                                                                        |
-| ----------------------------------------- | ---------------------------------------------------------------------------------- |
-| `Spark.services.create(data)`             | [Create a new Spark service](#create-a-new-spark-service).                         |
-| `Spark.services.execute(uri, data)`       | [Execute a Spark service](#execute-a-spark-service).                               |
-| `Spark.services.batch.execute(uri, data)` | [Execute multiple records synchronously](#execute-multiple-records-synchronously). |
-| `Spark.services.getVersions(uri)`         | [Get all the versions of a service](#get-all-the-versions-of-a-service).           |
-| `Spark.services.getSwagger(uri)`          | [Get the Swagger documentation of a service](#get-the-swagger-documentation).      |
-| `Spark.services.getSchema(uri)`           | [Get the schema for a given service](#get-the-schema-for-a-service).               |
-| `Spark.services.getMetadata(uri)`         | [Get the metadata of a service](#get-the-metadata-of-a-service).                   |
-| `Spark.services.download(uri)`            | [Download the excel file of a service](#download-the-excel-file-of-a-service).     |
-| `Spark.services.recompile(uri)`           | [Recompile a service using specific compiler version](#recompile-a-service).       |
-| `Spark.services.validate(uri, data)`      | [Validate input data using static or dynamic validations](#validate-input-data).   |
-| `Spark.services.export(uri)`              | [Export Spark services as a zip file](#export-spark-services).                     |
-| `Spark.services.import(data)`             | [Import a Spark service from a zip file](#import-spark-services).                  |
+| Verb                                        | Description                                                                        |
+| ------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `Spark.services.create(data)`               | [Create a new Spark service](#create-a-new-spark-service).                         |
+| `Spark.services.execute(uri, data)`         | [Execute a Spark service](#execute-a-spark-service).                               |
+| `Spark.services.batches.execute(uri, data)` | [Execute multiple records synchronously](#execute-multiple-records-synchronously). |
+| `Spark.services.getVersions(uri)`           | [Get all the versions of a service](#get-all-the-versions-of-a-service).           |
+| `Spark.services.getSwagger(uri)`            | [Get the Swagger documentation of a service](#get-the-swagger-documentation).      |
+| `Spark.services.getSchema(uri)`             | [Get the schema for a given service](#get-the-schema-for-a-service).               |
+| `Spark.services.getMetadata(uri)`           | [Get the metadata of a service](#get-the-metadata-of-a-service).                   |
+| `Spark.services.download(uri)`              | [Download the excel file of a service](#download-the-excel-file-of-a-service).     |
+| `Spark.services.recompile(uri)`             | [Recompile a service using specific compiler version](#recompile-a-service).       |
+| `Spark.services.validate(uri, data)`        | [Validate input data using static or dynamic validations](#validate-input-data).   |
+| `Spark.services.export(uri)`                | [Export Spark services as a zip file](#export-spark-services).                     |
+| `Spark.services.import(data)`               | [Import a Spark service from a zip file](#import-spark-services).                  |
 
 ## Create a new Spark service
 
@@ -357,7 +357,7 @@ const data = {
   callPurpose: 'Batch execution',
 };
 
-await spark.services.batch.execute('my-folder/my-service', { data });
+await spark.services.batches.execute('my-folder/my-service', { data });
 ```
 
 To have a full overview of the parameters, see the `UriParams` and `ExecuteParams<Inputs>`
