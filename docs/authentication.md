@@ -109,16 +109,27 @@ As you already know, the SDK will attempt to read the API key, bearer token, and
 OAuth credentials from the environment variables. This is the recommended way to
 store your sensitive information.
 
+**Method 1**: Here's how you can export the environment variables in a Unix-like shell:
+
 ```bash
+export CSPARK_BASE_URL='https://excel.my-env.coherent.global/my-tenant'
+# and
 export CSPARK_API_KEY='my-api-key'
 # or
-export CSPARK_BEARER_TOKEN='Bearer your access token'
+export CSPARK_BEARER_TOKEN='Bearer my-access-token'
 # or
 export CSPARK_CLIENT_ID='my-client-id'
 export CSPARK_CLIENT_SECRET='my-client-secret'
 # or
 export CSPARK_OAUTH_PATH='path/to/my/client-credentials.json'
 ```
+
+**Method 2** (preferred): Alternatively, you can use a `.env` file to store your
+environment variables and use a package like [dotenv](https://www.npmjs.com/package/dotenv)
+to load them into your application.
+
+> [!WARNING]
+> Please note that you should never commit your `.env` file to a public repository.
 
 Creating a `SparkClient` instance now becomes as simple as:
 

@@ -215,7 +215,7 @@ to execute a specific version, you can do the following:
 ```ts
 await spark.services.execute('version/uuid');
 // or
-await spark.services.execute({ folder: 'my-folder', service: 'my-service', versionId: 'uuid' });
+await spark.services.execute({ versionId: 'uuid' });
 // or
 await spark.services.execute('my-folder/my-service', { data: { versionId: 'uuid' } });
 ```
@@ -226,7 +226,7 @@ await spark.services.execute('my-folder/my-service', { data: { versionId: 'uuid'
 ```ts
 await spark.services.execute('service/uuid');
 // or
-await spark.services.execute({ folder: 'my-folder', service: 'my-service', serviceId: 'uuid' });
+await spark.services.execute({ serviceId: 'uuid' });
 // or
 await spark.services.execute('my-folder/my-service', { data: { serviceId: 'uuid' } });
 ```
@@ -361,7 +361,7 @@ await spark.services.batches.execute('my-folder/my-service', { data });
 ```
 
 To have a full overview of the parameters, see the `UriParams` and `ExecuteParams<Inputs>`
-objects [here](../src/resources/batch.ts).
+objects [here](../src/resources/batches.ts).
 
 For the first argument, `UriParams` object:
 
@@ -826,7 +826,7 @@ Additionally, you can specify optional parameters to customize the export proces
 | _maxRetries_      | `number`                | The maximum number of retries when checking the export status.     |
 | _retryInterval_   | `number`                | The interval between status check retries in seconds.              |
 
-For example, the example below exports the latest version of a service and packages
+For instance, the example below exports the latest version of a service and packages
 all its associated files into a zip file.
 
 ```ts

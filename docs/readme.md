@@ -116,7 +116,11 @@ control over the process.
 
 ## HTTP Request
 
-The SDK is shipped with a built-in logger that will log all HTTP requests
+The SDK is built on top of the [node-fetch](https://www.npmjs.com/package/node-fetch)
+library, which provides an elegant, feature-rich HTTP module. The SDK built a layer
+on top of it to simplify the process of making HTTP requests to the Spark platform.
+
+The SDK is also shipped with a built-in logger that will log all HTTP requests
 to the console by default. If you want to disable this feature, you can set
 the `logger` property to `false` or to higher log levels (e.g., `warn`) in the
 SDK configuration.

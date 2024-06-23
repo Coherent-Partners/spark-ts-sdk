@@ -13,6 +13,7 @@ for commit guidelines.
   - `Spark.service.log` -> `Spark.services.logs`
   - `Spark.batch` -> `Spark.batches`
 - Apply minor improvements to the base Uri options
+- Enfore no-console lint rule
 
 ## 0.1.2 (2024-05-15)
 

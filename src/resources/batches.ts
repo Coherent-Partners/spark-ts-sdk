@@ -80,7 +80,7 @@ export class Batches extends ApiResource {
       runner_thread_count: options?.runnersPerVM,
       max_input_size: options?.maxInputSize,
       max_output_size: options?.maxOutputSize,
-      acceptable_error_percentage: 1 - (options?.accuracy ?? 1) * 100,
+      acceptable_error_percentage: Math.ceil((1 - Math.min(options?.accuracy ?? 1, 1.0)) * 100), // ensure 0.0 to 1.0
     };
 
     return this.request<BatchCreated>(url, { method: 'POST', body });
@@ -453,7 +453,7 @@ interface PipelineOptions {
    */
   maxOutputSize?: number;
   /**
-   * The percentage of acceptable error rate (defaults to 1.0 aka 100).
+   * The percentage of acceptable error rate (defaults to 1.0 aka 100%).
    *
    * By nature, batch jobs are intended to process large amounts of data and it
    * is possible that some records may fail to process as expected or throw errors.
