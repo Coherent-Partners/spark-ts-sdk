@@ -20,7 +20,7 @@ export class History extends ApiResource {
    * interchangeable and will be used as a search term if provided.
    */
   find(uri: string | SearchParams, paging: Paging = {}): Promise<HttpResponse<LogListed>> {
-    const { folder, service, ...params } = Uri.toParams(uri);
+    const { folder, service, ...params } = Uri.validate(uri);
     const endpoint = `product/${folder}/engines/${service}/logs`;
     const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
     const body = this.#buildSearchBody(params, paging);
@@ -45,7 +45,7 @@ export class History extends ApiResource {
    */
   async rehydrate(params: RehydrateParams): Promise<HttpResponse<LogRehydrated>>;
   async rehydrate(uri: string | RehydrateParams, callId?: string): Promise<HttpResponse<LogRehydrated>> {
-    const { folder, service, ...params } = Uri.toParams(uri);
+    const { folder, service, ...params } = Uri.validate(uri);
     callId = (callId ?? params?.callId)?.trim();
     if (!callId) {
       const error = SparkError.sdk({ message: 'callId is required', cause: callId });
@@ -83,7 +83,7 @@ export class History extends ApiResource {
    */
   async download(params: DownloadParams): Promise<HttpResponse<LogStatus>>;
   async download(uri: string | DownloadParams, type?: DownloadFileType): Promise<HttpResponse<LogStatus>> {
-    const { folder, service, ...params } = Uri.toParams(uri);
+    const { folder, service, ...params } = Uri.validate(uri);
     const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
     type = (type ?? params?.type ?? 'json').toLowerCase() as DownloadFileType;
 
@@ -144,7 +144,7 @@ class LogDownload extends ApiResource {
    * @throws {SparkError} if the download job fails to produce a downloadable file.
    */
   async initiate(uri: string | CreateJobParams, type?: DownloadFileType): Promise<HttpResponse<JobCreated>> {
-    const { folder, service, ...params } = Uri.toParams(uri);
+    const { folder, service, ...params } = Uri.validate(uri);
     type = (type ?? params?.type ?? 'json').toLowerCase() as DownloadFileType;
     const url = Uri.from({ folder, service }, { base: this.config.baseUrl.full, endpoint: `log/download${type}` });
 
@@ -183,7 +183,7 @@ class LogDownload extends ApiResource {
   async getStatus(uri: string, type: DownloadFileType): Promise<HttpResponse<LogStatus>>;
   async getStatus(params: GetStatusParams): Promise<HttpResponse<LogStatus>>;
   async getStatus(uri: string | GetStatusParams, type?: DownloadFileType): Promise<HttpResponse<LogStatus>> {
-    const { jobId, ...params } = Uri.toParams(uri);
+    const { jobId, ...params } = Uri.validate(uri);
     const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
     type = (type ?? params?.type ?? 'json').toLowerCase() as DownloadFileType;
     const url = Uri.from(params, { base: this.config.baseUrl.full, endpoint: `log/download${type}/status/${jobId}` });

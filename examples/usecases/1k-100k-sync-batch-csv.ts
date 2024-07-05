@@ -49,7 +49,7 @@ async function main() {
   const writer = createWriteStream(join(basePath, new Date().toISOString() + '_results.json'));
   const logger = new Logger('sync-batch');
   const spark = new Spark({ ...sparkOptions, logger: { logger } });
-  const batches = spark.services.batches;
+  const services = spark.services;
 
   // This helps keep track of the request ID for each API call (not required).
   spark.config.interceptors.add({
@@ -62,7 +62,7 @@ async function main() {
   async function submit(values: any[], count: number = 0) {
     const inputs = [headers, ...values]; // submit as JSON array.
     try {
-      const response = await batches.execute<Inputs, Outputs>(serviceUri, { inputs });
+      const response = await services.execute<Inputs, Outputs>(serviceUri, { inputs });
 
       writer.write(JSON.stringify({ inputs, ...response.data }, null, 2) + (count ? ',\n' : ''));
       logger.log(`chunk ${count} (${values.length} records) processed successfully`);

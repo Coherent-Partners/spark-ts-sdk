@@ -1,21 +1,20 @@
 <!-- markdownlint-disable-file MD024 -->
 
-# Service API
+# Services API
 
-| Verb                                        | Description                                                                        |
-| ------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `Spark.services.create(data)`               | [Create a new Spark service](#create-a-new-spark-service).                         |
-| `Spark.services.execute(uri, data)`         | [Execute a Spark service](#execute-a-spark-service).                               |
-| `Spark.services.batches.execute(uri, data)` | [Execute multiple records synchronously](#execute-multiple-records-synchronously). |
-| `Spark.services.getVersions(uri)`           | [Get all the versions of a service](#get-all-the-versions-of-a-service).           |
-| `Spark.services.getSwagger(uri)`            | [Get the Swagger documentation of a service](#get-the-swagger-documentation).      |
-| `Spark.services.getSchema(uri)`             | [Get the schema for a given service](#get-the-schema-for-a-service).               |
-| `Spark.services.getMetadata(uri)`           | [Get the metadata of a service](#get-the-metadata-of-a-service).                   |
-| `Spark.services.download(uri)`              | [Download the excel file of a service](#download-the-excel-file-of-a-service).     |
-| `Spark.services.recompile(uri)`             | [Recompile a service using specific compiler version](#recompile-a-service).       |
-| `Spark.services.validate(uri, data)`        | [Validate input data using static or dynamic validations](#validate-input-data).   |
-| `Spark.services.export(uri)`                | [Export Spark services as a zip file](#export-spark-services).                     |
-| `Spark.services.import(data)`               | [Import a Spark service from a zip file](#import-spark-services).                  |
+| Verb                                  | Description                                                                      |
+| ------------------------------------- | -------------------------------------------------------------------------------- |
+| `Spark.services.create(data)`         | [Create a new Spark service](#create-a-new-spark-service).                       |
+| `Spark.services.execute(uri, inputs)` | [Execute a Spark service](#execute-a-spark-service).                             |
+| `Spark.services.getVersions(uri)`     | [Get all the versions of a service](#get-all-the-versions-of-a-service).         |
+| `Spark.services.getSwagger(uri)`      | [Get the Swagger documentation of a service](#get-the-swagger-documentation).    |
+| `Spark.services.getSchema(uri)`       | [Get the schema for a given service](#get-the-schema-for-a-service).             |
+| `Spark.services.getMetadata(uri)`     | [Get the metadata of a service](#get-the-metadata-of-a-service).                 |
+| `Spark.services.download(uri)`        | [Download the excel file of a service](#download-the-excel-file-of-a-service).   |
+| `Spark.services.recompile(uri)`       | [Recompile a service using specific compiler version](#recompile-a-service).     |
+| `Spark.services.validate(uri, data)`  | [Validate input data using static or dynamic validations](#validate-input-data). |
+| `Spark.services.export(uri)`          | [Export Spark services as a zip file](#export-spark-services).                   |
+| `Spark.services.import(data)`         | [Import a Spark service from a zip file](#import-spark-services).                |
 
 ## Create a new Spark service
 
@@ -149,20 +148,27 @@ and publication process.
 
 ## Execute a Spark service
 
-This method executes a Spark service with the given input data. It uses the API v3
-format to execute the service.
+This method executes a Spark service with the input data and returns the output data.
+It's the most common method for interacting with Spark services.
 
-Check out the [API reference](https://docs.coherent.global/spark-apis/execute-api/execute-api-v3)
-to learn more about the API v3 format of the inputs and outputs.
+Currently, Spark supports two versions of the API: v3 and v4. The SDK will use
+the [v3 format][v3-format] for a single input and the [v4 format][v4-format]
+for multiple inputs.
+
+By default, the SDK uses the v4 format for the output data. You may specify the
+desired response format to retrieve the original format emitted by the API.
+
+Check out the [API reference](https://docs.coherent.global/spark-apis/execute-api)
+to learn more about Services API.
 
 ### Arguments
 
 The method accepts a string or a `UriParams` object and optionally a second object
-with the input data as arguments. See the use cases below.
+with the input data and metadata as arguments. See the use cases below.
 
 - **Default inputs**:
   the following example demonstrates how to execute a service with default values.
-  Obviously, the SDK ignores what those default values are. Under the hood, the SDK
+  Obviously, the SDK ignores those default values. Under the hood, the SDK
   uses an empty object `{}` as the input data, which is an indicator for Spark to
   use the default inputs defined in the Excel file.
 
@@ -178,10 +184,7 @@ await spark.services.execute({ folder: 'my-folder', service: 'my-service' });
   object as the second argument.
 
 ```ts
-const inputs = { my_input: 13 };
-await spark.services.execute('my-folder/my-service', { inputs });
-// or
-await spark.services.execute('my-folder/my-service', { data: { inputs } });
+await spark.services.execute('my-folder/my-service', { inputs: { my_input: 13 } });
 ```
 
 - **Inputs with metadata**: you can also provide metadata along with the input data.
@@ -189,21 +192,16 @@ await spark.services.execute('my-folder/my-service', { data: { inputs } });
 ```ts
 const inputs = { my_input: 13 };
 const metadata = { subservices: 'sum,product', callPurpose: 'Demo' };
-await spark.services.execute('my-folder/my-service', { data: { inputs, ...metadata } });
+await spark.services.execute('my-folder/my-service', { inputs, ...metadata });
 ```
 
-- **Raw data**:
+- **JSON string data**:
   you may use JSON string data as shown in the [API Tester](https://docs.coherent.global/navigation/api-tester).
   Basically, you are free to work with raw data as long as it's a valid JSON
   string and follows the API v3 format.
 
 ```ts
-const raw = `{
-  "request_data": { "inputs": { "my_input": 13 } },
-  "request_meta": { "version_id": "uuid", "call_purpose": "Demo" }
-}`;
-
-await spark.services.execute('my-folder/my-service', { raw });
+await spark.services.execute('my-folder/my-service', { inputs: `{ "my_input": 13 }` });
 ```
 
 The previous examples will execute the latest version of a service. If you want
@@ -216,8 +214,6 @@ to execute a specific version, you can do the following:
 await spark.services.execute('version/uuid');
 // or
 await spark.services.execute({ versionId: 'uuid' });
-// or
-await spark.services.execute('my-folder/my-service', { data: { versionId: 'uuid' } });
 ```
 
 - using **serviceId**:
@@ -227,26 +223,26 @@ await spark.services.execute('my-folder/my-service', { data: { versionId: 'uuid'
 await spark.services.execute('service/uuid');
 // or
 await spark.services.execute({ serviceId: 'uuid' });
-// or
-await spark.services.execute('my-folder/my-service', { data: { serviceId: 'uuid' } });
 ```
 
 - using semantic **version**:
   `version` also known as revision number is the semantic version of the service.
+  Keep in mind that using only `version` is not enough to locate a service. You must
+  provide either the `folder` and `service` names or the `serviceId`.
 
 ```ts
 await spark.services.execute('my-folder/my-service[0.1.0]');
 // or
 await spark.services.execute({ folder: 'my-folder', service: 'my-service', version: '0.1.0' });
-// or
-await spark.services.execute('my-folder/my-service', { data: { version: '0.1.0' } });
 ```
 
 - using **proxy** endpoints:
   `proxy` is the custom endpoint associated with the service.
 
 ```ts
-await spark.services.execute('my-proxy/endpoint');
+await spark.services.execute('proxy/custom-endpoint');
+// or
+await spark.services.execute({ proxy: 'custom-endpoint' });
 ```
 
 As you can tell, there are multiple flavors when it comes to locating a Spark
@@ -259,41 +255,67 @@ For the first argument, `UriParams` object:
 | ----------- | --------- | ------------------------------------------------ |
 | _folder_    | `string`  | The folder name.                                 |
 | _service_   | `string`  | The service name.                                |
+| _version_   | `string`  | The user-friendly semantic version of a service. |
 | _versionId_ | `string`  | The UUID of a particular version of the service. |
-| _serviceId_ | `string`  | The service UUID.                                |
-| _version_   | `string`  | The semantic version of the service.             |
+| _serviceId_ | `string`  | The service UUID (points to the latest version). |
 | _proxy_     | `string`  | The custom endpoint associated with the service. |
 | _public_    | `boolean` | Whether to use the public endpoint.              |
 
 For the second argument, `ExecuteParams` object:
 
-| Property             | Type                       | Description                                                     |
-| -------------------- | -------------------------- | --------------------------------------------------------------- |
-| _inputs_             | `Record<string, any>`      | The input data.                                                 |
-| _raw_                | `string`                   | The input data in its raw form.                                 |
-| _data_               | `ExecuteData<Inputs>`      | Executable input data with metadata.                            |
-| _data.inputs_        | `Record<string, any>`      | Alternate way to pass in input data.                            |
-| _data.serviceUri_    | `string`                   | The service URI.                                                |
-| _data.versionId_     | `string`                   | The version ID of the service.                                  |
-| _data.serviceId_     | `string`                   | The service UUID.                                               |
-| _data.version_       | `string`                   | The semantic version.                                           |
-| _data.activeSince_   | `string \| number \| Date` | The transaction date.                                           |
-| _data.sourceSystem_  | `string`                   | The source system.                                              |
-| _data.correlationId_ | `string`                   | The correlation ID.                                             |
-| _data.callPurpose_   | `string`                   | The call purpose.                                               |
-| _data.outputs_       | `string \| string[]`       | The array of output names.                                      |
-| _data.compilerType_  | `string`                   | The compiler type (e.g., `Neuron`).                             |
-| _data.debugSolve_    | `boolean`                  | Enable debugging for solve functions.                           |
-| _data.output_        | `string \| string[]`       | Expect specific requested output.                               |
-| _data.outputRegex_   | `string`                   | Expect specific requested output using regex.                   |
-| _data.withInputs_    | `boolean`                  | Whether to include input data in the response.                  |
-| _data.subservices_   | `string \| string[]`       | The comma-separated subservice names if string.                 |
-| _data.downloadable_  | `boolean`                  | Whether to include a download URL of the Excel in the response. |
+| Property          | Type                                             | Description                                                  |
+| ----------------- | ------------------------------------------------ | ------------------------------------------------------------ |
+| _inputs_          | `null \| string \| Record<string, any> \| any[]` | The input data (single or many).                             |
+| _responseFormat_  | `original \| alike`                              | Response data format to use (defaults to `alike`).           |
+| _activeSince_     | `string \| number \| Date`                       | The transaction date (helps pinpoint a version).             |
+| _sourceSystem_    | `string`                                         | The source system (defaults to `Spark JS SDK`).              |
+| _correlationId_   | `string`                                         | The correlation ID.                                          |
+| _callPurpose_     | `string`                                         | The call purpose.                                            |
+| _tablesAsArray_   | `string \| string[]`                             | Filter which table to output as JSON array.                  |
+| _compilerType_    | `string`                                         | The compiler type (defaults to `Neuron`).                    |
+| _debugSolve_      | `boolean`                                        | Enable debugging for solve functions.                        |
+| _selectedOutputs_ | `string \| string[]`                             | Select which output to return.                               |
+| _outputsFilter_   | `string`                                         | Use to perform advanced filtering of outputs .               |
+| _echoInputs_      | `boolean`                                        | Whether to echo the input data (alongside the outputs).      |
+| _subservices_     | `string \| string[]`                             | The list of sub-services to output.                          |
+| _downloadable_    | `boolean`                                        | Produce a downloadable rehydrated Excel file for the inputs. |
 
 ### Returns
 
 This method returns the output data of the service execution in the following
+format:
+
+- `original`: the output data as JSON in its original format (as returned by the API).
+- `alike`: the output data as JSON in the v4 format whether it's a single or multiple inputs.
+
+This method returns the output data of the service execution in the following
 format (aka v3 format).
+
+For instance, the output data of a service execution for a single input looks like this
+when the `responseFormat` is set to `alike`:
+
+```json
+{
+  "outputs": [{ "my_output": 42 }],
+  "process_time": [1],
+  "warnings": [null],
+  "errors": [null],
+  "service_chain": [null],
+  "service_id": "uuid",
+  "version_id": "uuid",
+  "version": "1.2.3",
+  "call_id": "uuid",
+  "compiler_version": "1.2.0",
+  "correlation_id": null,
+  "request_timestamp": "1970-01-23T00:58:20.752Z"
+}
+```
+
+You may wonder why the output data is wrapped in an array for a single input.
+This is because the `alike` format is designed to work with both single and multiple
+inputs. This should help maintain consistency in the output data format. But if you
+prefer the original format emitted by the API, you can set the `responseFormat`
+to `original`.
 
 ```json
 {
@@ -322,9 +344,13 @@ format (aka v3 format).
 }
 ```
 
-> [!TIP]
-> When using TypeScript, you can define both input and output data as interfaces
-> to help you work with the data more efficiently. See the example below.
+> [!IMPORTANT]
+> Executing multiple inputs is a synchronous operation and may take some time to complete.
+> The default timeout for this client is 60 seconds, and for Spark servers, it is 55 seconds.
+> Another good practice is to split the batch into smaller chunks and submit separate requests.
+
+When using TypeScript, you can define both input and output data as interfaces
+to help you work with the data more efficiently. See the example below.
 
 ```ts
 interface Inputs {
@@ -336,90 +362,12 @@ interface Outputs {
 }
 
 const inputs: Inputs = { my_input: 13 };
-const response = await spark.services.execute<Inputs, Outputs>('my-folder/my-service', { inputs });
+const response = await spark.services.execute<Inputs, Outputs>('my-folder/my-service', {
+  inputs,
+  responseFormat: 'original',
+});
 console.log(response.data.response_data.outputs.my_output); // 42
 ```
-
-## Execute multiple records synchronously
-
-This method helps you execute multiple records synchronously. It's useful when you
-have a batch of records to process and you want to execute them all at once. This
-operation is similar to the `Spark.services.execute` method but with multiple records.
-
-### Arguments
-
-The method accepts a string or a `UriParams` object and a second object with the
-input data as arguments.
-
-```ts
-const data = {
-  inputs: [{ value: 11 }, { value: 12 }, { value: 13 }],
-  callPurpose: 'Batch execution',
-};
-
-await spark.services.batches.execute('my-folder/my-service', { data });
-```
-
-To have a full overview of the parameters, see the `UriParams` and `ExecuteParams<Inputs>`
-objects [here](../src/resources/batches.ts).
-
-For the first argument, `UriParams` object:
-
-| Property    | Type      | Description                          |
-| ----------- | --------- | ------------------------------------ |
-| _folder_    | `string`  | The folder name.                     |
-| _service_   | `string`  | The service name.                    |
-| _versionId_ | `string`  | The version UUID of the service.     |
-| _serviceId_ | `string`  | The service UUID.                    |
-| _version_   | `string`  | The semantic version of the service. |
-| _public_    | `boolean` | Whether to use the public endpoint.  |
-
-For the second argument, `ExecuteParams<Inputs>` object:
-
-| Property             | Type                       | Description                           |
-| -------------------- | -------------------------- | ------------------------------------- |
-| _inputs_             | `any[]`                    | The input data.                       |
-| _raw_                | `string`                   | The input data in its raw form.       |
-| _data_               | `ExecuteData<Inputs>`      | Executable input data with metadata.  |
-| _data.inputs_        | `any[]`                    | Alternate way to pass in input data.  |
-| _data.serviceUri_    | `string`                   | The service URI.                      |
-| _data.versionId_     | `string`                   | The version ID of the service.        |
-| _data.activeSince_   | `string \| number \| Date` | The transaction date.                 |
-| _data.sourceSystem_  | `string`                   | The source system.                    |
-| _data.correlationId_ | `string`                   | The correlation ID.                   |
-| _data.callPurpose_   | `string`                   | The call purpose.                     |
-| _data.output_        | `string \| string[]`       | Expect specific requested output.     |
-| _data.subservices_   | `string \| string[]`       | The comma-separated subservice names. |
-
-### Returns
-
-This method returns the output data of the service execution in the following
-format (aka v4 format).
-
-```json
-{
-  "outputs": [{ "my_output": 40 }, { "my_output": 41 }, { "my_output": 42 }],
-  "process_time": [1, 1, 1],
-  "warnings": [null, null, null],
-  "errors": [null, null, null],
-  "service_id": "uuid",
-  "version_id": "uuid",
-  "version": "0.4.2",
-  "call_id": "uuid",
-  "compiler_version": "1.12.0",
-  "correlation_id": null,
-  "request_timestamp": "1970-12-03T04:56:78.186Z"
-}
-```
-
-> [!IMPORTANT]
-> This operation is synchronous and may take some time to complete. The default
-> timeout is 60 seconds. If you have a large batch of records, you may want to
-> increase the timeout to avoid any issues. Another good practice is to split
-> the batch into small chunks and submit separate requests.
-
-Check out the [API reference](https://docs.coherent.global/spark-apis/execute-api/execute-api-v4#sample-request)
-to learn more about the API v4 format of the inputs and outputs.
 
 ## Get all the versions of a service
 
@@ -438,47 +386,42 @@ await spark.services.getVersions({ folder: 'my-folder', service: 'my-service' })
 ### Returns
 
 ```json
-{
-  "status": "Success",
-  "message": null,
-  "errorCode": null,
-  "data": [
-    {
-      "id": "uuid",
-      "createdAt": "1970-12-03T04:56:78.186Z",
-      "engine": "my-service",
-      "revision": "0.2.0",
-      "effectiveStartDate": "1970-12-03T04:56:78.186Z",
-      "effectiveEndDate": "1990-12-03T04:56:78.186Z",
-      "isActive": true,
-      "releaseNote": "some release note",
-      "childEngines": null,
-      "versionLabel": "",
-      "defaultEngineType": "Neuron",
-      "tags": null,
-      "product": "my-folder",
-      "author": "john.doe@coherent.global",
-      "originalFileName": "my-service-v2.xlsx"
-    },
-    {
-      "id": "86451865-dc5e-4c7c-a7f6-c35435f57dd1",
-      "createdAt": "1970-12-03T04:56:78.186Z",
-      "engine": "my-service",
-      "revision": "0.1.0",
-      "effectiveStartDate": "1970-12-03T04:56:78.186Z",
-      "effectiveEndDate": "1980-12-03T04:56:78.186Z",
-      "isActive": false,
-      "releaseNote": null,
-      "childEngines": null,
-      "versionLabel": "",
-      "defaultEngineType": "XConnector",
-      "tags": null,
-      "product": "my-folder",
-      "author": "jane.doe@coherent.global",
-      "originalFileName": "my-service.xlsx"
-    }
-  ]
-}
+[
+  {
+    "id": "uuid",
+    "createdAt": "1970-12-03T04:56:78.186Z",
+    "engine": "my-service",
+    "revision": "0.2.0",
+    "effectiveStartDate": "1970-12-03T04:56:78.186Z",
+    "effectiveEndDate": "1990-12-03T04:56:78.186Z",
+    "isActive": true,
+    "releaseNote": "some release note",
+    "childEngines": null,
+    "versionLabel": "",
+    "defaultEngineType": "Neuron",
+    "tags": null,
+    "product": "my-folder",
+    "author": "john.doe@coherent.global",
+    "originalFileName": "my-service-v2.xlsx"
+  },
+  {
+    "id": "86451865-dc5e-4c7c-a7f6-c35435f57dd1",
+    "createdAt": "1970-12-03T04:56:78.186Z",
+    "engine": "my-service",
+    "revision": "0.1.0",
+    "effectiveStartDate": "1970-12-03T04:56:78.186Z",
+    "effectiveEndDate": "1980-12-03T04:56:78.186Z",
+    "isActive": false,
+    "releaseNote": null,
+    "childEngines": null,
+    "versionLabel": "",
+    "defaultEngineType": "XConnector",
+    "tags": null,
+    "product": "my-folder",
+    "author": "jane.doe@coherent.global",
+    "originalFileName": "my-service.xlsx"
+  }
+]
 ```
 
 ## Get the Swagger documentation
@@ -738,8 +681,11 @@ the `ExecuteParams` object.
 ```ts
 const inputs = { my_input: 13 };
 const metadata = { validationType: 'dynamic', callPurpose: 'Demo' };
-await spark.services.validate('my-folder/my-service', { data: { inputs, ...metadata } });
+await spark.services.validate('my-folder/my-service', { inputs, ...metadata });
 ```
+
+No need to specify the `responseFormat` property as the method always returns the
+original format emitted by the API.
 
 ### Returns
 
@@ -893,3 +839,10 @@ await spark.services.import({
 This method returns a JSON payload containing the import summary and the imported
 entities have been created/mapped in the destination tenant. See the example in the
 [import method](./impex.md#import-spark-entities) for a sample response.
+
+[Back to top](#services-api) or [Next: Batches API](./batches.md)
+
+<!-- References -->
+
+[v3-format]: https://docs.coherent.global/spark-apis/execute-api/execute-api-v3
+[v4-format]: https://docs.coherent.global/spark-apis/execute-api/execute-api-v4

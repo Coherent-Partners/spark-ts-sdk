@@ -172,10 +172,11 @@ export class Uri {
    * However, if a `proxy` is provided, it will be used as the endpoint.
    */
   static from(uri: Maybe<UriParams> = {}, { base, version: path = 'api/v3', endpoint = '' }: UriOptions): Uri {
-    const { folder, service, versionId, proxy, public: isPublic } = uri;
+    const { folder, service, versionId, serviceId, proxy, public: isPublic } = uri;
     if (isPublic) path += `/public`;
-    if (folder && service) path += `/folders/${folder}/services/${service}`;
-    else if (versionId) path += `/version/${versionId}`;
+    if (versionId) path += `/version/${versionId}`;
+    else if (serviceId) path += `/service/${serviceId}`;
+    else if (folder && service) path += `/folders/${folder}/services/${service}`;
     else if (proxy) path += `/proxy/${sanitizeUri(proxy)}`;
 
     if (endpoint && !proxy) path += `/${endpoint}`;
@@ -230,6 +231,7 @@ export class Uri {
    * 1. `folder/service[version?]` or `folders/folder/services/service[version?]`
    * 2. `service/serviceId`
    * 3. `version/versionId`
+   * 4. `proxy/endpoint`
    *
    * Otherwise, it is considered an invalid service URI locator.
    */
@@ -241,6 +243,7 @@ export class Uri {
     const [, folder, service, version] = match;
     if (folder === 'version') return { versionId: service }; // FIXME: confirm it's a UUID.
     if (folder === 'service') return { serviceId: service };
+    if (folder === 'proxy') return { proxy: service };
     return { folder, service, version: version || undefined };
   }
 
@@ -255,12 +258,36 @@ export class Uri {
    * resource.
    */
   static encode(uri: UriParams, long: boolean = true): string {
-    const { folder, service, version, serviceId, versionId } = uri;
+    const { folder, service, version, serviceId, versionId, proxy } = uri;
+    if (proxy) return `proxy/${proxy}`;
     if (versionId) return `version/${versionId}`;
     if (serviceId) return `service/${serviceId}`;
     if (folder && service)
       return (long ? `folders/${folder}/services` : folder) + `/${service}${version ? `[${version}]` : ''}`;
     return '';
+  }
+
+  /**
+   * Validates and transforms a Spark-friendly service locator into `UriParams`.
+   * @param {string | T} uri - Spark-friendly uri locator
+   * @returns {UriParams} the decoded parameters if any to build a Spark URI.
+   *
+   * This is a convenience method to handle string-based URIs and `UriParams` objects
+   * interchangeably. This improves the user experience by allowing them to pass in
+   * URIs in different formats without worrying about the underlying implementation.
+   */
+  static validate<T extends UriParams>(uri: string | T, message?: string): T {
+    const uriParams = Uri.toParams(uri);
+    if (StringUtils.isEmpty(Uri.encode(uriParams, false))) {
+      const { folder, service } = uriParams;
+      if (folder && !service) message ??= 'service name is missing';
+      if (service && !folder) message ??= 'folder name is missing';
+      message ??= 'service uri locator is required';
+      message += ' :: a uri needs to be of these formats: \n\t- "folder/service[?version]" \n\t-';
+      message += ' "service/serviceId" \n\t- "version/versionId" \n\t- "proxy/custom-endpoint"\n';
+      throw SparkError.sdk({ message, cause: uri });
+    }
+    return uriParams;
   }
 
   /**

@@ -37,7 +37,7 @@ describe('Spark.services', () => {
   });
 
   it('should execute a service with default inputs', async () => {
-    const res = await spark.services.execute<Outputs>('my-folder/my-service');
+    const res = await spark.services.execute('my-folder/my-service', { responseFormat: 'original' });
 
     expect(apiRequest).toHaveBeenCalledWith(
       expect.anything(),
@@ -50,11 +50,12 @@ describe('Spark.services', () => {
       }),
     );
 
+    const data = res.data as any;
     expect(res.status).toBe(200);
-    expect(res.data).toBeDefined();
-    expect(res.data.status).toBe('Success');
-    expect(res.data.response_data.outputs).toBeDefined();
-    expect(res.data.response_data.outputs.my_output).toBe(42);
+    expect(data).toBeDefined();
+    expect(data.status).toBe('Success');
+    expect(data.response_data.outputs).toBeDefined();
+    expect(data.response_data.outputs.my_output).toBe(42);
   });
 
   it('should execute a service with inputs', async () => {
@@ -64,7 +65,7 @@ describe('Spark.services', () => {
         service: 'my-service',
         public: true,
       },
-      { inputs: { my_input: 13 } },
+      { inputs: { my_input: 13 }, responseFormat: 'original' },
     );
 
     expect(apiRequest).toHaveBeenCalledWith(
@@ -78,10 +79,11 @@ describe('Spark.services', () => {
       }),
     );
 
+    const data = res.data as any;
     expect(res.status).toBe(200);
-    expect(res.data).toBeDefined();
-    expect(res.data.status).toBe('Success');
-    expect(res.data.response_data.outputs).toBeDefined();
-    expect(res.data.response_data.outputs.my_output).toBe(44);
+    expect(data).toBeDefined();
+    expect(data.status).toBe('Success');
+    expect(data.response_data.outputs).toBeDefined();
+    expect(data.response_data.outputs.my_output).toBe(44);
   });
 });

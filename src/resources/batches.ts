@@ -1,48 +1,24 @@
 import { type Config } from '../config';
 import { HttpResponse } from '../http';
-import { Serializable } from '../data';
-import { SPARK_SDK } from '../constants';
+import { SPARK_SDK, BATCH_CHUNK_SIZE } from '../constants';
 import { SparkError } from '../error';
 import Utils, { DateUtils, StringUtils, getUuid } from '../utils';
 
-import { ApiResource, Uri, UriOptions, UriParams } from './base';
+import { ApiResource, Uri, UriOptions } from './base';
 
 export class Batches extends ApiResource {
-  /**
-   * Executes multiple records synchronously.
-   * @param {string} uri - how to locate the service
-   * @param {ExecuteParams<Inputs>} params - the execution parameters (inputs, metadata, etc.)
-   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>} the executed service outputs
-   * @throws {SparkError} if the service execution fails or no inputs are provided.
-   */
-  execute<Inputs, Outputs>(uri: string, params: ExecuteParams<Inputs>): Promise<HttpResponse<ServiceExecuted<Outputs>>>;
-  /**
-   * Executes multiple records synchronously.
-   * @param {UriParams} uri - use fine-grained details to locate the service
-   * @param {ExecuteParams<Inputs>} params - the execution parameters (inputs, metadata, etc.)
-   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>} the executed service outputs
-   * @throws {SparkError} if the service execution fails or no inputs are provided.
-   */
-  execute<Inputs, Outputs>(
-    uri: Omit<UriParams, 'proxy'>,
-    params: ExecuteParams<Inputs>,
-  ): Promise<HttpResponse<ServiceExecuted<Outputs>>>;
-  execute<Inputs, Outputs>(
-    uri: string | Omit<UriParams, 'proxy'>,
-    params: ExecuteParams<Inputs>,
-  ): Promise<HttpResponse<ServiceExecuted<Outputs>>> {
-    const { folder, service, version, serviceId, versionId, ...rest } = Uri.toParams(uri);
-    const serviceUri = serviceId ?? params?.data?.serviceUri ?? Uri.encode({ folder, service, version }, false);
-    const url = Uri.from(rest, { base: this.config.baseUrl.full, version: 'api/v4', endpoint: 'execute' });
-    const body = this.#buildExecuteBody({ serviceUri, versionId }, params);
+  readonly baseUri!: UriOptions;
+  constructor(config: Config) {
+    super(config);
+    this.baseUri = { base: this.config.baseUrl.full, version: 'api/v4' };
+  }
 
-    if (body.inputs.length === 0) {
-      const error = SparkError.sdk({ message: 'no inputs provided for service execution', cause: body });
-      this.logger.error(error.message);
-      throw error;
-    }
-
-    return this.request<ServiceExecuted<Outputs>, ExecuteBody<Inputs>>(url, { method: 'POST', body });
+  /**
+   * Describes the batch pipelines available across the tenant.
+   * @returns {Promise<HttpResponse<BatchDescribed>>} the batch pipeline details
+   */
+  describe(): Promise<HttpResponse<BatchDescribed>> {
+    return this.request(Uri.from(undefined, { ...this.baseUri, endpoint: `batch/status` }));
   }
 
   /**
@@ -50,18 +26,17 @@ export class Batches extends ApiResource {
    * @param {string} uri - where the service is located
    * @returns {Promise<HttpResponse<BatchCreated>>} the batch pipeline details
    */
-  create(uri: string): Promise<HttpResponse<BatchCreated>>;
+  create(uri: string, options?: PipelineOptions): Promise<HttpResponse<BatchCreated>>;
   /**
    * Creates a batch pipeline for asynchronous execution.
    * @param {CreateParams} params - where the service is located and additional metadata
    * @returns {Promise<HttpResponse<BatchCreated>>} the batch pipeline details
    */
-  create(params: CreateParams): Promise<HttpResponse<BatchCreated>>;
+  create(params: CreateParams, options?: PipelineOptions): Promise<HttpResponse<BatchCreated>>;
   create(uri: string | CreateParams, options?: PipelineOptions): Promise<HttpResponse<BatchCreated>> {
-    const { folder, service, version, serviceId, ...params } = Uri.toParams(uri);
+    const { folder, service, version, serviceId, ...params } = Uri.validate(uri);
     const serviceUri = serviceId ?? params?.serviceUri ?? Uri.encode({ folder, service, version }, false);
-    const url = Uri.from(undefined, { base: this.config.baseUrl.full, version: 'api/v4', endpoint: 'batch' });
-    this.#validateUri({ serviceUri, versionId: params.versionId });
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'batch' });
 
     const body = {
       service: serviceUri,
@@ -92,41 +67,6 @@ export class Batches extends ApiResource {
    */
   of(batchId: string): Pipeline {
     return new Pipeline(batchId, this.config);
-  }
-
-  #buildExecuteBody<T>(uri: { serviceUri: string; versionId?: string }, params: ExecuteParams<T>): ExecuteBody<T> {
-    this.#validateUri(uri);
-    const { data, raw } = params;
-    const metadata = {
-      service: uri.serviceUri,
-      version_id: data?.versionId ?? uri.versionId,
-      version_by_timestamp: DateUtils.isDate(data?.activeSince) ? data.activeSince.toISOString() : undefined,
-      subservice: Array.isArray(data?.subservices) ? data.subservices.join(',') : data?.subservices,
-      output: data?.output,
-      call_purpose: data?.callPurpose ?? 'Sync Batch Execution',
-      source_system: data?.sourceSystem ?? SPARK_SDK,
-      correlation_id: data?.correlationId,
-    };
-
-    const inputs = data?.inputs || params.inputs;
-    if ((!Array.isArray(inputs) || inputs?.length === 0) && StringUtils.isNotEmpty(raw)) {
-      const parsed = Serializable.deserialize(raw as string, () => {
-        this.logger.warn('failed to parse the raw input as JSON', raw);
-        return { inputs: [], ...metadata };
-      });
-
-      return Utils.isObject(parsed) ? { ...metadata, ...parsed } : { inputs: [], ...metadata };
-    } else {
-      return { inputs: inputs ?? [], ...metadata };
-    }
-  }
-
-  #validateUri(uri: { serviceUri: string; versionId?: string }): void {
-    if (StringUtils.isEmpty(uri.serviceUri) && StringUtils.isEmpty(uri.versionId)) {
-      const error = SparkError.sdk({ message: 'service uri locator is required', cause: uri });
-      this.logger.error(error.message);
-      throw error;
-    }
   }
 }
 
@@ -239,10 +179,9 @@ class Pipeline extends ApiResource {
   /**
    * Closes a batch pipeline.
    *
-   * Closing a batch means you don't want to add any more data or chunks to batch
-   * and you want to close the batch. After closing a batch, batch will still process
-   * the data and user will be able to download the remaining output from get chunk
-   * results API.
+   * If you no longer have any more data to add to the batch, you can close the batch.
+   * After closing a batch, batch will still process the data and user will be able
+   * to download the remaining output from get chunk results API.
    * @returns {Promise<HttpResponse<BatchDisposed>>} the batch status
    */
   async close(): Promise<HttpResponse<BatchDisposed>> {
@@ -259,9 +198,9 @@ class Pipeline extends ApiResource {
   /**
    * Cancels a batch pipeline.
    *
-   * Cancelling a batch is helpful when batch is not working as expected or you
-   * have made a mistake and you want to immediately stop the batch processing.
-   * You won't be able to download anymore data after cancelling a batch.
+   * When batch is not working as expected or you have made a mistake and you can
+   * cancel the batch to immediately stop further processing. You won't be able
+   * to download anymore data after canceling a batch.
    * @returns {Promise<HttpResponse<BatchDisposed>>} the batch status
    */
   async cancel(): Promise<HttpResponse<BatchDisposed>> {
@@ -289,7 +228,7 @@ class Pipeline extends ApiResource {
 
   #buildPushBody<Inputs>(
     params: PushDataParams<Inputs>,
-    { ifChunkIdDuplicated: ifDuplicated = 'replace' }: PushDataOptions = {},
+    { ifChunkIdDuplicated: ifDuplicated = 'replace', chunkSize = BATCH_CHUNK_SIZE }: PushDataOptions = {},
   ): Chunks<Inputs> {
     try {
       const { chunks, data, inputs } = params ?? {};
@@ -297,8 +236,9 @@ class Pipeline extends ApiResource {
       if (Utils.isNotEmptyArray(chunks)) return { chunks: this.#assessChunks(chunks, ifDuplicated) };
       if (Utils.isNotEmptyArray(data?.inputs))
         return { chunks: this.#assessChunks([{ id: getUuid(), data }], ifDuplicated) };
-      if (Utils.isNotEmptyArray(inputs))
-        return { chunks: this.#assessChunks([{ id: getUuid(), data: { parameters: {}, inputs } }], ifDuplicated) };
+      if (Utils.isNotEmptyArray(inputs)) {
+        return { chunks: this.#assessChunks(createChunks(inputs, chunkSize), ifDuplicated) };
+      }
 
       throw SparkError.sdk({
         cause: params,
@@ -346,7 +286,7 @@ class Pipeline extends ApiResource {
         }
       }
 
-      this.#chunks.set(chunk.id, (chunk.data.size = chunk.data?.inputs?.length ?? 0));
+      this.#chunks.set(chunk.id, (chunk.size ??= chunk.data?.inputs?.length ?? 0));
     }
     return chunks;
   }
@@ -362,48 +302,6 @@ interface MetadataParams {
   sourceSystem?: string;
   correlationId?: string;
 }
-
-interface ExecuteParams<Inputs = any> {
-  readonly data?: ExecuteData<Inputs>;
-  readonly inputs?: Inputs[];
-  readonly raw?: string;
-}
-
-interface ExecuteData<Inputs = any> extends MetadataParams {
-  inputs: Inputs[];
-}
-
-type ExecuteBody<Inputs = any> = {
-  inputs: Inputs[];
-  service: string;
-  version_id?: string;
-  version_by_timestamp?: string;
-  subservice?: string;
-  output?: string;
-  call_purpose?: string;
-  source_system?: string;
-  correlation_id?: string;
-};
-
-type ServiceExecuted<Outputs = any> = {
-  outputs: Outputs[];
-  warnings: Partial<{ source_path: string; message: string }>[][];
-  errors: Partial<{
-    error_category: string;
-    error_type: string;
-    additional_details: string;
-    source_path: string;
-    message: string;
-  }>[][];
-  process_time: number[];
-  service_id: string;
-  version_id: string;
-  version: string;
-  call_id: string;
-  compiler_version: string;
-  correlation_id: string;
-  request_timestamp: string;
-};
 
 interface CreateParams extends MetadataParams {
   folder?: string;
@@ -466,19 +364,61 @@ interface PipelineOptions {
   accuracy?: number;
 }
 
+type BatchDescribed = {
+  in_progress_batches: any[];
+  recent_batches: {
+    object: string;
+    id: string;
+    data: {
+      pipeline_status: string;
+      summary: {
+        records_submitted: number;
+        records_failed: number;
+        records_completed: number;
+        compute_time_ms: number;
+        batch_time_ms: number;
+      };
+      response_timestamp: string;
+      batch_status: string;
+      created_by: string;
+      created_timestamp: string;
+      updated_timestamp: string;
+      service_uri: string;
+    };
+  }[];
+  tenant: {
+    configuration: {
+      input_buffer_allocated_bytes: number;
+      output_buffer_allocated_bytes: number;
+      max_workers: number;
+    };
+    status: {
+      input_buffer_used_bytes: number;
+      input_buffer_remaining_bytes: number;
+      output_buffer_used_bytes: number;
+      output_buffer_remaining_bytes: number;
+      workers_in_use: number;
+    };
+  };
+  environment: { update: number };
+};
+
 type BatchCreated = {
   object: string;
   id: string;
-  batch_status: string;
   data: {
-    unique_record_key: string | null;
     service_id: string;
     version_id: string;
-    version: string;
-    call_id: string | null;
     compiler_version: string;
-    request_timestamp: string;
     correlation_id: string | null;
+    source_system: string | null;
+    unique_record_key: string | null;
+    response_timestamp: string;
+    batch_status: string;
+    created_by: string;
+    created_timestamp: string;
+    updated_timestamp: string;
+    service_uri: string;
   };
 };
 
@@ -513,25 +453,43 @@ type BatchStatus = {
 type BatchInfo = {
   object: string;
   id: string;
-  batch_status: string;
   data: {
-    unique_record_key: string;
     service_id: string;
     version_id: string;
-    version: string;
-    call_id: string | null;
     compiler_version: string;
-    request_timestamp: string;
-    correlation_id: string;
+    correlation_id: string | null;
+    source_system: string | null;
+    unique_record_key: string | null;
     summary: {
-      total_chunks: number;
-      total_records: number;
-      total_input_size: number;
-      total_output_size: number;
-      total_calc_time: number;
-      batch_created_timestamp: string;
-      batch_updated_timestamp: string;
+      chunks_submitted: number;
+      chunks_retried: number;
+      chunks_completed: number;
+      chunks_failed: number;
+      records_retried: number;
+      input_size_bytes: number;
+      output_size_bytes: number;
+      avg_compute_time_ms: number;
+      records_submitted: number;
+      records_failed: number;
+      records_completed: number;
+      compute_time_ms: number;
+      batch_time_ms: number;
     };
+    configuration: {
+      initial_workers: number;
+      chunks_per_request: number;
+      runner_thread_count: number;
+      acceptable_error_percentage: number;
+      input_buffer_allocated_bytes: number;
+      output_buffer_allocated_bytes: number;
+      max_workers: number;
+    };
+    response_timestamp: string;
+    batch_status: string;
+    created_by: string;
+    created_timestamp: string;
+    updated_timestamp: string;
+    service_uri: string;
   };
 };
 
@@ -546,6 +504,7 @@ type BatchResult<Outputs = any> = {
   }[];
   status: {
     request_timestamp: string;
+    response_timestamp: string;
     batch_status: string;
     pipeline_status: string;
     input_buffer_used_bytes: number;
@@ -559,28 +518,32 @@ type BatchResult<Outputs = any> = {
     chunks_completed: number;
     chunks_submitted: number;
     chunks_available: number;
+    workers_in_use: number;
   };
 };
 
 type BatchDisposed = {
   object: string;
   id: string;
-  status: string;
   meta: {
     service_id: string;
     version_id: string;
-    version: string;
-    process_time: number;
-    call_id: string;
-    compiler_type: string;
     compiler_version: string;
     correlation_id: string | null;
-    request_timestamp: string;
+    source_system: string | null;
+    unique_record_key: string | null;
+    response_timestamp: string;
+    batch_status: string;
+    created_by: string;
+    created_timestamp: string;
+    updated_timestamp: string;
+    service_uri: string;
   };
 };
 
 interface PushDataOptions {
   ifChunkIdDuplicated?: IfChunkIdDuplicated;
+  chunkSize?: number;
 }
 
 interface PushDataParams<Inputs = any> {
@@ -593,10 +556,32 @@ interface ChunkData<Inputs> {
   inputs: Inputs[];
   parameters: Record<string, any>;
   summary?: Record<string, any>;
-  size?: number;
 }
 
-type BatchChunk<Inputs> = { id: string; data: ChunkData<Inputs> };
+type BatchChunk<Input> = { id: string; data: ChunkData<Input>; size?: number };
 type PipelineState = 'open' | 'closed' | 'cancelled';
 type IfChunkIdDuplicated = 'ignore' | 'replace' | 'throw';
 type Chunks<T> = { chunks: BatchChunk<T>[] };
+
+/**
+ * Creates an array of batch chunks from a dataset.
+ *
+ * @template T - The type of elements in the dataset.
+ * @param {T[]} dataset - The dataset to create chunks from.
+ * @param {number} [chunkSize=200] - The size of each chunk.
+ * @returns {BatchChunk<T>[]} An array of batch chunks.
+ */
+export function createChunks<T = any>(dataset: T[], chunkSize: number = BATCH_CHUNK_SIZE): BatchChunk<T>[] {
+  const total = dataset.length;
+  const batchSize = Math.ceil(total / chunkSize);
+  const chunks: BatchChunk<T>[] = [];
+
+  for (let i = 0; i < batchSize; i++) {
+    const start = i * chunkSize;
+    const end = Math.min(start + chunkSize, total);
+    const chunk = dataset.slice(start, end);
+    chunks.push({ id: getUuid(), data: { inputs: chunk, parameters: {} } });
+  }
+
+  return chunks;
+}

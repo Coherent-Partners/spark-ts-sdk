@@ -85,7 +85,7 @@ import Spark from '@cspark/sdk';
 
 const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', token: 'bearer token' });
 
-spark.services.log
+spark.logs
   .rehydrate('my-folder/my-service', 'a-valid-call-id')
   .then((response) => {
     // write downloaded file to disk
