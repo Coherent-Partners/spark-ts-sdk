@@ -52,7 +52,7 @@ export interface RequestOptions<T = JsonData> {
   /**
    * Token used for request cancellation
    */
-  readonly cancellationToken?: CancellationToken;
+  readonly cancellationToken?: CancellationToken | null;
 
   /**
    * Number of retries to attempt

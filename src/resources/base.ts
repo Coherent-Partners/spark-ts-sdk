@@ -15,14 +15,20 @@ import Utils, { StringUtils, Maybe, sanitizeUri } from '../utils';
  * specific API resources, such as folders, services, logs, imports, exports, etc.
  *
  * @param {Config} config - the configuration options for the API resource.
+ * @param {AbortController} controller - an optional controller to abort requests.
  *
  * @see Config for more details.
  */
 export abstract class ApiResource {
   protected readonly logger!: Logger;
+  protected readonly controller!: AbortController;
 
-  constructor(protected readonly config: Config) {
+  constructor(
+    protected readonly config: Config,
+    controller?: AbortController,
+  ) {
     this.logger = Logger.of(config.logger);
+    this.controller = controller || new AbortController();
   }
 
   /**
@@ -91,7 +97,22 @@ export abstract class ApiResource {
       method,
       headers: { ...headers, ...this.defaultHeaders },
       config: this.config,
+      cancellationToken: this.controller.signal,
     });
+  }
+
+  /**
+   * Aborts the current request.
+   *
+   * This method is used to abort the current request. It is useful when the user
+   * wants to cancel a request that is taking too long or is no longer needed.
+   *
+   * It is recommended to call this method before making a new request to avoid
+   * any conflicts.
+   * @see AbortController for more details.
+   */
+  abort(): void {
+    this.controller.abort();
   }
 }
 

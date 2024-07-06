@@ -1,4 +1,6 @@
-import { SparkError, Uri } from '@cspark/sdk';
+import { AbortError } from 'node-fetch';
+import Spark, { SparkError, Uri } from '@cspark/sdk';
+import LocalServer, { TestBaseUrl, TestApiResource } from './_server';
 
 describe('Uri', () => {
   const BASE_URL = 'https://excel.test.coherent.global/tenant-name';
@@ -114,5 +116,44 @@ describe('Uri', () => {
     expect(Uri.encode({ serviceId: '456' })).toBe('service/456');
     expect(Uri.encode({ versionId: '123' })).toBe('version/123');
     expect(Uri.encode({ proxy: 'custom-endpoint' })).toBe('proxy/custom-endpoint');
+  });
+});
+
+describe('ApiResource', () => {
+  const localSever = new LocalServer();
+  let testResource: TestApiResource;
+  let spark: Spark;
+
+  beforeAll(async () => {
+    await localSever.start();
+    spark = new Spark({
+      baseUrl: new TestBaseUrl(`http://${localSever.hostname}:${localSever.port}`, 'my-tenant'),
+      apiKey: 'open',
+      logger: false,
+    });
+  });
+
+  afterAll(async () => {
+    return localSever.stop();
+  });
+
+  it('should be able to abort long requests from external signals', async () => {
+    const controller = new AbortController();
+    testResource = new TestApiResource(spark.config, controller);
+    const timeout = setTimeout(() => controller.abort(), 500); // abort after 500ms
+    const promise = testResource.slow(); // this request will take 1s
+
+    await expect(promise).rejects.toThrow(AbortError);
+    expect(controller.signal.aborted).toBe(true);
+    clearTimeout(timeout);
+  });
+
+  it('can abort long requests on demand', async () => {
+    testResource = new TestApiResource(spark.config);
+    const timeout = setTimeout(() => testResource.abort(), 500); // abort after 500ms
+    const promise = testResource.slow(); // this request will take 1s
+
+    await expect(promise).rejects.toThrow(AbortError);
+    clearTimeout(timeout);
   });
 });
