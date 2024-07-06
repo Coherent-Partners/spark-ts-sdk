@@ -192,7 +192,7 @@ async function createRequestInit<T>(options: HttpOptions<T>): Promise<RequestIni
     method,
     body: method === 'GET' ? undefined : body,
     headers: { ...headers, ...options.config.auth?.asHeader },
-    signal: options.cancellationToken,
+    signal: options.cancellationToken as RequestInit['signal'],
   };
 }
 
