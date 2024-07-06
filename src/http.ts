@@ -18,8 +18,6 @@ export interface Multipart {
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-export type CancellationToken = AbortSignal;
-
 /**
  * Exposes some options when building HTTP requests.
  */
@@ -52,7 +50,7 @@ export interface RequestOptions<T = JsonData> {
   /**
    * Token used for request cancellation
    */
-  readonly cancellationToken?: CancellationToken | null;
+  readonly cancellationToken?: AbortSignal | null | undefined;
 
   /**
    * Number of retries to attempt

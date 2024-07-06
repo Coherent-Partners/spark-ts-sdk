@@ -4,13 +4,22 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.1 (2024-06-15)
+
+- Breaking changes: merge `Spark.services.batches.execute()` (removed) into `Spark.services.execute()`
+  - `Spark.services.execute()` now supports both sync batch and service executions
+  - `Spark.services.execute()` now may return v3 or v4 service executions on demand
+- Add support for external signals to abort long-running services
+- Add documentation for the Batches API
+- Validate URI parameters and save travel time to Spark APIs when invalid.
+
 ## 0.2.0 (2024-06-15)
 
 - Breaking change: pluralize collection names in the SDK
   - `Spark.folder` -> `Spark.folders`
   - `Spark.service` -> `Spark.services`
   - `Spark.service.batch` -> `Spark.services.batches`
-  - `Spark.service.log` -> `Spark.services.logs`
+  - `Spark.service.log` -> `Spark.services.logs` (removed)
   - `Spark.batch` -> `Spark.batches`
 - Apply minor improvements to the base Uri options
 - Enfore no-console lint rule
