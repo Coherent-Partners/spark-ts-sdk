@@ -7,8 +7,8 @@
 
       function main(apiKey) {
         const spark = new Spark({ env: 'uat.us', tenant: 'my-tenant', apiKey, allowBrowser: true });
-        spark.service
-          .execute('my-folder/my-service', { inputs: { value: 'Hello, Spark SDK!' } })
+        spark.services
+          .execute('my-folder/my-service', { inputs: { value: 42 } })
           .then((response) => console.log(response.data))
           .catch(console.error);
       }

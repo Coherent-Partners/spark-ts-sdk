@@ -25,7 +25,7 @@ You may pass in the specs as an `object` with the following properties:
 | _versionIds_      | `string[]`              | The version UUIDs of the desired service.                                       |
 | _filters_         | `object`                | How to filter out which entities to export.                                     |
 | _filters.file_    | `migrate \| onpremises` | Whether it's for data migration or on-prem deployments (defaults to `migrate`). |
-| _filters.version_ | `latest \| all`         | Which version of the file to export (defaults to `all`).                        |
+| _filters.version_ | `latest \| all`         | Which version of the file to export (defaults to `latest`).                     |
 | _sourceSystem_    | `string`                | The source system name to export from (e.g., `Spark JS SDK`).                   |
 | _correlationId_   | `string`                | The correlation ID for the export (useful for tagging).                         |
 | _maxRetries_      | `number`                | The maximum number of retries when checking the export status.                  |

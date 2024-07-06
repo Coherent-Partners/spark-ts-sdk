@@ -1,7 +1,7 @@
 import { type SparkClient } from '@cspark/sdk';
 
 function create(spark: SparkClient) {
-  spark.services.batches
+  spark.batches
     .create('my-folder/my-service')
     .then((resp) => console.log(JSON.stringify(resp.data, undefined, 2)))
     .catch(console.error);

@@ -116,6 +116,15 @@ export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function getByteLength(str: string): number {
+  if (typeof TextEncoder !== 'undefined') {
+    const encoder = new TextEncoder();
+    return encoder.encode(str).length;
+  } else {
+    return Buffer.byteLength(str, 'utf8');
+  }
+}
+
 /**
  * Sanitizes a Spark-friendly service locator by removing extra slashes.
  */
@@ -140,6 +149,14 @@ export abstract class StringUtils {
 
   static isNotEmpty(text: unknown): boolean {
     return !StringUtils.isEmpty(text);
+  }
+
+  static capitalize(text: string): string {
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  static join(value: string | string[] | undefined, separator: string = ','): undefined | string {
+    return Array.isArray(value) ? value.join(separator) : value;
   }
 }
 
@@ -197,6 +214,7 @@ export default {
   sanitizeUri,
   isBrowser,
   getBrowserInfo,
+  getByteLength,
   readFile,
   formatUrl,
   getUuid,

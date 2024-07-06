@@ -4,8 +4,6 @@ import { SPARK_SDK } from '../constants';
 import { HttpResponse, Multipart, getRetryTimeout } from '../http';
 import Utils, { StringUtils, DateUtils } from '../utils';
 
-import { History } from './history';
-import { Batches } from './batches';
 import { ImpEx, ImportResult } from './impex';
 import { ApiResource, ApiResponse, Uri, UriParams } from './base';
 import { GetSwaggerParams, GetVersionsParams, GetSchemaParams, GetMetadataParams } from './types';
@@ -15,14 +13,6 @@ import { ExportParams, ImportParams, MigrateParams } from './types';
 export class Services extends ApiResource {
   get compilation() {
     return new Compilation(this.config);
-  }
-
-  get batches() {
-    return new Batches(this.config);
-  }
-
-  get logs() {
-    return new History(this.config);
   }
 
   /**
@@ -91,71 +81,107 @@ export class Services extends ApiResource {
   /**
    * Executes a service using default inputs.
    * @param {string} uri - where the service is located
-   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>>} the service execution response
+   * @returns {Promise<HttpResponse<ServiceExecuted<Output>>>} the service execution response
    *
    * Obviously, the SDK ignores what those default values are. Under the hood,
    * the SDK uses an empty object `{}` as the input data, which is an indicator for
    * Spark to use the default inputs defined in the Excel file.
    */
-  execute<Outputs>(uri: string): Promise<HttpResponse<ServiceExecuted<Outputs>>>;
+  execute<Output>(uri: string): Promise<HttpResponse<ServiceExecuted<Output>>>;
   /**
    * Executes a service using default inputs.
    * @param {UriParams} uri - use fine-grained details to locate the service
-   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>>} the service execution response
+   * @returns {Promise<HttpResponse<ServiceExecuted<Output>>>} the service execution response
    *
    * The `UriParams` object can be used to specify the service location and additional
    * parameters like the version ID, service ID, proxy service URI, etc.
    * @see {@link UriParams} for more details.
    */
-  execute<Outputs>(uri: UriParams): Promise<HttpResponse<ServiceExecuted<Outputs>>>;
+  execute<Output>(uri: UriParams): Promise<HttpResponse<ServiceExecuted<Output>>>;
   /**
    * Executes a service with the given inputs.
    * @param {string} uri - where the service is located
-   * @param {ExecuteParams<Inputs>} params - the execution parameters (inputs, metadata, etc.)
-   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>>} the service execution response
+   * @param {ExecuteParams<Input>} params - the execution parameters (inputs, metadata, etc.)
+   * @returns {Promise<HttpResponse<ServiceExecuted<Output>>>} the service execution response
    *
    * The inputs can be provided the following ways:
    * - `params.inputs` - the input data to use for the calculation, which assumes the default metadata.
    * - `params.data` - the full metadata and input data to use for the calculation.
    * - `params.raw` - a JSON string to parse as the full metadata and input data.
    */
-  execute<Inputs, Outputs>(uri: string, params: ExecuteParams<Inputs>): Promise<HttpResponse<ServiceExecuted<Outputs>>>;
+  execute<Input, Output>(uri: string, params: ExecuteParams<Input>): Promise<HttpResponse<ServiceExecuted<Output>>>;
   /**
    * Executes a service with the given inputs.
    * @param {UriParams} uri - use fine-grained details to locate the service
-   * @param {ExecuteParams<Inputs>} params - the execution parameters (inputs, metadata, etc.)
-   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>>} the service execution response
+   * @param {ExecuteParams<Input>} params - the execution parameters (inputs, metadata, etc.)
+   * @returns {Promise<HttpResponse<ServiceExecuted<Output>>>} the service execution response
    */
   execute<Input, Output>(uri: UriParams, params: ExecuteParams<Input>): Promise<HttpResponse<ServiceExecuted<Output>>>;
-  execute<Inputs, Outputs>(uri: string | UriParams, params?: ExecuteParams<Inputs>) {
-    uri = Uri.toParams(uri);
-    const url = Uri.from(uri, { base: this.config.baseUrl.full, endpoint: 'execute' });
-    const body = this.#buildExecuteBody(uri, params);
+  async execute<Input, Output>(uri: string | UriParams, params: ExecuteParams<Input> = {}) {
+    uri = Uri.validate(uri);
 
-    return this.request<ServiceExecuted<Outputs>>(url, { method: 'POST', body });
+    const { inputs, ...meta } = params;
+    const executable = new ExecuteInputs(inputs);
+    const metadata = new ExecuteMeta(meta, uri, executable.isBatch);
+
+    const url = executable.isBatch
+      ? Uri.from({ public: uri.public }, { base: this.config.baseUrl.full, version: 'api/v4', endpoint: 'execute' })
+      : Uri.from(uri, { base: this.config.baseUrl.full, endpoint: uri.versionId || uri.serviceId ? '' : 'execute' });
+
+    const body = executable.isBatch
+      ? { inputs: executable.inputs, ...metadata.value }
+      : { request_data: { inputs: executable.inputs }, request_meta: metadata.value };
+
+    return this.request(url, { method: 'POST', body }).then((response: HttpResponse<any>) => {
+      const { responseFormat: format = 'alike' } = params;
+      if (format === 'original' || executable.isBatch) return response;
+      return {
+        ...response,
+        data: {
+          outputs: [response.data.response_data?.outputs],
+          process_time: [response.data.response_meta?.process_time],
+          warnings: [response.data.response_data?.warnings],
+          errors: [response.data.response_data?.errors],
+          service_chain: [response.data.response_data?.service],
+          service_id: response.data.response_meta?.service_id,
+          version_id: response.data.response_meta?.version_id,
+          version: response.data.response_meta?.version,
+          call_id: response.data.response_meta?.call_id,
+          compiler_version: response.data.response_meta?.compiler_version,
+          correlation_id: response.data.response_meta?.correlation_id,
+          request_timestamp: response.data.response_meta?.request_timestamp,
+        } as ServiceExecuted<Output>,
+      };
+    });
   }
 
   /**
    * Validates the inputs for a service.
    * @param {string | UriParams} uri - where the service is located
-   * @param {ExecuteParams<Inputs>} params - optionally the validation parameters (inputs, metadata, etc.)
-   * @returns {Promise<HttpResponse<ServiceExecuted<Outputs>>>} the validation response
+   * @param {ValidateParams} params - optionally the validation parameters (inputs, metadata, etc.)
+   * @returns {Promise<HttpResponse<ServiceExecuted<Output>>>} the validation response
    * @throws {SparkError} if the validation fails
    */
-  validate<Inputs, Outputs>(
-    uri: string,
-    params?: ExecuteParams<Inputs>,
-  ): Promise<HttpResponse<ServiceExecuted<Outputs>>>;
-  validate<Inputs, Outputs>(
-    uri: UriParams,
-    params?: ExecuteParams<Inputs>,
-  ): Promise<HttpResponse<ServiceExecuted<Outputs>>>;
-  validate<Inputs, Outputs>(uri: string | UriParams, params?: ExecuteParams<Inputs>) {
-    uri = Uri.toParams(uri);
+  validate<Output>(uri: string | UriParams, params?: ValidateParams): Promise<HttpResponse<ServiceExecuted<Output>>> {
+    uri = Uri.validate(uri);
     const url = Uri.from(uri, { base: this.config.baseUrl.full, endpoint: 'validation' });
-    const body = this.#buildExecuteBody(uri, params);
 
-    return this.request<ServiceExecuted<Outputs>>(url, { method: 'POST', body });
+    const { inputs, ...meta } = params ?? {};
+    const executable = new ExecuteInputs(inputs);
+    const metadata = new ExecuteMeta(meta, uri, false);
+    const body = {
+      request_data: { inputs: executable.inputs },
+      request_meta: {
+        ...metadata.value,
+        validation_type: StringUtils.isNotEmpty(meta.validationType)
+          ? meta.validationType === 'dynamic'
+            ? 'dynamic'
+            : 'default_values'
+          : undefined,
+      },
+    };
+
+    return this.request<ServiceExecuted<Output>>(url, { method: 'POST', body });
   }
 
   /**
@@ -166,7 +192,7 @@ export class Services extends ApiResource {
   getSchema(uri: string): Promise<HttpResponse>;
   getSchema(params: GetSchemaParams): Promise<HttpResponse>;
   getSchema(uri: string | GetSchemaParams): Promise<HttpResponse> {
-    const { folder, service } = Uri.toParams(uri);
+    const { folder, service } = Uri.validate(uri);
     const endpoint = `product/${folder}/engines/get/${service}`;
     const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
 
@@ -181,7 +207,7 @@ export class Services extends ApiResource {
   getMetadata(uri: string): Promise<HttpResponse<MetadataFound>>;
   getMetadata(params: GetMetadataParams): Promise<HttpResponse<MetadataFound>>;
   getMetadata(uri: string | GetMetadataParams): Promise<HttpResponse<MetadataFound>> {
-    return this.request(Uri.from(Uri.toParams(uri), { base: this.config.baseUrl.full, endpoint: 'metadata' }));
+    return this.request(Uri.from(Uri.validate(uri), { base: this.config.baseUrl.full, endpoint: 'metadata' }));
   }
 
   /**
@@ -191,12 +217,12 @@ export class Services extends ApiResource {
    */
   getVersions(uri: string): Promise<HttpResponse<VersionListed>>;
   getVersions(params: GetVersionsParams): Promise<HttpResponse<VersionListed>>;
-  getVersions(uri: string | GetVersionsParams): Promise<HttpResponse<VersionListed>> {
-    const { folder, service } = Uri.toParams(uri);
+  async getVersions(uri: string | GetVersionsParams): Promise<HttpResponse<VersionListed>> {
+    const { folder, service } = Uri.validate(uri);
     const endpoint = `product/${folder}/engines/getversions/${service}`;
     const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
 
-    return this.request(url);
+    return this.request(url).then((response: any) => ({ ...response, data: response.data.data }));
   }
 
   /**
@@ -208,7 +234,7 @@ export class Services extends ApiResource {
   getSwagger(uri: string): Promise<HttpResponse>;
   getSwagger(params: GetSwaggerParams): Promise<HttpResponse>;
   getSwagger(uri: string | GetSwaggerParams): Promise<HttpResponse> {
-    const { folder, service, versionId = '', downloadable = false, subservice = 'All' } = Uri.toParams(uri);
+    const { folder, service, versionId = '', downloadable = false, subservice = 'All' } = Uri.validate(uri);
     const endpoint = `downloadswagger/${subservice}/${downloadable}/${versionId}`;
     const url = Uri.from({ folder, service }, { base: this.config.baseUrl.full, endpoint });
 
@@ -223,7 +249,7 @@ export class Services extends ApiResource {
   download(uri: string): Promise<HttpResponse>;
   download(params: DownloadParams): Promise<HttpResponse>;
   download(uri: string | DownloadParams): Promise<HttpResponse> {
-    const { folder, service, version = '', fileName: filename = '', type = 'original' } = Uri.toParams(uri);
+    const { folder, service, version = '', fileName: filename = '', type = 'original' } = Uri.validate(uri);
     const endpoint = `product/${folder}/engines/${service}/download/${version}`;
     const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
     const params = { filename, type: type === 'configured' ? 'withmetadata' : '' };
@@ -244,7 +270,7 @@ export class Services extends ApiResource {
   recompile(uri: string): Promise<HttpResponse<ServiceRecompiled>>;
   recompile(params: RecompileParams): Promise<HttpResponse<ServiceRecompiled>>;
   recompile(uri: string | RecompileParams): Promise<HttpResponse<ServiceRecompiled>> {
-    const { folder, service, versionId, releaseNotes, ...params } = Uri.toParams(uri);
+    const { folder, service, versionId, releaseNotes, ...params } = Uri.validate(uri);
     const url = Uri.from({ folder, service }, { base: this.config.baseUrl.full, endpoint: 'recompileNodgen' });
     const [startDate, endDate] = DateUtils.parse(params.startDate, params.endDate);
     const data = {
@@ -272,7 +298,7 @@ export class Services extends ApiResource {
   async export(uri: string): Promise<HttpResponse[]>;
   async export(params: ExportParams): Promise<HttpResponse[]>;
   async export(uri: string | ExportParams): Promise<HttpResponse[]> {
-    const { folder, service, version, versionId, ...params } = Uri.toParams(uri);
+    const { folder, service, version, versionId, ...params } = Uri.validate(uri);
     const serviceUri = params.serviceUri ?? Uri.encode({ folder, service, version }, false);
 
     return ImpEx.only(this.config).export({
@@ -310,48 +336,6 @@ export class Services extends ApiResource {
 
     const imported = await this.import({ ...params, file: exported[0].buffer });
     return { exports: exported, imports: imported };
-  }
-
-  #buildExecuteBody<T>(uri: UriParams, { data = {}, inputs: initialInputs, raw }: ExecuteParams<T> = {}): ExecuteBody {
-    const defaultValues = { callPurpose: 'Single Execution', compilerType: 'Neuron', version: uri.version };
-    const metadata = {
-      service_uri: data?.serviceUri,
-      service_id: data?.serviceId ?? uri.serviceId,
-      version: data?.version ?? defaultValues.version,
-      version_id: data?.versionId ?? uri.versionId,
-      transaction_date: DateUtils.isDate(data?.activeSince) ? data.activeSince.toISOString() : undefined,
-      source_system: data?.sourceSystem ?? SPARK_SDK,
-      correlation_id: data?.correlationId,
-      call_purpose: data?.callPurpose ?? defaultValues.callPurpose,
-      array_outputs: Array.isArray(data?.outputs) ? data.outputs.join(',') : data?.outputs,
-      compiler_type: data?.compilerType ?? defaultValues.compilerType,
-      debug_solve: data?.debugSolve,
-      excel_file: data?.downloadable,
-      requested_output: Array.isArray(data?.output) ? data.output.join(',') : data?.output,
-      requested_output_regex: data?.outputRegex,
-      response_data_inputs: data?.withInputs,
-      service_category: Array.isArray(data?.subservices) ? data.subservices.join(',') : data?.subservices,
-      validation_type: StringUtils.isNotEmpty(data?.validationType)
-        ? data.validationType === 'dynamic'
-          ? 'dynamic'
-          : 'default_values'
-        : undefined,
-    };
-
-    const inputs = data?.inputs || initialInputs;
-    if (!Utils.isObject(inputs) && StringUtils.isNotEmpty(raw)) {
-      const parsed = Serializable.deserialize(raw as string, () => {
-        this.logger.warn('failed to parse the raw input as JSON', raw);
-        return { request_data: { inputs: {} }, request_meta: metadata };
-      });
-
-      parsed.request_meta = Utils.isObject(parsed?.request_meta)
-        ? { ...defaultValues, ...parsed.request_meta }
-        : metadata;
-      return parsed;
-    } else {
-      return { request_data: { inputs: inputs ?? {} }, request_meta: metadata };
-    }
   }
 }
 
@@ -421,63 +405,6 @@ interface ServiceApiResponse<TData, TMeta = Record<string, any>> extends Pick<Ap
   response_meta: TMeta;
 }
 
-interface ExecuteData<Inputs = Record<string, any>> {
-  // Input definitions for calculation
-  inputs?: Inputs | null;
-
-  // Parameters to identify the correct service and version to use:
-  serviceUri?: string;
-  serviceId?: string;
-  version?: string;
-  versionId?: string;
-  activeSince?: string | number | Date;
-
-  // These fields, if provided as part of the API request, are visible in the API Call History.
-  sourceSystem?: string;
-  correlationId?: string;
-  callPurpose?: string;
-
-  // Parameters to control the response outputs
-  outputs?: undefined | string | string[];
-  compilerType?: CompilerType;
-  debugSolve?: boolean;
-  downloadable?: boolean;
-  output?: undefined | string | string[];
-  outputRegex?: string;
-  withInputs?: boolean;
-  subservices?: undefined | string | string[];
-  validationType?: ValidationType;
-}
-
-interface ExecuteParams<Inputs = Record<string, any>> {
-  readonly data?: ExecuteData<Inputs>;
-  readonly inputs?: Inputs;
-  readonly raw?: string;
-}
-
-type ExecuteBody<Inputs = Record<string, any>> = {
-  request_data: { inputs: Inputs | null };
-  request_meta: {
-    service_uri?: string;
-    service_id?: string;
-    version?: string;
-    version_id?: string;
-    transaction_date?: string;
-    source_system?: string;
-    correlation_id?: string;
-    call_purpose?: string;
-    array_outputs?: string;
-    compiler_type?: string;
-    debug_solve?: boolean;
-    excel_file?: boolean;
-    requested_output?: string;
-    requested_output_regex?: string;
-    response_data_inputs?: boolean;
-    service_category?: string;
-    validation_type?: string;
-  };
-};
-
 type ServiceCompiled = ServiceApiResponse<{
   lines_of_code: number;
   hours_saved: number;
@@ -493,41 +420,39 @@ type ServiceCompiled = ServiceApiResponse<{
   no_of_cellswithdata: number;
 }>;
 
-type ServiceExecuted<Outputs = Record<string, any>> = ServiceApiResponse<{
-  outputs: Outputs;
-  warnings: Partial<{ source_path: string; message: string }>[] | null;
-  errors:
-    | Partial<{
-        error_category: string;
-        error_type: string;
-        additional_details: string;
-        source_path: string;
-        message: string;
-      }>[]
-    | null;
-  service_chain:
-    | Partial<{
-        service_name: string;
-        run_if: string;
-        requested_report: string;
-        requested_report_filename: string;
-      }>[]
-    | null;
-}>;
+type ServiceExecuted<Output = Record<string, any>> = {
+  outputs: Output[];
+  process_time: number[];
+  warnings: Partial<{ source_path: string; message: string }>[];
+  errors: Partial<{
+    error_category: string;
+    error_type: string;
+    additional_details: string;
+    source_path: string;
+    message: string;
+  }>[];
+  service_chain?: Partial<{
+    service_name: string;
+    run_if: string;
+    requested_report: string;
+    requested_report_filename: string;
+  }>[];
+  service_id: string;
+  version_id: string;
+  version: string;
+  call_id: string;
+  compiler_version: string;
+  correlation_id: string;
+  request_timestamp: string;
+};
 
-type MetadataFound = ServiceExecuted;
+type MetadataFound = ServiceApiResponse<ServiceExecuted>;
 
 type CompilationStatus = ServiceApiResponse<{ status: string; last_error_message: string; progress: number }>;
 
 type ServicePublished = ServiceApiResponse<{ version_id: string }>;
 
 type ServiceRecompiled = ServiceApiResponse<{ versionId: string; revision: string; jobId: string }>;
-
-interface VersionApiResponse<T> extends Pick<ApiResponse, 'status'> {
-  data: T;
-  errorCode: string | null;
-  message: string | null;
-}
 
 interface VersionInfo {
   id: string;
@@ -547,4 +472,204 @@ interface VersionInfo {
   originalFileName: string;
 }
 
-export type VersionListed = VersionApiResponse<VersionInfo[]>;
+type VersionListed = VersionInfo[];
+
+type JsonInputs = Record<string, any>;
+type ArrayInputs<T = any> = T[];
+type Inputs<T> = undefined | null | string | JsonInputs | ArrayInputs<T>;
+
+interface ExecuteParams<I = Record<string, any>> {
+  // Data for calculation
+  inputs?: Inputs<I>;
+  responseFormat?: 'original' | 'alike';
+
+  // Metadata for calculation
+  activeSince?: string | number | Date;
+  sourceSystem?: string;
+  correlationId?: string;
+  callPurpose?: string;
+  compilerType?: CompilerType;
+  subservices?: undefined | string | string[];
+
+  // Available only in v3 (legacy)
+  debugSolve?: boolean;
+  downloadable?: boolean;
+  echoInputs?: boolean;
+  selectedOutputs?: undefined | string | string[];
+  tablesAsArray?: undefined | string | string[];
+  outputsFilter?: string;
+}
+
+interface ValidateParams extends ExecuteParams {
+  validationType?: ValidationType;
+}
+
+class ExecuteInputs<T> {
+  readonly inputs!: JsonInputs | ArrayInputs;
+  readonly unitLength!: number;
+
+  constructor(data: Inputs<T>) {
+    if (data === undefined || data === null || (Array.isArray(data) && data.length === 0)) data = {}; // default values for empty inputs
+    if (StringUtils.isString(data)) data = Serializable.deserialize(data); // supports JSON string
+
+    if (Utils.isObject(data)) {
+      this.unitLength = 1;
+      this.inputs = data as JsonInputs;
+    } else if (Array.isArray(data)) {
+      this.unitLength = data.length;
+      this.inputs = data as ArrayInputs;
+    } else {
+      throw SparkError.sdk({
+        message: 'invalid data format\nExpected input data formats are string, object or an array of objects',
+        cause: data,
+      });
+    }
+  }
+
+  get isBatch() {
+    return this.unitLength > 1;
+  }
+}
+
+class ExecuteMeta {
+  private _activeSince: string | undefined = undefined;
+  private _sourceSystem: string | undefined = undefined;
+  private _correlationId: string | undefined = undefined;
+  private _callPurpose: string | undefined = undefined;
+  private _compilerType: string | undefined = undefined;
+  private _subservices: string | undefined = undefined;
+  private _debugSolve: boolean | undefined = undefined;
+  private _downloadable: boolean | undefined = undefined;
+  private _echoInputs: boolean | undefined = undefined;
+  private _selectedOutputs: string | undefined = undefined;
+  private _tablesAsArray: string | undefined = undefined;
+  private _outputsFilter: string | undefined = undefined;
+  private _inputKey: string | undefined = undefined;
+
+  readonly #supportedCompilerTypes = ['neuron', 'type3', 'type2', 'type1', 'xconnector'];
+
+  constructor(
+    metadata: Omit<ExecuteParams, 'inputs'>,
+    readonly uri: UriParams,
+    readonly isBatch: boolean,
+  ) {
+    this.#activeSince = metadata.activeSince;
+    this.#sourceSystem = metadata.sourceSystem;
+    this.#correlationId = metadata.correlationId;
+    this.#callPurpose = metadata.callPurpose;
+    this.#compilerType = metadata.compilerType;
+    this.#subservices = metadata.subservices;
+    this.#debugSolve = metadata.debugSolve;
+    this.#downloadable = metadata.downloadable;
+    this.#echoInputs = metadata.echoInputs;
+    this.#selectedOutputs = metadata.selectedOutputs;
+    this.#tablesAsArray = metadata.tablesAsArray;
+    this.#outputsFilter = metadata.outputsFilter;
+  }
+
+  set #activeSince(date: undefined | string | number | Date) {
+    this._activeSince = DateUtils.isDate(date) ? date.toISOString() : undefined;
+  }
+
+  set #sourceSystem(system: string | undefined) {
+    this._sourceSystem = system ?? SPARK_SDK;
+  }
+
+  set #correlationId(id: string | undefined) {
+    this._correlationId = id;
+  }
+
+  set #callPurpose(purpose: string | undefined) {
+    this._callPurpose = StringUtils.isNotEmpty(purpose)
+      ? purpose
+      : this.isBatch
+        ? 'Sync Batch Execution'
+        : 'Single Execution';
+  }
+
+  set #compilerType(type: CompilerType | undefined) {
+    type = type?.toLowerCase() as CompilerType;
+    if (StringUtils.isNotEmpty(type) && this.#supportedCompilerTypes.includes(type)) {
+      this._compilerType = StringUtils.capitalize(type);
+    } else {
+      // default if value not supported or provided. No need to throw an error.
+      this._compilerType = 'Neuron';
+    }
+  }
+
+  set #subservices(services: string | string[] | undefined) {
+    this._subservices = StringUtils.join(services);
+  }
+
+  set #debugSolve(debug: boolean | undefined) {
+    this._debugSolve = debug;
+  }
+
+  set #downloadable(download: boolean | undefined) {
+    this._downloadable = download;
+  }
+
+  set #echoInputs(echo: boolean | undefined) {
+    this._echoInputs = echo;
+  }
+
+  set #selectedOutputs(outputs: string | string[] | undefined) {
+    this._selectedOutputs = StringUtils.join(outputs);
+  }
+
+  set #tablesAsArray(tables: string | string[] | undefined) {
+    this._tablesAsArray = StringUtils.join(tables);
+  }
+
+  set #outputsFilter(filter: string | undefined) {
+    this._outputsFilter = filter;
+  }
+
+  /**
+   * The sanitized metadata values for the execution request.
+   *
+   * The returned metadata will vary based on the execution mode (user-specified
+   * or inferred). Meaning, parsing and validating the inputs will dictate the
+   * structure of the metadata; hence, why the metadata is dynamic.
+   */
+  get value() {
+    const uri = this.uri;
+    const { folder, service, version, serviceId } = uri;
+    const serviceUri = serviceId || Uri.encode({ folder, service, version }, false) || undefined;
+
+    if (this.isBatch) {
+      return {
+        service: serviceUri,
+        version_id: uri.versionId,
+        version_by_timestamp: this._activeSince,
+        subservice: this._subservices,
+        output: this._selectedOutputs,
+        call_purpose: this._callPurpose,
+        source_system: this._sourceSystem,
+        correlation_id: this._correlationId,
+        unique_record_key: this._inputKey, // async only
+      } as const;
+    }
+
+    return {
+      // URI locator via metadata (v3 also supports URI in url path)
+      service_id: uri.serviceId,
+      version_id: uri.versionId,
+      version: uri.version,
+
+      // v3 expects extra metadata
+      transaction_date: this._activeSince,
+      call_purpose: this._callPurpose,
+      source_system: this._sourceSystem,
+      correlation_id: this._correlationId,
+      array_outputs: this._tablesAsArray,
+      compiler_type: this._compilerType,
+      debug_solve: this._debugSolve,
+      excel_file: this._downloadable,
+      requested_output: this._selectedOutputs,
+      requested_output_regex: this._outputsFilter,
+      response_data_inputs: this._echoInputs,
+      service_category: this._subservices,
+    } as const;
+  }
+}

@@ -3,6 +3,7 @@ export const DEFAULT_RETRY_INTERVAL = 1; // 1 second
 export const DEFAULT_TIMEOUT_IN_MS = 60000; // 60 seconds
 export const RETRY_RANDOMIZATION_FACTOR = 1.5;
 export const SPARK_SDK = 'Spark JS SDK';
+export const BATCH_CHUNK_SIZE = 200;
 
 export const ENV_VARS = {
   BASE_URL: 'CSPARK_BASE_URL',

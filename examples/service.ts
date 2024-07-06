@@ -17,17 +17,17 @@ function create(spark: SparkClient) {
     .catch(console.error);
 }
 
-function execute(spark: SparkClient) {
-  const data = { inputs: { value: 'Hello, Spark SDK' }, versionId: 'uuid' };
+function executeOne(spark: SparkClient) {
+  const data = { inputs: { value: 'Hello, Spark SDK' } };
   spark.services
-    .execute('my-folder/my-service', { data })
+    .execute('my-folder/my-service', data)
     .then((response) => console.log(response.data))
     .catch((err) => console.error(JSON.stringify(err.cause, null, 2)));
 }
 
-export function executeAll(spark: SparkClient) {
+export function executeMany(spark: SparkClient) {
   const batch = [{ value: 1 }, { value: 2 }, { value: 3 }];
-  spark.services.batches
+  spark.services
     .execute({ folder: 'my-folder', service: 'my-service' }, { inputs: batch })
     .then((response) => console.log(response.data))
     .catch(console.error);
@@ -63,9 +63,7 @@ function getMetadata(spark: SparkClient) {
 
 function validate(spark: SparkClient) {
   spark.services
-    .validate('my-folder/my-service', {
-      data: { inputs: { letter: 'b', number: 23 }, validationType: 'dynamic' },
-    })
+    .validate('my-folder/my-service', { inputs: { letter: 'b', number: 23 }, validationType: 'dynamic' })
     .then((response) => console.log(JSON.stringify(response.data, null, 2)))
     .catch(console.error);
 }
@@ -133,6 +131,6 @@ export default {
   export: exportAsZip,
   import: importFromZip,
   migrate,
-  execute,
-  executeAll,
+  executeOne,
+  executeMany,
 };

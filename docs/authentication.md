@@ -1,17 +1,17 @@
 # Authentication
 
-The SDK supports three types of authentication mechanisms:
+The SDK supports three types of authentication schemes:
 
-- `apiKey`
-- `token`
-- `oauth` (recommended method for production)
+- [API key](#api-key)
+- [Bearer token](#bearer-token)
+- [OAuth2.0 Client Credentials](#client-credentials-grant) (recommended method for production)
 
 ## API Key
 
 A Spark API key is a synthetic key that allows you to authenticate to the platform
 and access the following APIs:
 
-- [Batch APIs][batch-apis]
+- [Batches API][batch-apis]
 - [Execute API][execute-api]
 - [Metadata API][metadata-api]
 - [Validation API][validation-api]
@@ -109,16 +109,27 @@ As you already know, the SDK will attempt to read the API key, bearer token, and
 OAuth credentials from the environment variables. This is the recommended way to
 store your sensitive information.
 
+**Method 1**: Here's how you can export the environment variables in a Unix-like shell:
+
 ```bash
+export CSPARK_BASE_URL='https://excel.my-env.coherent.global/my-tenant'
+# and
 export CSPARK_API_KEY='my-api-key'
 # or
-export CSPARK_BEARER_TOKEN='Bearer your access token'
+export CSPARK_BEARER_TOKEN='Bearer my-access-token'
 # or
 export CSPARK_CLIENT_ID='my-client-id'
 export CSPARK_CLIENT_SECRET='my-client-secret'
 # or
 export CSPARK_OAUTH_PATH='path/to/my/client-credentials.json'
 ```
+
+**Method 2** (preferred): Alternatively, you can use a `.env` file to store your
+environment variables and use a package like [dotenv](https://www.npmjs.com/package/dotenv)
+to load them into your application.
+
+> [!WARNING]
+> Please note that you should never commit your `.env` file to a public repository.
 
 Creating a `SparkClient` instance now becomes as simple as:
 
@@ -142,6 +153,8 @@ console.log(`access token: ${spark.config.auth.oauth?.accessToken}`);
 
 If more than one authentication mechanisms are provided, the SDK will prioritize in
 the following order: API key > Bearer token > and OAuth2.0 client credentials grant.
+
+[Back to top](#authentication) or [Next: Services API](./services.md)
 
 [batch-apis]: https://docs.coherent.global/spark-apis/batch-apis
 [execute-api]: https://docs.coherent.global/spark-apis/execute-api

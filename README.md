@@ -1,9 +1,9 @@
-# @cspark/sdk
+# Coherent Spark Node.js SDK
 
 [![npm version][version-img]][version-url]
 
-The Coherent Spark Node.js SDK (currently in Beta) is designed to elevate the developer
-experience and provide a convenient access to the Coherent Spark APIs.
+The Coherent Spark Node.js SDK (currently in **Beta**) is designed to elevate the developer
+experience and provide convenient access to the Coherent Spark APIs.
 
 👋 **Just a heads-up:**
 
@@ -20,6 +20,7 @@ yarn add @cspark/sdk
 ```
 
 > 🫣 This package requires [Node.js 14.15](https://nodejs.org/en/download/current) or higher.
+> Browser-like environments are also supported.
 
 ## Usage
 
@@ -239,11 +240,10 @@ OAuth2.0 Client Credentials flow:
 - `Spark.folders.update(id, data)` updates a folder's information by id.
 - `Spark.folders.delete(id)` deletes a folder by id.
 
-[Service API](./docs/service.md) - manages Spark services:
+[Services API](./docs/services.md) - manages Spark services:
 
 - `Spark.services.create(data)` creates a new Spark service.
 - `Spark.services.execute(uri, data)` executes a Spark service.
-- `Spark.services.batches.execute(uri, data)` executes multiple records synchronously.
 - `Spark.services.getVersions(uri)` lists all the versions of a service.
 - `Spark.services.getSwagger(uri)` gets the Swagger documentation of a service.
 - `Spark.services.getSchema(uri)` gets the schema of a service.
@@ -253,6 +253,18 @@ OAuth2.0 Client Credentials flow:
 - `Spark.services.validate(uri, data)` validates input data using static or dynamic validations.
 - `Spark.services.export(uri)` exports Spark services as a zip file.
 - `Spark.services.import(data)` imports Spark services from a zip file into the Spark platform.
+
+[Batches API](./docs/batches.md) - manages asynchronous batch processing:
+
+- `Spark.batches.describe()` describes the batch pipelines across a tenant.
+- `Spark.batches.create(params, [options])` creates a new batch pipeline.
+- `Spark.batches.of(id)` defines a client-side batch pipeline by ID.
+- `Spark.batches.of(id).getInfo()` gets the details of a batch pipeline.
+- `Spark.batches.of(id).getStatus()` gets the status of a batch pipeline.
+- `Spark.batches.of(id).push(data, [options])` adds input data to a batch pipeline.
+- `Spark.batches.of(id).pull([options])` retrieves the output data from a batch pipeline.
+- `Spark.batches.of(id).close()` closes a batch pipeline.
+- `Spark.batches.of(id).cancel()` cancels a batch pipeline.
 
 [Log History API](./docs/history.md) - manages service execution logs:
 
@@ -294,12 +306,12 @@ See the [Uri](./src/resources/base.ts) class for more details.
 
 Feeling motivated enough to contribute? Great! Your help is always appreciated.
 
-Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on the code of
+Please read [CONTRIBUTING.md][contributing-url] for details on the code of
 conduct, and the process for submitting pull requests.
 
 ## Copyright and License
 
-[Apache-2.0](./LICENSE)
+[Apache-2.0][license-url]
 
 <!-- References -->
 
@@ -308,3 +320,5 @@ conduct, and the process for submitting pull requests.
 [api-key-docs]: https://docs.coherent.global/spark-apis/authorization-api-keys
 [bearer-token-docs]: https://docs.coherent.global/spark-apis/authorization-bearer-token
 [oauth2-docs]: https://docs.coherent.global/spark-apis/authorization-client-credentials
+[contributing-url]: https://github.com/Coherent-Partners/spark-ts-sdk/CONTRIBUTING.md
+[license-url]: https://github.com/Coherent-Partners/spark-ts-sdk/LICENSE

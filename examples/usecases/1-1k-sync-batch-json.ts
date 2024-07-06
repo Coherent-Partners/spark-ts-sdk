@@ -59,7 +59,7 @@ async function main() {
 
   // 2. Execute sync batch and save results to a file
   try {
-    const response = await spark.services.batches.execute<Inputs, Outputs>(serviceUri, { inputs: dataset });
+    const response = await spark.services.execute<Inputs, Outputs>(serviceUri, { inputs: dataset });
 
     writer.write(JSON.stringify({ inputs: dataset, ...response.data }, null, 2));
     logger.log(`bulk of ${total} records processed successfully`);

@@ -11,7 +11,8 @@ which shall help you save time and streamline your development process.
 
 - [Authentication](./authentication.md)
 - [Folder API](./folder.md)
-- [Service API](./service.md)
+- [Services API](./services.md)
+- [Batches API](./batches.md)
 - [Log History API](./history.md)
 - [ImpEx API](./impex.md)
 - [Other APIs](./misc.md)
@@ -41,20 +42,20 @@ documentation, the ESM format will be used in all the code snippets.
 
 ### Spark URI Locator
 
-You may notice by now that `folder` and `service` when combined together form a
+You may notice by now that `folder` and `service` when combined form a
 base identifier to locate a resource in the Spark platform for a particular
-environment and tenant. I term this _Spark URI Locator_.
+environment and tenant. I term this _Service URI_ locator.
 
 Given that this locator may be part of either the final URL or the request payload,
 it is recommended to use plain strings (i.e., not URL-encoded) when referring to
 these identifiers.
-The SDK will take care of encoding them when necessary. Otherwise, you risk running
+The SDK will take encode them when necessary. Otherwise, you risk running into
 into issues when trying to locate a resource.
 
 For instance, executing a Spark service using these identifiers
 
-- folder => `my folder` (when encoded => `my%20folder`)
-- service => `my service` (when encoded => `my%20service`)
+- folder: `my folder` (when encoded => `my%20folder`)
+- service: `my service` (when encoded => `my%20service`)
 
 can be tricky if they are URL-encoded. See in the example below how the URI locator
 formed by these identifiers can be used in different contexts:
@@ -62,30 +63,20 @@ formed by these identifiers can be used in different contexts:
 ```ts
 const folder = 'my%20folder'; // encoding equivalent to 'my folder'
 const service = 'my%20service'; // encoding equivalent to 'my service'
+const serviceUri = `${folder}/${service}`;
 
 // Use case 1: as part of the URL
-await spark.services.execute(
-  { folder, service },
-  {
-    /* data */
-  },
-);
+await spark.services.execute(serviceUri, { inputs: {} });
 
 // Use case 2: as part of the payload (will fail to locate the service)
-await spark.services.batches.execute(
-  { folder, service },
-  {
-    /* data */
-  },
-);
+await spark.services.execute(serviceUri, { inputs: [{}] });
 ```
 
-Behind the scenes, the `Spark.services.execute` uses the URI locator as part of
+Behind the scenes, the `Use case 1` (single input) uses the URI locator as part of
 the final URL to locate the service to execute. Hence, it works fine whether the
-identifiers are URL encoded or not. However, when using the `Spark.services.batches.execute`,
+identifiers are URL-encoded or not. However, when using a list of inputs in `Use case 2`,
 the method uses the URI locator as part of the payload, which will fail to locate
-the service if the identifiers are URL-encoded. Therefore, it is recommended to
-use plain strings when referring to these identifiers.
+the service if the identifiers are URL-encoded.
 
 ### Transactional vs Non-Transactional Methods
 
@@ -116,7 +107,11 @@ control over the process.
 
 ## HTTP Request
 
-The SDK is shipped with a built-in logger that will log all HTTP requests
+The SDK is built on top of the [node-fetch](https://www.npmjs.com/package/node-fetch)
+library, which provides an elegant, feature-rich HTTP module. The SDK built a layer
+on top of it to simplify the process of making HTTP requests to the Spark platform.
+
+The SDK is also shipped with a built-in logger that will log all HTTP requests
 to the console by default. If you want to disable this feature, you can set
 the `logger` property to `false` or to higher log levels (e.g., `warn`) in the
 SDK configuration.
@@ -202,7 +197,7 @@ as well as the obtained response if available.
       "method": "DELETE",
       "headers": {
         "User-Agent": "Coherent Spark SDK v0.1.0 (Node/16.14.2)",
-        "x-spark-ua": "agent=cspark-ts-sdk/0.1.0; env=Node/16.14.2",
+        "x-spark-ua": "agent=spark-ts-sdk/0.1.0; env=Node/16.14.2",
         "x-request-id": "uuid",
         "x-tenant-name": "my-tenant",
         "Content-Type": "application/json"
@@ -368,3 +363,5 @@ If you have any questions or need help with the SDK, feel free to create an issu
 or submit a pull request following these [guidelines](../CONTRIBUTING.md).
 
 Happy coding! 🚀
+
+[Back to top](#sdk-documentation) or [Next: Authentication](./authentication.md)

@@ -137,7 +137,7 @@ class Export extends ApiResource {
     const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'export' });
     const metadata = {
       file_filter: params?.filters?.file ?? 'migrate',
-      version_filter: params?.filters?.version ?? 'all',
+      version_filter: params?.filters?.version ?? 'latest',
       source_system: params?.sourceSystem ?? SPARK_SDK,
       correlation_id: params?.correlationId,
     };
@@ -289,7 +289,7 @@ export class Wasm extends ApiResource {
   download(uri: string): Promise<HttpResponse>;
   download(params: Omit<UriParams, 'proxy' | 'version'>): Promise<HttpResponse>;
   download(uri: string | Omit<UriParams, 'proxy' | 'version'>): Promise<HttpResponse> {
-    const { folder, service, public: isPublic, serviceId, versionId } = Uri.toParams(uri);
+    const { folder, service, public: isPublic, serviceId, versionId } = Uri.validate(uri);
     const serviceUri = Uri.encode({ folder, service, serviceId, versionId });
     const endpoint = `getnodegenzipbyId/${serviceUri}`;
     const url = Uri.partial(`nodegen${isPublic ? '/public' : ''}`, { base: this.config.baseUrl.full, endpoint });

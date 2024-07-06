@@ -1,4 +1,6 @@
-import { SparkError, Uri } from '@cspark/sdk';
+import { AbortError } from 'node-fetch';
+import Spark, { SparkError, Uri } from '@cspark/sdk';
+import LocalServer, { TestBaseUrl, TestApiResource } from './_server';
 
 describe('Uri', () => {
   const BASE_URL = 'https://excel.test.coherent.global/tenant-name';
@@ -28,6 +30,14 @@ describe('Uri', () => {
       'https://excel.test.coherent.global/tenant-name/api/v3/folders/f/services/s/execute',
     );
 
+    expect(Uri.from({ versionId: '123' }, { base: BASE_URL }).value).toBe(
+      'https://excel.test.coherent.global/tenant-name/api/v3/version/123', // no longer support 'execute' endpoint
+    );
+
+    expect(Uri.from({ serviceId: '456' }, { base: BASE_URL }).value).toBe(
+      'https://excel.test.coherent.global/tenant-name/api/v3/service/456', // no longer support 'execute' endpoint
+    );
+
     expect(Uri.from(undefined, { base: BASE_URL, version: 'api/v4', endpoint: 'execute' }).value).toBe(
       'https://excel.test.coherent.global/tenant-name/api/v4/execute',
     );
@@ -38,10 +48,10 @@ describe('Uri', () => {
 
     expect(
       Uri.from(
-        { folder: 'high', service: 'priority', versionId: 'low-priority' },
+        { folder: 'low', service: 'priority', versionId: 'high-priority' },
         { base: BASE_URL, endpoint: 'execute' },
       ).value,
-    ).toBe('https://excel.test.coherent.global/tenant-name/api/v3/folders/high/services/priority/execute');
+    ).toBe('https://excel.test.coherent.global/tenant-name/api/v3/version/high-priority/execute');
 
     expect(Uri.from({ proxy: 'custom-endpoint' }, { base: BASE_URL }).value).toBe(
       'https://excel.test.coherent.global/tenant-name/api/v3/proxy/custom-endpoint',
@@ -56,7 +66,20 @@ describe('Uri', () => {
     );
   });
 
+  it('can concatenate with query params', () => {
+    const uri = Uri.from({ folder: 'f', service: 's' }, { base: BASE_URL, endpoint: 'execute' });
+    expect(uri.concat({ a: 'b' })).toBe(
+      'https://excel.test.coherent.global/tenant-name/api/v3/folders/f/services/s/execute?a=b',
+    );
+
+    expect(uri.concat({ a: 'b', c: 'd', e: '' })).toBe(
+      'https://excel.test.coherent.global/tenant-name/api/v3/folders/f/services/s/execute?a=b&c=d&e=',
+    );
+  });
+
   it('should throw an error if wrong uri params', () => {
+    expect(() => Uri.validate('')).toThrow(SparkError);
+    expect(() => Uri.validate('f//')).toThrow(SparkError);
     expect(() => Uri.from(undefined, { base: BASE_URL })).not.toThrow(SparkError);
     expect(() => Uri.partial('', { base: BASE_URL })).not.toThrow(SparkError);
 
@@ -72,6 +95,7 @@ describe('Uri', () => {
     expect(Uri.decode('folders/f/services/s[1.2.3]')).toEqual({ folder: 'f', service: 's', version: '1.2.3' });
     expect(Uri.decode('service/456')).toEqual({ serviceId: '456' });
     expect(Uri.decode('version/123')).toEqual({ versionId: '123' });
+    expect(Uri.decode('proxy/custom-endpoint')).toEqual({ proxy: 'custom-endpoint' });
 
     // Atypical cases
     expect(Uri.decode('/f/s/')).toEqual({ folder: 'f', service: 's' });
@@ -84,5 +108,52 @@ describe('Uri', () => {
     expect(Uri.decode('//f/')).toEqual({});
     expect(Uri.decode('//f')).toEqual({});
     expect(Uri.decode('///')).toEqual({});
+  });
+
+  it('should encode UriParams object into string uri', () => {
+    expect(Uri.encode({ folder: 'f', service: 's' })).toBe('folders/f/services/s');
+    expect(Uri.encode({ folder: 'f', service: 's', version: '1.2.3' }, false)).toBe('f/s[1.2.3]');
+    expect(Uri.encode({ serviceId: '456' })).toBe('service/456');
+    expect(Uri.encode({ versionId: '123' })).toBe('version/123');
+    expect(Uri.encode({ proxy: 'custom-endpoint' })).toBe('proxy/custom-endpoint');
+  });
+});
+
+describe('ApiResource', () => {
+  const localSever = new LocalServer();
+  let testResource: TestApiResource;
+  let spark: Spark;
+
+  beforeAll(async () => {
+    await localSever.start();
+    spark = new Spark({
+      baseUrl: new TestBaseUrl(`http://${localSever.hostname}:${localSever.port}`, 'my-tenant'),
+      apiKey: 'open',
+      logger: false,
+    });
+  });
+
+  afterAll(async () => {
+    return localSever.stop();
+  });
+
+  it('should be able to abort long requests from external signals', async () => {
+    const controller = new AbortController();
+    testResource = new TestApiResource(spark.config, controller);
+    const timeout = setTimeout(() => controller.abort(), 500); // abort after 500ms
+    const promise = testResource.slow(); // this request will take 1s
+
+    await expect(promise).rejects.toThrow(AbortError);
+    expect(controller.signal.aborted).toBe(true);
+    clearTimeout(timeout);
+  });
+
+  it('can abort long requests on demand', async () => {
+    testResource = new TestApiResource(spark.config);
+    const timeout = setTimeout(() => testResource.abort(), 500); // abort after 500ms
+    const promise = testResource.slow(); // this request will take 1s
+
+    await expect(promise).rejects.toThrow(AbortError);
+    clearTimeout(timeout);
   });
 });

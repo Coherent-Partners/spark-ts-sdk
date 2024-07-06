@@ -1,12 +1,24 @@
 import http from 'http';
 import { once } from 'events';
-import { BaseUrl } from '@cspark/sdk/config';
+import { BaseUrl, type Config } from '@cspark/sdk/config';
+import { ApiResource, Uri } from '@cspark/sdk';
 
 // Use a custom BaseUrl for testing purposes.
 export class TestBaseUrl extends BaseUrl {
   constructor(baseUrl: string, tenant: string) {
     // bypass the URL validation
     super(baseUrl, tenant);
+  }
+}
+
+// A fake Spark API resource for testing purposes.
+export class TestApiResource extends ApiResource {
+  constructor(config: Config, controller?: AbortController) {
+    super(config, controller);
+  }
+  slow() {
+    const uri = Uri.from(undefined, { base: this.config.baseUrl.value, endpoint: 'test-resource/slow' });
+    return this.request(uri);
   }
 }
 
@@ -42,6 +54,15 @@ export default class LocalServer {
 
   router(req: http.IncomingMessage, res: http.ServerResponse) {
     const pathname = req.url;
+
+    // TestApiResource.slow()
+    if (pathname === '/api/v3/test-resource/slow') {
+      const timeout = setTimeout(() => {
+        res.statusCode = 200;
+        res.end();
+      }, 1000);
+      res.on('close', () => clearTimeout(timeout));
+    }
 
     // Spark.folders.getCategories()
     if (pathname === '/api/v1/lookup/getcategories') {
