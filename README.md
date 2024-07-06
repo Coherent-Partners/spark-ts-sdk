@@ -1,9 +1,9 @@
-# @cspark/sdk
+# Coherent Spark Node.js SDK
 
 [![npm version][version-img]][version-url]
 
-The Coherent Spark Node.js SDK (currently in Beta) is designed to elevate the developer
-experience and provide a convenient access to the Coherent Spark APIs.
+The Coherent Spark Node.js SDK (currently in **Beta**) is designed to elevate the developer
+experience and provide convenient access to the Coherent Spark APIs.
 
 👋 **Just a heads-up:**
 
@@ -20,6 +20,7 @@ yarn add @cspark/sdk
 ```
 
 > 🫣 This package requires [Node.js 14.15](https://nodejs.org/en/download/current) or higher.
+> Browser-like environments are also supported.
 
 ## Usage
 
