@@ -1,3 +1,5 @@
+import { AbortSignal } from 'node-fetch/externals';
+
 import { Authorization } from '../auth';
 import { Config } from '../config';
 import { JsonData } from '../data';
@@ -5,7 +7,7 @@ import { SparkError } from '../error';
 import { Logger } from '../logger';
 import { about as sdkInfo, sdkUaHeader } from '../version';
 import { _fetch, _download, HttpOptions, HttpResponse } from '../http';
-import Utils, { StringUtils, Maybe, sanitizeUri } from '../utils';
+import Utils, { StringUtils, Maybe, sanitizeUri, getAbortController } from '../utils';
 
 /**
  * Base class for all API resources.
@@ -21,14 +23,22 @@ import Utils, { StringUtils, Maybe, sanitizeUri } from '../utils';
  */
 export abstract class ApiResource {
   protected readonly logger!: Logger;
-  protected readonly controller!: AbortController;
+  protected readonly controller: AbortController | undefined;
 
   constructor(
     protected readonly config: Config,
     controller?: AbortController,
   ) {
     this.logger = Logger.of(config.logger);
-    this.controller = controller || new AbortController();
+    this.controller = controller || getAbortController();
+
+    if (!this.controller) {
+      this.logger.warn(
+        `"AbortController" is unavailable in this environment "${sdkInfo}". You will not be able to abort requests ` +
+          'unless you use a different environment (e.g., Node 14.17+) or a polyfill to support this feature. ' +
+          'A suggested implementation is "abort-controller" (https://www.npmjs.com/package/abort-controller)',
+      );
+    }
   }
 
   /**
@@ -97,7 +107,7 @@ export abstract class ApiResource {
       method,
       headers: { ...headers, ...this.defaultHeaders },
       config: this.config,
-      cancellationToken: this.controller.signal,
+      cancellationToken: this.controller?.signal as Maybe<AbortSignal>,
     });
   }
 
@@ -112,7 +122,7 @@ export abstract class ApiResource {
    * @see AbortController for more details.
    */
   abort(): void {
-    this.controller.abort();
+    this.controller?.abort();
   }
 }
 

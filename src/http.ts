@@ -1,5 +1,6 @@
 import { type Readable as ByteStream } from 'stream';
 import nodeFetch, { RequestInit, AbortError } from 'node-fetch';
+import { AbortSignal } from 'node-fetch/externals';
 
 import { Config } from './config';
 import { Streamer } from './streaming';
@@ -192,7 +193,7 @@ async function createRequestInit<T>(options: HttpOptions<T>): Promise<RequestIni
     method,
     body: method === 'GET' ? undefined : body,
     headers: { ...headers, ...options.config.auth?.asHeader },
-    signal: options.cancellationToken as RequestInit['signal'],
+    signal: options.cancellationToken,
   };
 }
 
