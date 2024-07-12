@@ -25,12 +25,9 @@ export abstract class ApiResource {
   protected readonly logger!: Logger;
   protected readonly controller: AbortController | undefined;
 
-  constructor(
-    protected readonly config: Config,
-    controller?: AbortController,
-  ) {
+  constructor(protected readonly config: Config) {
     this.logger = Logger.of(config.logger);
-    this.controller = controller || getAbortController();
+    this.controller = getAbortController();
 
     if (!this.controller) {
       this.logger.warn(
