@@ -12,10 +12,24 @@ async function bootstrapModules(names: string[]) {
   }
 }
 
-bootstrapModules(['fs', 'stream', 'crypto', 'form-data', 'buffer']); // FIXME: use shims instead.
+bootstrapModules(['fs', 'stream', 'crypto', 'form-data', 'buffer', 'abort-controller']); // FIXME: use shims instead.
 
 export function isBrowser() {
   return typeof window === 'object' && typeof document === 'object' && typeof navigator !== 'undefined';
+}
+
+/**
+ * This should fix the issue with the AbortController polyfill for @cspark/sdk@0.2.0
+ * for Node 14.15>= and <14.17 environments.
+ */
+export function getAbortController(): AbortController | undefined {
+  // AbortController was added in node v14.17.0 globally.
+  if (typeof AbortController !== 'undefined') return new AbortController();
+
+  // However, because Node 14.15+ is supported, we allow devs to load it from an
+  // external module such as a peer dependency to avoid breaking changes.
+  const abortController = loadModule('abort-controller')?.AbortController;
+  return abortController ? new abortController() : undefined;
 }
 
 /**
@@ -213,6 +227,7 @@ export default {
   isNotEmptyArray,
   sanitizeUri,
   isBrowser,
+  getAbortController,
   getBrowserInfo,
   getByteLength,
   readFile,

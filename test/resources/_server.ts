@@ -1,6 +1,6 @@
 import http from 'http';
 import { once } from 'events';
-import { BaseUrl, type Config } from '@cspark/sdk/config';
+import { BaseUrl } from '@cspark/sdk/config';
 import { ApiResource, Uri } from '@cspark/sdk';
 
 // Use a custom BaseUrl for testing purposes.
@@ -13,9 +13,6 @@ export class TestBaseUrl extends BaseUrl {
 
 // A fake Spark API resource for testing purposes.
 export class TestApiResource extends ApiResource {
-  constructor(config: Config, controller?: AbortController) {
-    super(config, controller);
-  }
   slow() {
     const uri = Uri.from(undefined, { base: this.config.baseUrl.value, endpoint: 'test-resource/slow' });
     return this.request(uri);

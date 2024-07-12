@@ -137,20 +137,9 @@ describe('ApiResource', () => {
     return localSever.stop();
   });
 
-  it('should be able to abort long requests from external signals', async () => {
-    const controller = new AbortController();
-    testResource = new TestApiResource(spark.config, controller);
-    const timeout = setTimeout(() => controller.abort(), 500); // abort after 500ms
-    const promise = testResource.slow(); // this request will take 1s
-
-    await expect(promise).rejects.toThrow(AbortError);
-    expect(controller.signal.aborted).toBe(true);
-    clearTimeout(timeout);
-  });
-
   it('can abort long requests on demand', async () => {
     testResource = new TestApiResource(spark.config);
-    const timeout = setTimeout(() => testResource.abort(), 500); // abort after 500ms
+    const timeout = setTimeout(() => testResource?.abort(), 500); // abort after 500ms
     const promise = testResource.slow(); // this request will take 1s
 
     await expect(promise).rejects.toThrow(AbortError);

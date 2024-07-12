@@ -1,6 +1,6 @@
 import { getBrowserInfo } from './utils';
 
-const version = '0.2.1';
+const version = '0.2.2';
 
 const sdkLogger = `CSPARK v${version}`;
 

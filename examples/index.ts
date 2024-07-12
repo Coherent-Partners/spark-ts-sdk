@@ -10,7 +10,7 @@ import Spark from '@cspark/sdk';
 
 import Config from './config';
 import Folder from './folders';
-import Service from './service';
+import Service from './services';
 import History from './history';
 import ImpEx from './impex';
 import Batch from './batches';

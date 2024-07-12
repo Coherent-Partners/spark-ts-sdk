@@ -80,44 +80,43 @@ export class Services extends ApiResource {
 
   /**
    * Executes a service using default inputs.
-   * @param {string} uri - where the service is located
+   *
+   * @param {string} uri - use the `{folder}/{service}[?{version}]` or `service/{serviceId}` or
+   * `version/{versionId}` format to locate the service.
+   * @param {ExecuteParams<Input>} [params] - the optional execution parameters (inputs, metadata, etc.)
+   * The inputs can be provided the following ways:
+   * - as `null` or `undefined` to use the default inputs
+   * - as a JSON string
+   * - as a JSON object for single execution
+   * - as an array of JSON objects for synchronous batch execution
    * @returns {Promise<HttpResponse<ServiceExecuted<Output>>>} the service execution response
    *
    * Obviously, the SDK ignores what those default values are. Under the hood,
    * the SDK uses an empty object `{}` as the input data, which is an indicator for
    * Spark to use the default inputs defined in the Excel file.
    */
-  execute<Output>(uri: string): Promise<HttpResponse<ServiceExecuted<Output>>>;
+  execute<Input, Output>(uri: string, params?: ExecuteParams<Input>): Promise<HttpResponse<ServiceExecuted<Output>>>;
   /**
    * Executes a service using default inputs.
-   * @param {UriParams} uri - use fine-grained details to locate the service
-   * @returns {Promise<HttpResponse<ServiceExecuted<Output>>>} the service execution response
    *
+   * @param {UriParams} uri - use fine-grained details to locate the service
    * The `UriParams` object can be used to specify the service location and additional
    * parameters like the version ID, service ID, proxy service URI, etc.
    * @see {@link UriParams} for more details.
-   */
-  execute<Output>(uri: UriParams): Promise<HttpResponse<ServiceExecuted<Output>>>;
-  /**
-   * Executes a service with the given inputs.
-   * @param {string} uri - where the service is located
-   * @param {ExecuteParams<Input>} params - the execution parameters (inputs, metadata, etc.)
-   * @returns {Promise<HttpResponse<ServiceExecuted<Output>>>} the service execution response
    *
+   * @param {ExecuteParams<Input>} [params] - the optional execution parameters (inputs, metadata, etc.)
    * The inputs can be provided the following ways:
-   * - `params.inputs` - the input data to use for the calculation, which assumes the default metadata.
-   * - `params.data` - the full metadata and input data to use for the calculation.
-   * - `params.raw` - a JSON string to parse as the full metadata and input data.
-   */
-  execute<Input, Output>(uri: string, params: ExecuteParams<Input>): Promise<HttpResponse<ServiceExecuted<Output>>>;
-  /**
-   * Executes a service with the given inputs.
-   * @param {UriParams} uri - use fine-grained details to locate the service
-   * @param {ExecuteParams<Input>} params - the execution parameters (inputs, metadata, etc.)
+   * - as `null` or `undefined` to use the default inputs
+   * - as a JSON string
+   * - as a JSON object for single execution
+   * - as an array of JSON objects for synchronous batch execution
    * @returns {Promise<HttpResponse<ServiceExecuted<Output>>>} the service execution response
    */
-  execute<Input, Output>(uri: UriParams, params: ExecuteParams<Input>): Promise<HttpResponse<ServiceExecuted<Output>>>;
-  async execute<Input, Output>(uri: string | UriParams, params: ExecuteParams<Input> = {}) {
+  execute<Input, Output>(uri: UriParams, params?: ExecuteParams<Input>): Promise<HttpResponse<ServiceExecuted<Output>>>;
+  async execute<Input, Output>(
+    uri: string | UriParams,
+    params: ExecuteParams<Input> = {},
+  ): Promise<HttpResponse<ServiceExecuted<Output>>> {
     uri = Uri.validate(uri);
 
     const { inputs, ...meta } = params;
@@ -142,7 +141,7 @@ export class Services extends ApiResource {
           process_time: [response.data.response_meta?.process_time],
           warnings: [response.data.response_data?.warnings],
           errors: [response.data.response_data?.errors],
-          service_chain: [response.data.response_data?.service],
+          service_chain: [response.data.response_data?.service_chain],
           service_id: response.data.response_meta?.service_id,
           version_id: response.data.response_meta?.version_id,
           version: response.data.response_meta?.version,
@@ -505,7 +504,7 @@ interface ValidateParams extends ExecuteParams {
 }
 
 class ExecuteInputs<T> {
-  readonly inputs!: JsonInputs | ArrayInputs;
+  readonly inputs!: JsonInputs | ArrayInputs<T>;
   readonly unitLength!: number;
 
   constructor(data: Inputs<T>) {
@@ -517,7 +516,7 @@ class ExecuteInputs<T> {
       this.inputs = data as JsonInputs;
     } else if (Array.isArray(data)) {
       this.unitLength = data.length;
-      this.inputs = data as ArrayInputs;
+      this.inputs = data as ArrayInputs<T>;
     } else {
       throw SparkError.sdk({
         message: 'invalid data format\nExpected input data formats are string, object or an array of objects',
