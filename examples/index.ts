@@ -18,6 +18,7 @@ import Batch from './batches';
 const token = 'insert-my-access-token';
 const spark = new Spark({ token, env: 'my-env', tenant: 'my-tenant' });
 
+Config.build(token);
 Config.printLogs();
 Config.retrieveToken(spark);
 

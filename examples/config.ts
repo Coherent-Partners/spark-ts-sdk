@@ -1,4 +1,9 @@
-import { type SparkClient, Logger } from '@cspark/sdk';
+import { type SparkClient, Logger, JwtConfig } from '@cspark/sdk';
+
+function build(token: string) {
+  const config = JwtConfig.from({ token });
+  console.log(`config: ${config}`);
+}
 
 function retrieveToken(spark: SparkClient) {
   spark.config.auth.oauth
@@ -26,6 +31,7 @@ function printLogs() {
 }
 
 export default {
+  build,
   retrieveToken,
   printLogs,
 };

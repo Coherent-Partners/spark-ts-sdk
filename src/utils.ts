@@ -5,14 +5,21 @@ const LoadedModules: Record<string, any> = {};
 
 async function bootstrapModules(names: string[]) {
   if (isBrowser()) return;
-  if (typeof module === 'object' && typeof module.exports === 'object') {
-    names.forEach((name) => (LoadedModules[name] = require(name)));
-  } else {
-    names.forEach((name) => import(name).then((module) => (LoadedModules[name] = module)));
+  for (const name of names) {
+    try {
+      if (typeof module === 'object' && typeof module.exports === 'object') {
+        LoadedModules[name] = require(name);
+      } else {
+        LoadedModules[name] = await import(name);
+      }
+    } catch {
+      // Avoid throwing errors when loading optional modules. Users will be notified
+      // when attempting to use a feature that requires the missing module.
+    }
   }
 }
 
-bootstrapModules(['fs', 'stream', 'crypto', 'form-data', 'buffer', 'abort-controller']); // FIXME: use shims instead.
+bootstrapModules(['fs', 'stream', 'crypto', 'form-data', 'buffer', 'abort-controller', 'jwt-decode']); // FIXME: use shims instead.
 
 export function isBrowser() {
   return typeof window === 'object' && typeof document === 'object' && typeof navigator !== 'undefined';

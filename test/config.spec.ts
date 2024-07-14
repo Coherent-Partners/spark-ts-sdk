@@ -64,7 +64,9 @@ describe('BaseUrl', () => {
   const VALID_URL = 'https://excel.test.coherent.global/tenant';
 
   it('should build base URL from parts', () => {
+    expect(BaseUrl.from({ url: 'https://spark.test.coherent.global/tenant' }).full).toBe(VALID_URL);
     expect(BaseUrl.from({ url: 'https://excel.test.coherent.global/tenant' }).full).toBe(VALID_URL);
+    expect(BaseUrl.from({ url: 'https://spark.test.coherent.global', tenant: 'tenant' }).full).toBe(VALID_URL);
     expect(BaseUrl.from({ url: 'https://excel.test.coherent.global', tenant: 'tenant' }).full).toBe(VALID_URL);
     expect(BaseUrl.from({ env: 'test', tenant: 'tenant' }).full).toBe(VALID_URL);
   });

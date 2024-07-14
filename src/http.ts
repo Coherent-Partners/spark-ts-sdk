@@ -197,6 +197,15 @@ async function createRequestInit<T>(options: HttpOptions<T>): Promise<RequestIni
   };
 }
 
+function isInternetError(errorCode: string): boolean {
+  return (
+    errorCode === 'ENOTFOUND' ||
+    errorCode === 'ECONNREFUSED' ||
+    errorCode === 'EHOSTUNREACH' ||
+    errorCode === 'ENETUNREACH'
+  );
+}
+
 /**
  * Calculate the SHA1 hash of the data
  */
@@ -244,7 +253,9 @@ export async function _fetch<Req = JsonData, Resp = JsonData>(
       return await nodeFetch(url, { ...requestInit, redirect: 'manual', timeout: config.timeout });
     } catch (cause) {
       if (cause instanceof AbortError) throw cause;
-      throw new SparkSdkError({ message: `failed to fetch <${resource}>`, cause });
+      // is it relevant to retry request when client's internet is down? 🤔
+      if (isInternetError((cause as any)?.code)) throw SparkError.api(0, `cannot connect to <${resource}>`);
+      throw SparkError.api(-1, { message: `failed to fetch <${resource}>`, cause: cause as Error });
     }
   })();
 
@@ -289,7 +300,7 @@ export async function _fetch<Req = JsonData, Resp = JsonData>(
     if (httpResponse.status === 429 && retries < config.maxRetries) {
       const retryDelay = httpResponse.headers['x-retry-after']
         ? parseFloat(httpResponse.headers['x-retry-after']!) * 1000
-        : getRetryTimeout(retries);
+        : getRetryTimeout(retries, config.retryInterval);
 
       await Utils.sleep(retryDelay);
       return _fetch(resource, { ...fetchOptions, retries: retries + 1 });
@@ -336,6 +347,8 @@ export async function _download(
       };
     })
     .catch(async (response) => {
+      if (response instanceof AbortError) throw response;
+      if (isInternetError((response as any)?.code)) throw SparkError.api(0, `cannot connect to <${resource}>`);
       if (response instanceof Error) {
         throw new SparkSdkError({ message: `failed to fetch <${resource}>`, cause: response });
       }

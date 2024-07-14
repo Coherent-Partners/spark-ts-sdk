@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.3 (2024-07-16)
+
+- Extract Spark settings from JWT token if enabled
+- Refactor http fetch to throw `InternetError` when no internet connection is available
+- Add more test coverage for the `ApiResource` class such as retry logic and error handling
+- Update Batches API documentation
+
 ## 0.2.2 (2024-07-12)
 
 - Fix `AbortController` polyfill for Node.js environments <= 14.17.0

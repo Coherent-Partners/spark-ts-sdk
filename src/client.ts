@@ -5,7 +5,7 @@ import { Authorization, OAuthMethod } from './auth';
 import * as API from './resources';
 
 /**
- * The available settings to initialize a new client.
+ * The available settings to initialize a new Spark client.
  *
  * These options are used to configure the behavior of the `SparkClient`, including
  * the base URL for the APIs, the API key to use for authentication, and the maximum
@@ -19,20 +19,24 @@ import * as API from './resources';
  * - `CSPARK_API_KEY` for `apiKey`
  * - `CSPARK_BEARER_TOKEN` for `token`
  *
- * Note that for user authentication you can use either an API key, a bearer token,
+ * For user authentication, you may use either an API key, a bearer token, or
  * OAuth2 client credentials. If all of them are provided, the client will consider
- * certain order of precedence (API key > Bearer token > OAuth). When using OAuth,
- * the client will temporarily store the token and refresh it as needed upon expiry.
+ * certain order of precedence (OAuth2 > API key > Bearer token). When using OAuth2,
+ * the client will temporarily store the token and refresh it upon expiry.
  */
 export interface ClientOptions extends OAuthMethod {
   /**
-   * Overrides the default base URL for the API, e.g., "https://excel.us.coherent.global/tenant-name/"
-   * By default, it'll be read from `process.env['CSPARK_BASE_URL']`.
+   * Overrides the base URL read from `process.env['CSPARK_BASE_URL']`.
+   *
+   * This can be only origin (e.g., `https://excel.my-env.coherent.global`) or may
+   * include the tenant name (e.g., `https://excel.my-env.coherent.global/my-tenant`).
+   * When the tenant name is not provided, the `tenant` option will be used as a
+   * backup to build the final base URL.
    */
   baseUrl?: Maybe<string | BaseUrl>;
 
   /**
-   * Overrides the inferred tenant name from `baseUrl`.
+   * Overrides the inferred tenant name from `baseUrl` if any.
    */
   tenant?: Maybe<string>;
 
@@ -40,7 +44,8 @@ export interface ClientOptions extends OAuthMethod {
    * The environment piece of the base URL, e.g., "sit" or "uat.us".
    *
    * This can be used in conjunction with `tenant` as a fallback to build the base
-   * URL when `baseUrl` is not provided, corrupted or is incomplete.
+   * URL when `baseUrl` is not provided, corrupted or is incomplete. If `baseUrl`
+   * is provided, this option will be ignored.
    */
   env?: Maybe<string>;
 
@@ -55,7 +60,7 @@ export interface ClientOptions extends OAuthMethod {
 
   /**
    * The maximum number of times that the client will retry a request in case of a
-   * temporary failure, like a network error or a 5XX error from the server.
+   * temporary failure, like a authentication error or rate limit from the server.
    *
    * By default, the client will retry requests up to 2 times.
    */
@@ -93,7 +98,7 @@ export interface ClientOptions extends OAuthMethod {
  * The main entry point for the Coherent Spark SDK client.
  *
  * This class provides access to all the resources available in the SDK, including
- * the `folder`, and `service` APIs, as well as the `impex` and `wasm` utilities.
+ * the `folders`, and `services` APIs, as well as the `impex` and `wasm` utilities.
  *
  * Visit the main documentation page for more details on how to use the SDK.
  * @see https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/docs
@@ -101,34 +106,41 @@ export interface ClientOptions extends OAuthMethod {
 export class Client {
   readonly config!: Config;
 
-  constructor(options: ClientOptions = {}) {
-    this.config = new Config(options);
+  constructor(options?: ClientOptions | Config) {
+    this.config = options instanceof Config ? options : new Config(options);
   }
 
+  /** The resource to manage Folders API. */
   get folders(): API.Folders {
     return new API.Folders(this.config);
   }
 
+  /** The resource to manage Services API. */
   get services(): API.Services {
     return new API.Services(this.config);
   }
 
+  /** The resource to manage asynchronous batch processing. */
   get batches(): API.Batches {
     return new API.Batches(this.config);
   }
 
+  /** The resource to manage service execution logs. */
   get logs(): API.History {
     return new API.History(this.config);
   }
 
+  /** The resource to manage files. */
   get files(): API.Files {
     return new API.Files(this.config);
   }
 
+  /** The resource to import and export Spark services. */
   get impex(): API.ImpEx {
     return API.ImpEx.only(this.config);
   }
 
+  /** The resource to manage a service's WebAssembly module. */
   get wasm(): API.Wasm {
     return new API.Wasm(this.config);
   }

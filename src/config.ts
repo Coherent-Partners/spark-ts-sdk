@@ -1,4 +1,4 @@
-import Utils from './utils';
+import Utils, { loadModule } from './utils';
 import Validators from './validators';
 import { SparkError } from './error';
 import { Authorization } from './auth';
@@ -95,14 +95,73 @@ export class Config {
   }
 }
 
+export class JwtConfig extends Config {
+  /**
+   * Decodes a Spark-issued JWT and extracts the base URL and tenant name.
+   * @param token {string} - the JWT to decode.
+   * @returns {ClientOptions} the decoded base URL and tenant name.
+   *
+   * This method is not supported in browser environments and is not intended for general
+   * use of token decoding. Additionally, it requires the `jwt-decode` module to be installed.
+   */
+  static decode(token: string): ClientOptions {
+    if (Utils.isBrowser()) throw SparkError.sdk('JWT decoding is not supported in browser environments');
+
+    const jwtDecode = loadModule('jwt-decode')?.jwtDecode;
+    if (!jwtDecode) throw SparkError.sdk('jwt-decode module is not available; use `npm install jwt-decode`');
+
+    try {
+      const decoded: JwtPayload = jwtDecode(token?.replace(/bearer/i, '')?.trim());
+      return {
+        baseUrl: BaseUrl.from({ url: new URL(decoded?.iss || '').toString() }).to('excel'),
+        tenant: decoded?.realm,
+        token,
+      };
+    } catch (cause) {
+      if (cause instanceof Error && cause.name === 'InvalidTokenError') {
+        throw SparkError.sdk({ message: `invalid JWT value <${token}>`, cause });
+      }
+      throw SparkError.sdk({ message: 'cannot decode JWT value', cause: token });
+    }
+  }
+
+  /**
+   * Builds a Config from the given JWT token.
+   * @param {ClientOptions} options - the distinct parameters to build a Config from.
+   * @param {string} options.token - the JWT token to decode.
+   * @returns a Config
+   * @throws {SparkError} if a Config cannot be built from the given JWT token.
+   */
+  static from({ token = Utils.readEnv(ENV_VARS.BEARER_TOKEN), ...options }: ClientOptions = {}): Config {
+    if (!token) throw SparkError.sdk('Bearer token is required');
+    const decoded = JwtConfig.decode(token);
+    return new this({ ...options, ...decoded });
+  }
+}
+
 export class BaseUrl {
   readonly url!: URL;
+  readonly env: string | undefined;
+  readonly service: string | undefined;
 
   protected constructor(
     baseUrl: string,
     readonly tenant: string,
   ) {
-    this.url = new URL(baseUrl + '/' + tenant);
+    const url = new URL(baseUrl + '/' + tenant);
+
+    const matches = url.origin.match(/https:\/\/([^\.]+)\.((?:[^\.]+\.)?[^\.]+)\.coherent\.global/);
+    if (matches && matches.length >= 3) {
+      const [, service, env] = matches;
+      this.service = service?.toLowerCase();
+      this.env = env?.toLowerCase();
+      this.url = ['excel', 'keycloak', 'utility', 'entitystore'].includes(this.service)
+        ? url
+        : new URL(`https://excel.${this.env}.coherent.global/${tenant}`);
+    } else {
+      this.env = undefined; // no environment needed for local development.
+      this.url = url;
+    }
   }
 
   /**
@@ -142,7 +201,7 @@ export class BaseUrl {
     });
   }
 
-  /** The base URL */
+  /** The base URL only (no tenant). */
   get value(): string {
     return this.url.origin;
   }
@@ -163,10 +222,26 @@ export class BaseUrl {
    * @returns the base URL for the given service (e.g., "https://entitystore.us.coherent.global")
    */
   to(service: 'excel' | 'keycloak' | 'utility' | 'entitystore', withTenant = false): string {
-    return (withTenant ? this.full : this.value).replace(/excel/, service);
+    return (withTenant ? this.full : this.value).replace(this.service ?? /excel/, service);
   }
 
   toString(): string {
     return this.full;
   }
+}
+
+interface JwtPayload {
+  exp?: number;
+  iat?: number;
+  auth_time?: number;
+  jti?: string;
+  iss?: string;
+  aud?: string[] | string;
+  sub?: string;
+  typ?: string;
+  'allowed-origins'?: string[];
+  scope?: string;
+  name?: string;
+  realm?: string;
+  [key: string]: any;
 }

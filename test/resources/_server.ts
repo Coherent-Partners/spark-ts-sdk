@@ -1,6 +1,6 @@
 import http from 'http';
 import { once } from 'events';
-import { BaseUrl } from '@cspark/sdk/config';
+import { BaseUrl, Config } from '@cspark/sdk/config';
 import { ApiResource, Uri } from '@cspark/sdk';
 
 // Use a custom BaseUrl for testing purposes.
@@ -13,9 +13,22 @@ export class TestBaseUrl extends BaseUrl {
 
 // A fake Spark API resource for testing purposes.
 export class TestApiResource extends ApiResource {
+  protected readonly baseUri!: Uri;
+  constructor(config: Config) {
+    super(config);
+    this.baseUri = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'test-resource' });
+  }
+
   slow() {
-    const uri = Uri.from(undefined, { base: this.config.baseUrl.value, endpoint: 'test-resource/slow' });
-    return this.request(uri);
+    return this.request(this.baseUri.value.concat('/slow-response'));
+  }
+
+  unauthorized() {
+    return this.request(this.baseUri.value.concat('/unauthorized'));
+  }
+
+  rateLimited() {
+    return this.request(this.baseUri.value.concat('/rate-limited'));
   }
 }
 
@@ -53,12 +66,23 @@ export default class LocalServer {
     const pathname = req.url;
 
     // TestApiResource.slow()
-    if (pathname === '/api/v3/test-resource/slow') {
+    if (pathname === '/test-resource/slow-response') {
       const timeout = setTimeout(() => {
         res.statusCode = 200;
         res.end();
       }, 1000);
       res.on('close', () => clearTimeout(timeout));
+    }
+
+    if (pathname === '/test-resource/unauthorized') {
+      res.statusCode = 401;
+      res.end();
+    }
+
+    if (pathname === '/test-resource/rate-limited') {
+      res.statusCode = 429;
+      res.setHeader('x-retry-after', '.1'); // propose retry after 100ms
+      res.end();
     }
 
     // Spark.folders.getCategories()

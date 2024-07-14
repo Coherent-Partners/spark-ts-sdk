@@ -148,7 +148,7 @@ export class SparkApiError extends SparkError {
       case 504:
         return new GatewayTimeoutError(error, 504);
       default:
-        return new ApiUnknownError(error);
+        return new UnknownApiError(error);
     }
   }
 }
@@ -201,7 +201,7 @@ export class GatewayTimeoutError extends SparkApiError {
   override readonly status = 504;
 }
 
-export class ApiUnknownError extends SparkApiError {
+export class UnknownApiError extends SparkApiError {
   override readonly status = undefined;
 }
 

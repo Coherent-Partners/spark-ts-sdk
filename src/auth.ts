@@ -104,14 +104,14 @@ export class Authorization {
   }
 
   get asHeader(): Record<string, string> {
+    if (this.oauth) return { Authorization: `Bearer ${this.oauth.accessToken}` };
     if (this.#apiKey && !this.isOpen) return { 'x-synthetic-key': this.#apiKey };
     if (this.token && !this.isOpen) return { Authorization: `Bearer ${this.token}` };
-    if (this.oauth) return { Authorization: `Bearer ${this.oauth.accessToken}` };
     return {};
   }
 
-  static from(which: OAuthMethod): Authorization {
-    const auth = new this(which);
+  static from(method: OAuthMethod): Authorization {
+    const auth = new this(method);
     if (auth.isEmpty) {
       throw SparkError.sdk({
         message: ''.concat(
@@ -119,7 +119,7 @@ export class Authorization {
           'provide a valid API key, bearer token, or OAuth credentials to proceed.\n',
           'If you will be fetching public APIs, set API key as "open".',
         ),
-        cause: JSON.stringify(which ?? {}),
+        cause: JSON.stringify(method ?? {}),
       });
     }
     return auth;

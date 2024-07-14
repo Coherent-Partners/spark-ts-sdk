@@ -3,7 +3,7 @@
 [![npm version][version-img]][version-url]
 
 The Coherent Spark Node.js SDK (currently in **Beta**) is designed to elevate the developer
-experience and provide convenient access to the Coherent Spark APIs.
+experience and provide convenient access to Coherent Spark APIs.
 
 👋 **Just a heads-up:**
 
@@ -102,6 +102,27 @@ environments:
 Explore the [examples](./examples/index.ts) and [documentation](./docs) folders
 to find out more about the SDK's capabilities.
 
+> **PRO TIP:**
+> A service URI locator can be combined with other parameters to locate a specific
+> service (or version of it) when it's not a string. For example, you may execute
+> a public service using an object containing the `folder`, `service`, and `public`
+> properties.
+
+```ts
+const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'open' });
+const uri = { folder: 'my-folder', service: 'my-service', public: true };
+const inputs = { value: 42 };
+
+spark.services
+  .execute(uri, { inputs })
+  .then((response) => console.log(response.data))
+  .catch(console.error);
+// The final URI in this case is:
+//    'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
+```
+
+See the [Uri](./src/resources/base.ts) class for more details.
+
 ## Client Options
 
 As shown in the examples above, the `Spark` client is your entry point to the SDK.
@@ -110,7 +131,7 @@ It is quite flexible and can be configured with the following options:
 ### Base URL
 
 `baseUrl` (default: `process.env['CSPARK_BASE_URL']`): indicates the base URL of
-the Coherent Spark APIs. It should include the tenant and environment information.
+Coherent Spark APIs. It should include the tenant and environment information.
 
 ```ts
 const spark = new Spark({ baseUrl: 'https://excel.my-env.coherent.global/my-tenant' });
@@ -219,7 +240,7 @@ Some of the derived `SparkApiError` are:
 | `RateLimitError`          | 429         | too many requests              |
 | `InternalServerError`     | 500         | server-side error              |
 | `ServiceUnavailableError` | 503         | server is down                 |
-| `ApiUnknownError`         | `undefined` | unknown error                  |
+| `UnknownApiError`         | `undefined` | unknown error                  |
 
 ## API Parity
 
@@ -232,7 +253,7 @@ OAuth2.0 Client Credentials flow:
 - `Authorization.oauth.retrieveToken(config)` generates new access token.
 - `Authorization.oauth.refreshToken(config)` refreshes access token when expired.
 
-[Folder API](./docs/folder.md) - manages folders:
+[Folders API](./docs/folders.md) - manages folders:
 
 - `Spark.folders.getCategories()` gets the list of folder categories.
 - `Spark.folders.create(data)` creates a new folder using info such as name, description, category, etc.
@@ -280,27 +301,6 @@ OAuth2.0 Client Credentials flow:
 
 - `Spark.wasm.download(uri)` downloads a service's WebAssembly module.
 - `Spark.files.download(url)` downloads temporary files issued by the Spark platform.
-
-> **PRO TIP:**
-> A service URI locator can be combined with other parameters to locate a specific
-> service (or version of it) when it's not a string. For example, you may execute
-> a public service using an object containing the `folder`, `service`, and `public`
-> properties.
-
-```ts
-const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'open' });
-const uri = { folder: 'my-folder', service: 'my-service', public: true };
-const inputs = { value: 42 };
-
-spark.services
-  .execute(uri, { inputs })
-  .then((response) => console.log(response.data))
-  .catch(console.error);
-// The final URI in this case is:
-//    'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
-```
-
-See the [Uri](./src/resources/base.ts) class for more details.
 
 ## Contributing
 

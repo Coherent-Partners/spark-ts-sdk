@@ -1,5 +1,6 @@
 import { AbortError } from 'node-fetch';
-import Spark, { SparkError, Uri } from '@cspark/sdk';
+import Utils from '@cspark/sdk/utils';
+import Spark, { SparkError, SparkApiError, Uri } from '@cspark/sdk';
 import LocalServer, { TestBaseUrl, TestApiResource } from './_server';
 
 describe('Uri', () => {
@@ -130,19 +131,34 @@ describe('ApiResource', () => {
       baseUrl: new TestBaseUrl(`http://${localSever.hostname}:${localSever.port}`, 'my-tenant'),
       apiKey: 'open',
       logger: false,
+      maxRetries: 3, // override default maxRetries: 2
     });
   });
 
-  afterAll(async () => {
-    return localSever.stop();
-  });
+  afterAll(async () => localSever.stop());
 
-  it('can abort long requests on demand', async () => {
+  it('can abort long-running requests', async () => {
     testResource = new TestApiResource(spark.config);
     const timeout = setTimeout(() => testResource?.abort(), 500); // abort after 500ms
     const promise = testResource.slow(); // this request will take 1s
 
     await expect(promise).rejects.toThrow(AbortError);
     clearTimeout(timeout);
+  });
+
+  it('throws an API error when unauthorized', async () => {
+    testResource = new TestApiResource(spark.config);
+    const promise = testResource.unauthorized();
+    await expect(promise).rejects.toThrow(SparkApiError);
+  });
+
+  it('can retry request upon rate limit failure', async () => {
+    const spy = jest.spyOn(Utils, 'sleep');
+    testResource = new TestApiResource(spark.config);
+    const promise = testResource.rateLimited(); // should retry 3 times per maxRetries
+
+    await expect(promise).rejects.toThrow(SparkApiError);
+    expect(spy).toHaveBeenCalledTimes(spark.config.maxRetries);
+    expect(spy).toHaveBeenLastCalledWith(100); // server suggests retry after 100ms
   });
 });
