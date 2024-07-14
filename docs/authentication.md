@@ -83,6 +83,24 @@ token directly or set it in the environment variable `CSPARK_BEARER_TOKEN`.
 const spark = new Spark({ token: 'Bearer my-access-token' });
 ```
 
+The bearer token can also be used to extract certain Spark settings from the JSON Web Token (JWT).
+However, you'll need to install this [jwt-decode] package to use this feature. Also,
+this is not supported in the browser environment.
+
+```ts
+import { JwtConfig } from '@cspark/sdk';
+
+const spark = new Spark(JwtConfig.from({ token: 'Bearer my-access-token', maxRetries: 3 }));
+// or
+const spark = new Spark(JwtConfig.decode('Bearer my-access-token'));
+```
+
+Note that `JwtConfig` is simply an extension of `Spark.Config`. So other client options
+can be specified as well if needed. In short, Spark will automatically try to extract
+the base URL, and tenant name from the bearer token.
+
+So, there's no need to provide them when creating a `SparkClient` instance.
+
 ## Client Credentials Grant
 
 The [OAuth2.0 client credentials grant][oauth2] is the preferred way to handle user authentication
@@ -165,3 +183,4 @@ the following order: OAuth2.0 client credentials grant > API key > Bearer token.
 [spark-api-keys]: https://docs.coherent.global/spark-apis/authorization-api-keys
 [bearer-token]: https://docs.coherent.global/spark-apis/authorization-bearer-token
 [oauth2]: https://docs.coherent.global/spark-apis/authorization-client-credentials
+[jwt-decode]: https://www.npmjs.com/package/jwt-decode

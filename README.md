@@ -253,7 +253,7 @@ OAuth2.0 Client Credentials flow:
 - `Authorization.oauth.retrieveToken(config)` generates new access token.
 - `Authorization.oauth.refreshToken(config)` refreshes access token when expired.
 
-[Folders API](./docs/folder.md) - manages folders:
+[Folders API](./docs/folders.md) - manages folders:
 
 - `Spark.folders.getCategories()` gets the list of folder categories.
 - `Spark.folders.create(data)` creates a new folder using info such as name, description, category, etc.

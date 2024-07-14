@@ -10,7 +10,7 @@ which shall help you save time and streamline your development process.
 ## Table of Contents
 
 - [Authentication](./authentication.md)
-- [Folder API](./folder.md)
+- [Folders API](./folder.md)
 - [Services API](./services.md)
 - [Batches API](./batches.md)
 - [Log History API](./history.md)
@@ -19,7 +19,7 @@ which shall help you save time and streamline your development process.
 
 ## Getting Started
 
-### EcmaScript Modules (ESM) vs CommonJS (CJS)
+### EcmaScript Modules vs CommonJS
 
 The SDK is written in TypeScript and compiled to both EcmaScript Modules (ESM) and
 CommonJS (CJS) formats. You may import the SDK in your project using either of these

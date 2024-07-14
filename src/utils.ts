@@ -5,10 +5,17 @@ const LoadedModules: Record<string, any> = {};
 
 async function bootstrapModules(names: string[]) {
   if (isBrowser()) return;
-  if (typeof module === 'object' && typeof module.exports === 'object') {
-    names.forEach((name) => (LoadedModules[name] = require(name)));
-  } else {
-    names.forEach((name) => import(name).then((module) => (LoadedModules[name] = module)));
+  for (const name of names) {
+    try {
+      if (typeof module === 'object' && typeof module.exports === 'object') {
+        LoadedModules[name] = require(name);
+      } else {
+        LoadedModules[name] = await import(name);
+      }
+    } catch {
+      // Avoid throwing errors when loading optional modules. Users will be notified
+      // when attempting to use a feature that requires the missing module.
+    }
   }
 }
 
