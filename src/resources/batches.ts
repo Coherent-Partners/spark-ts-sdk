@@ -42,8 +42,8 @@ export class Batches extends ApiResource {
       service: serviceUri,
       version_id: params.versionId,
       version_by_timestamp: DateUtils.isDate(params?.activeSince) ? params.activeSince.toISOString() : undefined,
-      subservice: Array.isArray(params.subservices) ? params.subservices.join(',') : params.subservices,
-      output: params.output,
+      subservice: StringUtils.join(params.subservices),
+      output: StringUtils.join(params.selectedOutputs),
       call_purpose: params.callPurpose ?? 'Async Batch Execution',
       source_system: params.sourceSystem ?? SPARK_SDK,
       correlation_id: params.correlationId,
@@ -297,7 +297,7 @@ interface MetadataParams {
   versionId?: string;
   activeSince?: number | string | Date;
   subservices?: string | string[];
-  output?: string;
+  selectedOutputs?: string | string[];
   callPurpose?: string;
   sourceSystem?: string;
   correlationId?: string;

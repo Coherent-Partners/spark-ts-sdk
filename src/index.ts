@@ -1,6 +1,7 @@
 // Public API
 export { version, about } from './version';
 export { Authorization } from './auth';
+export { BaseUrl, JwtConfig } from './config';
 export { Uri, UriParams, ApiResource, createChunks } from './resources';
 export { Logger, LoggerOptions, LogLevel, LoggerService } from './logger';
 export { SparkApiError, SparkSdkError, SparkError } from './error';

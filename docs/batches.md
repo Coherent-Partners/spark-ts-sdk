@@ -104,37 +104,48 @@ before you can perform any operations on it.
 
 ### Arguments
 
-The method accepts a string or a `UriParams` object and optional keyword arguments,
+The method accepts a string or a `UriParams` object and optional arguments,
 which include metadata and other pipeline configuration settings (experimental).
 
 For the first argument, the service URI locator as a string or `UriParams` object:
 
-| Property    | Type     | Description                                      |
-| ----------- | -------- | ------------------------------------------------ |
-| _folder_    | `string` | The folder name.                                 |
-| _service_   | `string` | The service name.                                |
-| _version_   | `string` | The user-friendly semantic version of a service. |
-| _versionId_ | `string` | The UUID of a particular version of the service. |
-| _serviceId_ | `string` | The service UUID (points to the latest version). |
+| Property     | Type     | Description                                            |
+| ------------ | -------- | ------------------------------------------------------ |
+| _folder_     | `string` | The folder name.                                       |
+| _service_    | `string` | The service name.                                      |
+| _version_    | `string` | The user-friendly semantic version of a service.       |
+| _versionId_  | `string` | The UUID of a particular version of the service.       |
+| _serviceId_  | `string` | The service UUID (points to the latest version).       |
+| _serviceUri_ | `string` | The service URI (e.g., `my-folder/my-service[0.4.2]`). |
 
 ```ts
 await spark.batches.create('my-folder/my-service');
 // or
 await spark.batches.create({ folder: 'my-folder', service: 'my-service' });
+// or
+await spark.batches.create({ serviceUri: 'my-folder/my-service' });
 ```
 
 If needed, you can also provide additional metadata as part of the first object
 argument to configure how the batch pipeline, once created, will perform its operations.
 
-| Property          | Type                       | Description                                      |
-| ----------------- | -------------------------- | ------------------------------------------------ |
-| _activeSince_     | `string \| number \| Date` | The transaction date (helps pinpoint a version). |
-| _sourceSystem_    | `string`                   | The source system (defaults to `Spark JS SDK`).  |
-| _correlationId_   | `string`                   | The correlation ID.                              |
-| _callPurpose_     | `string`                   | The call purpose.                                |
-| _selectedOutputs_ | `string \| string[]`       | Select which output to return.                   |
-| _subservices_     | `string \| string[]`       | The list of sub-services to output.              |
-| _inputKey_        | `string \| string[]`       | Indicate certain inputs as unique identifiers.   |
+| Property          | Type                       | Description                                       |
+| ----------------- | -------------------------- | ------------------------------------------------- |
+| _activeSince_     | `string \| number \| Date` | The transaction date (helps pinpoint a version).  |
+| _sourceSystem_    | `string`                   | The source system (defaults to `Spark JS SDK`).   |
+| _correlationId_   | `string`                   | The correlation ID.                               |
+| _callPurpose_     | `string`                   | The call purpose (e.g., `Async Batch Execution`). |
+| _selectedOutputs_ | `string \| string[]`       | Select which output to return.                    |
+| _subservices_     | `string \| string[]`       | The list of sub-services to output.               |
+| _inputKey_        | `string \| string[]`       | Indicate certain inputs as unique identifiers.    |
+
+```ts
+await spark.batches.create({
+  serviceUri: 'my-folder/my-service',
+  subservices: ['sub1', 'sub2'],
+  callPurpose: 'Demo',
+});
+```
 
 The following optional arguments are experimental and may change in future releases.
 
@@ -148,9 +159,17 @@ The following optional arguments are experimental and may change in future relea
 | _maxOutputSize_ | `number` | Maximum output buffer (in MB) a batch pipeline can support.                                    |
 | _accuracy_      | `number` | Acceptable error rate between 0.0 - 1.0 (defaults to 1.0 aka 100%).                            |
 
+```ts
+await spark.batches.create('my-folder/my-service', {
+  minRunners: 20,
+  maxRunners: 200,
+  accuracy: 0.95,
+});
+```
+
 ### Returns
 
-The method returns a JSON containing the details of the newly created batch pipeline.
+The method returns a JSON containing the details of the newly created pipeline.
 Do note the schema is similar to the one returned by the [`close` method](#close-a-batch-pipeline)
 or the [`cancel` method](#cancel-a-batch-pipeline).
 
@@ -163,7 +182,7 @@ or the [`cancel` method](#cancel-a-batch-pipeline).
     "version_id": "uuid",
     "compiler_version": "Neuron_v1.13.0",
     "correlation_id": null,
-    "source_system": "Spark Python SDK",
+    "source_system": "Spark JS SDK",
     "unique_record_key": null,
     "response_timestamp": "1970-12-03T04:56:12.186Z",
     "batch_status": "created",
@@ -176,8 +195,8 @@ or the [`cancel` method](#cancel-a-batch-pipeline).
 ```
 
 > [!TIP]
-> It is recommended that you close the pipeline once you have finished processing
-> the data. This will help free up resources and ensure optimal performance.
+> Remember to close the pipeline once you have finished processing the data.
+> This will help free up resources and ensure optimal performance.
 
 ## Define a client-side batch pipeline by ID
 
@@ -240,7 +259,7 @@ that's been recently created.
     "version_id": "uudi",
     "compiler_version": "Neuron_v1.13.0",
     "correlation_id": "uuid",
-    "source_system": "Spark Python SDK",
+    "source_system": "Spark JS SDK",
     "unique_record_key": null,
     "summary": {
       "chunks_submitted": 123,
@@ -316,14 +335,14 @@ to process the data, and the status of the pipeline.
 
 Other available statuses (i.e., `batch_status`) are:
 
-- `created`: the batch pipeline has been created but has not yet been started.
-- `in_progress`: the batch pipeline is currently processing data.
-- `closed`: the batch pipeline has been closed by the user.
-- `closed_by_timeout`: the batch pipeline has been closed by the system due to inactivity.
-- `completed`: the batch pipeline has completed processing all the input data.
-- `completed_by_timeout`: the batch pipeline has been marked as completed due to timeout.
-- `failed`: the batch pipeline has failed to process the input data.
-- `cancelled`: the batch pipeline has been canceled by the user.
+- `created`: the pipeline has been created but has not yet been started.
+- `in_progress`: the pipeline is currently processing data.
+- `closed`: the pipeline has been closed by the user.
+- `closed_by_timeout`: the pipeline has been closed by the system due to inactivity.
+- `completed`: the pipeline has completed processing all the input data.
+- `completed_by_timeout`: the pipeline has been marked as completed due to timeout.
+- `failed`: the pipeline has failed to process the input data.
+- `cancelled`: the pipeline has been canceled by the user.
 
 ## Add input data to a batch pipeline
 
@@ -333,19 +352,19 @@ It is also designed to facilitate data submission in different shapes and forms.
 
 ### Arguments
 
-The method accepts 3 mutually exclusive keyword arguments:
+The method accepts 3 mutually exclusive types of input data:
 
 - `inputs`: a list of the records as input data. This is convenient when you have
-  a list of records that needs to be processed in chunks. The method will automatically
-  create chunks and partition the data evenly across the chunks. You may also specify
-  the chunk size to control the number of records in each chunk.
+  records that need to be processed in chunks. The method will automatically
+  create chunks and partition the data evenly across them. You may also specify
+  the chunk size to indicate the number of records that goes in each chunk.
 
 ```ts
 await pipeline.push({ inputs: [{ value: 42 }, { value: 43 }] }, { chunkSize: 2 });
 ```
 
 - `data`: Sometimes, you may want to perform certain operations, such as applying
-  aggregations to the output data post-processing. This class lets you specify the `inputs`,
+  aggregations to the output data post-processing. This field lets you specify the `inputs`,
   `parameters` and `summary` separately.
 
 ```ts
@@ -358,7 +377,7 @@ await pipeline.push({
 });
 ```
 
-- `chunks`: This gives you full control over the chunk creation process, allowing you
+- `chunks`: This field gives you full control over the chunk creation process, allowing you
   to specify the `inputs`, `parameters`, and `summary`, and indicate the `id` and `size`.
   That is, you are in complete control of the data submission process: chunking and partitioning.
 
@@ -521,7 +540,7 @@ of existing workers and buffers.
     "version_id": "uuid",
     "compiler_version": "Neuron_v1.13.0",
     "correlation_id": null,
-    "source_system": "Spark Python SDK",
+    "source_system": "Spark JS SDK",
     "unique_record_key": null,
     "response_timestamp": "1970-12-03T04:56:12.186Z",
     "batch_status": "closed",
@@ -567,7 +586,7 @@ containing the details of the batch pipeline that was canceled.
     "version_id": "uuid",
     "compiler_version": "Neuron_v1.13.0",
     "correlation_id": null,
-    "source_system": "Spark Python SDK",
+    "source_system": "Spark JS SDK",
     "unique_record_key": null,
     "response_timestamp": "1970-12-03T04:56:12.186Z",
     "batch_status": "cancelled",
@@ -596,6 +615,7 @@ use the various methods of the Batches API in one go. The script performs the fo
 tasks:
 
 - reading a dataset from a JSON file;
+- creating a batch pipeline;
 - pushing it to a pipeline;
 - checking the pipeline's status every 2 seconds;
 - retrieving the output data from the pipeline when available;
@@ -631,7 +651,7 @@ async function createAndRun() {
     console.log(JSON.stringify(data, undefined, 2));
   }
 
-  function friendlyStatusMessage(status: any, message: string) {
+  function printStatus(status: any, message: string) {
     message = `${message} :: ${status.records_available} of ${status.record_submitted} records submitted (${status.records_completed} processed)`;
     console.log(message);
   }
@@ -648,14 +668,14 @@ async function createAndRun() {
     await sleep(1);
 
     let status = await pipeline.getStatus();
-    friendlyStatusMessage(status.data, 'first status check');
+    printStatus(status.data, 'first status check');
 
     const result = await pipeline.pull();
     console.log(result.data);
 
     while (status.data.records_completed < status.data.record_submitted) {
       status = await pipeline.getStatus();
-      friendlyStatusMessage(status.data, 'subsequent status check');
+      printStatus(status.data, 'subsequent status check');
 
       if (status.data.records_available > 0) {
         const result = await pipeline.pull();
@@ -682,7 +702,7 @@ createAndRun();
 > If you were to "productionize" this script, you would need to add graceful error handling,
 > logging, among other capabilities to make it more robust and reliable. You may also want
 > to consider how you read and feed the input data to the pipeline and how to handle
-> the output data that is returned.
+> the pulled output data.
 
 Happy coding! 🚀
 

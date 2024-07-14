@@ -152,7 +152,7 @@ console.log(`access token: ${spark.config.auth.oauth?.accessToken}`);
 ```
 
 If more than one authentication mechanisms are provided, the SDK will prioritize in
-the following order: API key > Bearer token > and OAuth2.0 client credentials grant.
+the following order: OAuth2.0 client credentials grant > API key > Bearer token.
 
 [Back to top](#authentication) or [Next: Services API](./services.md)
 

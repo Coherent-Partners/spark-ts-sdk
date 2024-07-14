@@ -98,7 +98,9 @@ export abstract class ApiResource {
     { method = 'GET', headers = {}, ...opts }: Omit<HttpOptions<Body>, 'config'> = {},
   ): Promise<HttpResponse<Result>> {
     url = StringUtils.isString(url) ? url : url.value;
+
     this.logger.debug(`${method} ${url}`);
+
     return _fetch<Body, Result>(url, {
       ...opts,
       method,
@@ -163,15 +165,15 @@ export interface UriParams {
  *
  * Should a user pass in a string, the `Uri` will attempt to parse it and extract
  * the UriParams from the following:
- * 1. `folder/service[version]` or `folders/folder/services/service[version]`
+ * 1. `folder/service[?version]` or (even `folders/folder/services/service[?version]`)
  * 2. `service/serviceId`
  * 3. `version/versionId`
+ * 4. `proxy/custom-endpoint`
  *
  * Should a user pass in a `UriParams` object, the `Uri` will use the parameters
  * as-is to build the URI accordingly.
  *
- * IMPORTANT:
- * Spark URIs' formats may vary depending on the action to be performed
+ * Spark URI's formats may vary depending on the action to be performed
  * (e.g., upload, execute, download, etc.) due to API versioning and endpoint
  * requirements. Therefore, the `Uri` helper is designed to be flexible enough to
  * handle different formats.
@@ -196,7 +198,7 @@ export class Uri {
    * parameters.
    *
    * NOTE:
-   * In this case, the order of priority: folder and service > serviceId > versionId > proxy.
+   * In this case, the order of priority: versionId > serviceId > folder and service > proxy.
    * However, if a `proxy` is provided, it will be used as the endpoint.
    */
   static from(uri: Maybe<UriParams> = {}, { base, version: path = 'api/v3', endpoint = '' }: UriOptions): Uri {
@@ -256,10 +258,10 @@ export class Uri {
    * @returns {UriParams} the decoded parameters if any to build a Spark URI.
    *
    * This can understand a uri only in the following formats:
-   * 1. `folder/service[version?]` or `folders/folder/services/service[version?]`
+   * 1. `folder/service[?version]` or `folders/folder/services/service[?version]`
    * 2. `service/serviceId`
    * 3. `version/versionId`
-   * 4. `proxy/endpoint`
+   * 4. `proxy/custom-endpoint`
    *
    * Otherwise, it is considered an invalid service URI locator.
    */

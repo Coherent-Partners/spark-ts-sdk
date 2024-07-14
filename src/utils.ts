@@ -12,7 +12,7 @@ async function bootstrapModules(names: string[]) {
   }
 }
 
-bootstrapModules(['fs', 'stream', 'crypto', 'form-data', 'buffer', 'abort-controller']); // FIXME: use shims instead.
+bootstrapModules(['fs', 'stream', 'crypto', 'form-data', 'buffer', 'abort-controller', 'jwt-decode']); // FIXME: use shims instead.
 
 export function isBrowser() {
   return typeof window === 'object' && typeof document === 'object' && typeof navigator !== 'undefined';
