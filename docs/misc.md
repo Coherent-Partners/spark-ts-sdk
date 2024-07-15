@@ -123,3 +123,5 @@ await Spark.download('https://my-spark-file-url', auth);
 
 When successful, this method returns a buffer containing the file. You may then write
 this buffer to disk (as shown above) or process it further.
+
+[Back to top](#other-apis) or [Main Documentation](./readme.md)

@@ -706,7 +706,7 @@ createAndRun();
 
 Happy coding! 🚀
 
-[Back to top](#batches-api)
+[Back to top](#batches-api) or [Next: Log History API](./history.md)
 
 <!-- References -->
 

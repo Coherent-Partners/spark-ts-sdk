@@ -10,7 +10,7 @@ which shall help you save time and streamline your development process.
 ## Table of Contents
 
 - [Authentication](./authentication.md)
-- [Folders API](./folder.md)
+- [Folders API](./folders.md)
 - [Services API](./services.md)
 - [Batches API](./batches.md)
 - [Log History API](./history.md)
@@ -49,7 +49,7 @@ environment and tenant. I term this _Service URI_ locator.
 Given that this locator may be part of either the final URL or the request payload,
 it is recommended to use plain strings (i.e., not URL-encoded) when referring to
 these identifiers.
-The SDK will take encode them when necessary. Otherwise, you risk running into
+The SDK will take care of encoding them when necessary. Otherwise, you risk running
 into issues when trying to locate a resource.
 
 For instance, executing a Spark service using these identifiers
@@ -159,6 +159,10 @@ where `T` is the type of the data returned by the API.
   "headers": {}
 }
 ```
+
+> Sometimes, the SDK may return a modified version of the Spark API response for
+> better readability and ease of use. Keep an eye on the `data` property to access
+> the actual response data.
 
 ## HTTP Error
 

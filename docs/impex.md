@@ -208,6 +208,8 @@ await migration.exports.initiate({ services: ['my-folder/my-service[0.1.0]'] });
 Remember that exporting and importing entities is a time-consuming process. Be sure
 to use enough retries and intervals to avoid timeouts.
 
+[Back to top](#impex-api) or [Next: Other APIs](./misc.md)
+
 <!-- References -->
 
 [export-api]: https://docs.coherent.global/spark-apis/impex-apis/export

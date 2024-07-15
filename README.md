@@ -179,8 +179,10 @@ const spark = new Spark({ oauth: { clientId: 'my-client-id', clientSecret: 'my-c
 const spark = new Spark({ oauth: 'path/to/oauth/credentials.json' });
 ```
 
-- `timeout` (default: `60000`): indicates the maximum amount of time (in milliseconds)
-  that the client should wait for a response from Spark servers before timing out a request.
+### Additional Settings
+
+- `timeout` (default: `60000` ms): indicates the maximum amount of time that the
+  client should wait for a response from Spark servers before timing out a request.
 
 - `maxRetries` (default: `2`): indicates the maximum number of times that the client
   will retry a request in case of a temporary failure, such as a unauthorized
@@ -250,13 +252,13 @@ of the currently supported APIs.
 [Authentication API](./docs/authentication.md) - manages access tokens using
 OAuth2.0 Client Credentials flow:
 
-- `Authorization.oauth.retrieveToken(config)` generates new access token.
+- `Authorization.oauth.retrieveToken(config)` generates new access tokens.
 - `Authorization.oauth.refreshToken(config)` refreshes access token when expired.
 
 [Folders API](./docs/folders.md) - manages folders:
 
 - `Spark.folders.getCategories()` gets the list of folder categories.
-- `Spark.folders.create(data)` creates a new folder using info such as name, description, category, etc.
+- `Spark.folders.create(data)` creates a new folder with additional info.
 - `Spark.folders.find(name)` finds folders by name, status, category, or favorite.
 - `Spark.folders.update(id, data)` updates a folder's information by id.
 - `Spark.folders.delete(id)` deletes a folder by id.

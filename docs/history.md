@@ -240,3 +240,5 @@ Description,Log Time,Transaction date,Version,Version ID,User name,Source system
 
 Check out the [API reference](https://docs.coherent.global/spark-apis/api-call-history-apis/download-log-as-csv)
 for more information.
+
+[Back to top](#log-history-api) or [Next: ImpEx API](./impex.md)

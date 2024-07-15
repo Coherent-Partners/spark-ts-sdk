@@ -83,7 +83,7 @@ You may pass in the folder name as a `string`.
 await spark.folders.create('my-folder');
 ```
 
-Alternatively, you can pass in the following parameters as an `object`, which
+Alternatively, you can provide the following parameters as an `object`, which
 will create a folder with some additional information.
 
 | Property          | Type                       | Description                                             |
@@ -92,7 +92,7 @@ will create a folder with some additional information.
 | _description_     | `string`                   | The description of the folder.                          |
 | _category_        | `FolderCategory`           | The category of the folder.                             |
 | _startDate_       | `string \| number \| Date` | The start date (format: `YYYY-MM-DD[THH:MM:SS.SSSZ]`).  |
-| _launchState_     | `string \| number \| Date` | The launch date (format: `YYYY-MM-DD[THH:MM:SS.SSSZ]`). |
+| _launchDate_      | `string \| number \| Date` | The launch date (format: `YYYY-MM-DD[THH:MM:SS.SSSZ]`). |
 | _status_          | `string`                   | The status of the folder.                               |
 | _cover_           | `CoverImage`               | The cover image of the folder.                          |
 | _cover.image_     | `Readable`                 | The image as a binary file.                             |
@@ -308,3 +308,5 @@ The method returns a successful status when the folder is deleted.
   "errorCode": null
 }
 ```
+
+[Back to top](#folders-api) or [Next: Services API](./services.md)

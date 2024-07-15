@@ -29,7 +29,7 @@ for more information.
 
 > [!IMPORTANT]
 > You must create a folder before creating a service. Please refer to the
-> [Folder API](./folder.md) to learn more about creating a folder.
+> [Folders API](./folders.md) to learn more about creating a folder.
 
 ### Arguments
 
@@ -148,13 +148,11 @@ and publication process.
 
 ## Execute a Spark service
 
-This method executes a Spark service with the input data and returns the output data.
-It's the most common method for interacting with Spark services.
+This method allows you to execute a Spark service.
 
-Currently, Spark supports two versions of the API: v3 and v4. The SDK will use
-the [v3 format][v3-format] for a single input and the [v4 format][v4-format]
-for multiple inputs.
-
+Currently, Spark supports two versions of Execute API: v3 and v4. The SDK will use
+the [v3 format][v3-format] for a single input and the [v4 format][v4-format] for
+multiple inputs.
 By default, the SDK uses the v4 format for the output data. You may specify the
 desired response format to retrieve the original format emitted by the API.
 
@@ -196,9 +194,8 @@ await spark.services.execute('my-folder/my-service', { inputs, ...metadata });
 ```
 
 - **JSON string data**:
-  you may use JSON string data as shown in the [API Tester](https://docs.coherent.global/navigation/api-tester).
-  Basically, you are free to work with raw data as long as it's a valid JSON
-  string and follows the API v3 format.
+  you may use string data as long as it's a valid JSON string and follows either
+  the v3 or v4 format.
 
 ```ts
 await spark.services.execute('my-folder/my-service', { inputs: `{ "my_input": 13 }` });
@@ -233,7 +230,7 @@ await spark.services.execute({ serviceId: 'uuid' });
 ```ts
 await spark.services.execute('my-folder/my-service[0.1.0]');
 // or
-await spark.services.execute({ folder: 'my-folder', service: 'my-service', version: '0.1.0' });
+await spark.services.execute({ serviceId: 'uuid', version: '0.1.0' });
 ```
 
 - using **proxy** endpoints:

@@ -20,7 +20,7 @@ If and when you need that API key to access additional APIs, you need to review 
 configure [feature permissions][feature-permissions] in the Spark platform. Find
 out more on how to generate and manage API keys in the [Spark documentation][spark-api-keys].
 
-Keep in mind that API keys are sensitive and should be kept secure. Therefore, we
+Remember that API keys are sensitive and should be kept secure. Therefore, we
 strongly recommend reading [this article][openai-api-keys] by OpenAI on best practices
 for API key safety.
 
@@ -33,9 +33,12 @@ directly or set it in the environment variable `CSPARK_API_KEY`:
 const spark = new Spark({ apiKey: 'my-api-key' });
 ```
 
-When accessing publicly available APIs, you do not require an API key or any
-other authentication mechanism. In fact, you can create a `SparkClient` instance
-without providing any authentication mechanism by setting the `apiKey` to `open`:
+When accessing publicly available APIs, Spark does not require an API key or any
+other authentication mechanism. Hence, you can create a `SparkClient` instance
+without providing any authentication mechanism by setting the `apiKey` to `open`.
+
+> You should keep in mind that this is internal to the SDK. Spark APIs will not know
+> how to handle this value.
 
 ```ts
 const spark = new Spark({ apiKey: 'open' });
@@ -48,7 +51,7 @@ const spark = new Spark({ apiKey: 'open' });
 ```ts
 const spark = new Spark();
 
-// the client options are available in the `config`uration property
+// the client options are available in the `config` property
 console.log(spark.config.auth.apiKey); // '****-rest-of-key'
 ```
 
@@ -63,6 +66,8 @@ understand the risks and let you proceed.
 const { SparkClient: Spark } = window['@cspark/sdk'];
 
 const spark = new Spark({ apiKey: 'my-api-key', allowBrowser: true });
+// or
+const spark = new Spark({ apiKey: 'open' });
 ```
 
 > [!NOTE]
@@ -83,9 +88,9 @@ token directly or set it in the environment variable `CSPARK_BEARER_TOKEN`.
 const spark = new Spark({ token: 'Bearer my-access-token' });
 ```
 
-The bearer token can also be used to extract certain Spark settings from the JSON Web Token (JWT).
-However, you'll need to install this [jwt-decode] package to use this feature. Also,
-this is not supported in the browser environment.
+The bearer token can also be used to extract certain Spark settings from the JWT.
+However, you'll need to install this [jwt-decode] NPM package to use this feature.
+Also, this is not supported in the browser environment.
 
 ```ts
 import { JwtConfig } from '@cspark/sdk';
@@ -97,7 +102,7 @@ const spark = new Spark(JwtConfig.decode('Bearer my-access-token'));
 
 Note that `JwtConfig` is simply an extension of `Spark.Config`. So other client options
 can be specified as well if needed. In short, Spark will automatically try to extract
-the base URL, and tenant name from the bearer token.
+the base URL and tenant name from the bearer token.
 
 So, there's no need to provide them when creating a `SparkClient` instance.
 
@@ -142,8 +147,8 @@ export CSPARK_CLIENT_SECRET='my-client-secret'
 export CSPARK_OAUTH_PATH='path/to/my/client-credentials.json'
 ```
 
-**Method 2** (preferred): Alternatively, you can use a `.env` file to store your
-environment variables and use a package like [dotenv](https://www.npmjs.com/package/dotenv)
+**Method 2** (preferred): You can use a `.env` file to store your environment
+variables and use a package like [dotenv](https://www.npmjs.com/package/dotenv)
 to load them into your application.
 
 > [!WARNING]
@@ -158,8 +163,8 @@ const spark = new Spark();
 ## Good to know
 
 When using OAuth2.0 client credentials grant, the SDK will automatically refresh
-the token when it expires. However, you can also generate or refresh the token manually. Here's
-how you can do it:
+the token when it expires. You can also generate or refresh the token manually.
+Here's how to do it:
 
 ```ts
 const spark = new Spark({ oauth: 'path/to/my/credentials.json' });
@@ -169,10 +174,10 @@ await spark.config.auth.oauth?.retrieveToken(spark.config);
 console.log(`access token: ${spark.config.auth.oauth?.accessToken}`);
 ```
 
-If more than one authentication mechanisms are provided, the SDK will prioritize in
+If more than one authentication mechanism are provided, the SDK will prioritize in
 the following order: OAuth2.0 client credentials grant > API key > Bearer token.
 
-[Back to top](#authentication) or [Next: Services API](./services.md)
+[Back to top](#authentication) or [Next: Folders API](./folders.md)
 
 [batch-apis]: https://docs.coherent.global/spark-apis/batch-apis
 [execute-api]: https://docs.coherent.global/spark-apis/execute-api
