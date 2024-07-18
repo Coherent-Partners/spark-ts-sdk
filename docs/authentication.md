@@ -1,6 +1,6 @@
 # Authentication
 
-The SDK supports three types of authentication schemes:
+The SDK supports three types of security schemes:
 
 - [API key](#api-key)
 - [Bearer token](#bearer-token)
@@ -11,14 +11,14 @@ The SDK supports three types of authentication schemes:
 A Spark API key is a synthetic key that allows you to authenticate to the platform
 and access the following APIs:
 
-- [Batches API][batch-apis]
 - [Execute API][execute-api]
+- [Batch API][batch-apis]
 - [Metadata API][metadata-api]
 - [Validation API][validation-api]
 
-If and when you need that API key to access additional APIs, you need to review and
+If and when you need that API key to access additional APIs, you'll have to review and
 configure [feature permissions][feature-permissions] in the Spark platform. Find
-out more on how to generate and manage API keys in the [Spark documentation][spark-api-keys].
+out more on how to generate and manage API keys in [Spark's User Guide][spark-api-keys].
 
 Remember that API keys are sensitive and should be kept secure. Therefore, we
 strongly recommend reading [this article][openai-api-keys] by OpenAI on best practices
@@ -58,7 +58,7 @@ console.log(spark.config.auth.apiKey); // '****-rest-of-key'
 ### Setting the API Key in Browser Environments
 
 By default, client-side use of this SDK is not recommended as it risks exposing
-your secret API credentials to attackers. However, the `allowBrowser` option can
+your secret API credentials to attackers. But, the `allowBrowser` option can
 be used to bypass this restriction. When set to `true`, the SDK will assume you
 understand the risks and let you proceed.
 
@@ -80,17 +80,17 @@ A bearer token (or simply token) is a short-lived JSON Web token (JWT) that allo
 to authenticate to the Spark platform and access its APIs. Follow [this guide][bearer-token] to
 learn how to access your bearer token.
 
-Keep in mind that a bearer token is usually prefixed with 'Bearer'. However, the
-SDK will automatically add the prefix if it is not provided. You can provide a bearer
-token directly or set it in the environment variable `CSPARK_BEARER_TOKEN`.
+Sometimes, a bearer token is prefixed with the word 'Bearer'. But the SDK will know
+how to handle it whether you choose it to prefix your token or not. You can set a
+token directly or define it in the environment variable `CSPARK_BEARER_TOKEN`.
 
 ```ts
 const spark = new Spark({ token: 'Bearer my-access-token' });
 ```
 
-The bearer token can also be used to extract certain Spark settings from the JWT.
-However, you'll need to install this [jwt-decode] NPM package to use this feature.
-Also, this is not supported in the browser environment.
+The bearer token also carry additional Spark settings that can be extracted and simplify
+the creation of a `SparkClient` instance. To harness this capability, you're required
+to install this [jwt-decode] NPM package. Also, this is not supported in the browser environment.
 
 ```ts
 import { JwtConfig } from '@cspark/sdk';
@@ -101,16 +101,14 @@ const spark = new Spark(JwtConfig.decode('Bearer my-access-token'));
 ```
 
 Note that `JwtConfig` is simply an extension of `Spark.Config`. So other client options
-can be specified as well if needed. In short, Spark will automatically try to extract
-the base URL and tenant name from the bearer token.
-
-So, there's no need to provide them when creating a `SparkClient` instance.
+can be specified as well if needed. In short, the SDK will automatically try to extract
+settings like the base URL and tenant name from the token.
 
 ## Client Credentials Grant
 
 The [OAuth2.0 client credentials grant][oauth2] is the preferred way to handle user authentication
-and authorization in the Spark platform. To use this grant, you need to provide the
-client ID and secret or the path to the JSON file containing the credentials.
+and authorization in the Spark platform. To use this grant, you should provide both the
+client ID and secret or the path to the JSON file containing them.
 
 Using the client ID and secret directly:
 
@@ -119,8 +117,7 @@ const oauth = { clientId: 'my-client-id', clientSecret: 'my-client-secret' };
 const spark = new Spark({ oauth });
 ```
 
-Alternatively, you can provide the path to the JSON file containing the client ID
-and secret:
+Or, you may provide the path to the JSON file containing the client ID and secret:
 
 ```ts
 const spark = new Spark({ oauth: 'path/to/my/credentials.json' });
@@ -148,23 +145,20 @@ export CSPARK_OAUTH_PATH='path/to/my/client-credentials.json'
 ```
 
 **Method 2** (preferred): You can use a `.env` file to store your environment
-variables and use a package like [dotenv](https://www.npmjs.com/package/dotenv)
-to load them into your application.
-
-> [!WARNING]
-> Please note that you should never commit your `.env` file to a public repository.
-
+variables and use a package like [dotenv] to load them into your application.
 Creating a `SparkClient` instance now becomes as simple as:
 
 ```ts
 const spark = new Spark();
 ```
 
-## Good to know
+> [!WARNING]
+> Please note that you should never commit your `.env` file to a public repository.
 
-When using OAuth2.0 client credentials grant, the SDK will automatically refresh
-the token when it expires. You can also generate or refresh the token manually.
-Here's how to do it:
+## Good to Know
+
+When using OAuth2.0 client credentials, the SDK will automatically refresh the
+bearer token when it expires. You can also generate or refresh the token manually.
 
 ```ts
 const spark = new Spark({ oauth: 'path/to/my/credentials.json' });
@@ -189,3 +183,4 @@ the following order: OAuth2.0 client credentials grant > API key > Bearer token.
 [bearer-token]: https://docs.coherent.global/spark-apis/authorization-bearer-token
 [oauth2]: https://docs.coherent.global/spark-apis/authorization-client-credentials
 [jwt-decode]: https://www.npmjs.com/package/jwt-decode
+[dotenv]: https://www.npmjs.com/package/dotenv

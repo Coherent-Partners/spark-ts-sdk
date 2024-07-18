@@ -8,28 +8,28 @@
 | `Spark.logs.download(uri, [type])`    | [Download service execution logs as csv or json file](#download-service-execution-logs).    |
 
 > [!WARNING]
-> The service execution history is a good source of truth for auditing and
-> debugging purposes and should be used accordingly. However, the log history is not
-> intended to be a data storage solution, where after each model execution, the log
-> is downloaded and stored in a local database. So, do use the following methods
-> **responsibly**.
+> The service execution history is a good source of truth for auditing and debugging
+> purposes. Though practical, log history is not intended to be a data storage solution.
+> So, do use the following methods **responsibly**.
 
 ## Rehydrate the executed model
 
-This method allows you to rehydrate the executed model into the original excel file
+This method allows you to "rehydrate" the executed model into the original excel file
 and download it to your local machine.
+
+> Rehydration is the process of regenerating the model with the input data used
+> during the execution.
 
 ### Arguments
 
-You may pass in the service URI, which is a combination of the folder name and the
-service name, and the call ID as `string`.
+You may indicate the service URI and the call ID as `string` arguments.
 
 ```ts
 await spark.logs.rehydrate('my-folder/my-service', 'call-id');
 ```
 
-Alternatively, you can pass in the following parameters as an `object`, which
-should include the service URI and the call ID. Otherwise, it will throw a `SparkSdkError`.
+Or, you can conveniently pass in the parameters as an `object`, which
+includes the service URI and the call ID. Otherwise, it will throw a `SparkSdkError`.
 
 | Property  | Type     | Description                           |
 | --------- | -------- | ------------------------------------- |
@@ -37,17 +37,20 @@ should include the service URI and the call ID. Otherwise, it will throw a `Spar
 | _service_ | `string` | The service name.                     |
 | _callId_  | `string` | The call ID of the service execution. |
 
-> **NOTE**: The properties `folder`, `service`, and `callId` are required.
-
 ```ts
 await spark.logs.rehydrate({ folder: 'my-folder', service: 'my-service', callId: 'call-id' });
 ```
+
+> [!TIP]
+> Another way of achieving the same result is by setting the `downloadable` metadata
+> field as `true` at the time of executing the service. See the
+> [Spark.services.execute()](./services.md#execute-a-spark-service) method for more information.
 
 ### Returns
 
 when successful, this method returns:
 
-- a buffer containing the file content
+- a buffer containing the file content (excel file);
 - a JSON payload including essential information such as the download URL.
 
 **JSON payload example:**
@@ -88,12 +91,10 @@ const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', token: 'bearer tok
 spark.logs
   .rehydrate('my-folder/my-service', 'a-valid-call-id')
   .then((response) => {
-    // write downloaded file to disk
     const file = createWriteStream('path/to/my-rehydrated-excel.xlsx');
-    response.buffer.pipe(file);
+    response.buffer.pipe(file); // write downloaded file to disk
 
-    // print download information
-    console.log(JSON.stringify(response.data, null, 2));
+    console.log(JSON.stringify(response.data, null, 2)); // print download info
   })
   .catch(console.error);
 ```
@@ -154,7 +155,7 @@ await spark.logs.download({
 
 When successful, this method returns:
 
-- a buffer containing the file content
+- a buffer containing the file content (zip file);
 - a JSON payload including essential information such as the download URL.
 
 **JSON payload example:**
@@ -231,7 +232,7 @@ if you requested a JSON file, the logs should be similar to this:
 ]
 ```
 
-And its CSV counterpart should look like this:
+And its CSV equivalent should look like this:
 
 ```csv
 Description,Log Time,Transaction date,Version,Version ID,User name,Source system,Correlation ID,Call purpose,Call ID,Calc time (ms),Total time (ms),my_input,my_output,Error Details,Warning Details

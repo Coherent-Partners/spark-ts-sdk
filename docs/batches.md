@@ -621,7 +621,7 @@ tasks:
 - retrieving the output data from the pipeline when available;
 - and finally, closing the pipeline.
 
-The script will continue to interacting with Spark till all data has been processed
+The script will continue interacting with Spark till all data has been processed
 unless an error occurs, which will force an early closure of the pipeline.
 
 ```ts

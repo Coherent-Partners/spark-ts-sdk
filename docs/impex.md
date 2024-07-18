@@ -10,37 +10,41 @@
 ## Export Spark entities
 
 This method relies on the [Export API][export-api] to export Spark entities from
-your tenant. This method lets you go as specific as you want, allowing you to export
-only the entities you need. You may choose to export specific versions, services,
-or folders.
+a tenant workspace. You may choose to export either specific versions, services
+or folders, or a combination of them, which eventually are packaged up into a zip
+file that will be downloaded to your local machine.
 
 ### Arguments
 
-You may pass in the specs as an `object` with the following properties:
+The expected argument is an `object` with the following properties:
 
-| Property          | Type                    | Description                                                                     |
-| ----------------- | ----------------------- | ------------------------------------------------------------------------------- |
-| _folders_         | `string[]`              | The folder names.                                                               |
-| _services_        | `string[]`              | The service URIs.                                                               |
-| _versionIds_      | `string[]`              | The version UUIDs of the desired service.                                       |
-| _filters_         | `object`                | How to filter out which entities to export.                                     |
-| _filters.file_    | `migrate \| onpremises` | Whether it's for data migration or on-prem deployments (defaults to `migrate`). |
-| _filters.version_ | `latest \| all`         | Which version of the file to export (defaults to `latest`).                     |
-| _sourceSystem_    | `string`                | The source system name to export from (e.g., `Spark JS SDK`).                   |
-| _correlationId_   | `string`                | The correlation ID for the export (useful for tagging).                         |
-| _maxRetries_      | `number`                | The maximum number of retries when checking the export status.                  |
-| _retryInterval_   | `number`                | The interval between status check retries in seconds.                           |
+| Property          | Type                    | Description                                                        |
+| ----------------- | ----------------------- | ------------------------------------------------------------------ |
+| _folders_         | `string[]`              | 1+ folder name(s).                                                 |
+| _services_        | `string[]`              | 1+ service URI(s).                                                 |
+| _versionIds_      | `string[]`              | 1+ version UUID(s) of the desired service.                         |
+| _filters_         | `object`                | Filter which entities to export.                                   |
+| _filters.file_    | `migrate \| onpremises` | For data migration or on-prem deployments (defaults to `migrate`). |
+| _filters.version_ | `latest \| all`         | Which version of the file to export (defaults to `latest`).        |
+| _sourceSystem_    | `string`                | Source system name to export from (e.g., `Spark JS SDK`).          |
+| _correlationId_   | `string`                | Correlation ID for the export (useful for tagging).                |
+| _maxRetries_      | `number`                | Maximum number of retries when checking the export status.         |
+| _retryInterval_   | `number`                | Interval between status check retries in seconds.                  |
 
-> **NOTE**: Remember that a service URI is in the format `folder/service[?version]`.
+> [!NOTE]
+> Remember that a service URI can be one of the following:
+>
+> - `{folder}/{service}[?{version}]` or
+> - `service/{serviceId}` or
+> - `version/{versionId}`.
 
 Check out the [API reference](https://docs.coherent.global/spark-apis/impex-apis/export#request-body)
 for more information.
 
 ```ts
 await spark.impex.export({
-  services: ['my-folder/my-service[0.4.2]', 'my-other-folder/my-service'],
+  services: ['my-folder/my-service[0.4.2]', 'my-other-folder/my-service-2'],
   filters: { file: 'onpremises' },
-  sourceSystem: 'Spark JS SDK',
   maxRetries: 5,
   retryInterval: 3,
 });
@@ -58,35 +62,32 @@ until it completes, and download the exported files. If you need more control ov
 these steps, consider using the `exports` resource directly. You may use the following
 methods:
 
-- `Spark.impex.exports.initiate(data)`: Create an export job.
-- `Spark.impex.exports.getStatus(jobId)`: Get the status of an export job.
-- `Spark.impex.exports.download(result)`: Download the exported files.
+- `Spark.impex.exports.initiate(data)` creates an export job.
+- `Spark.impex.exports.getStatus(jobId)` gets an export job's status.
+- `Spark.impex.exports.download(result)` downloads the exported files as a ZIP.
 
 ## Import Spark entities
 
-This method lets you import exported Spark entities into your workspace. The exported
-entities are in the form of a ZIP file and should include all the necessary files
-to recreate them in your tenant. Keep in mind that only entities for data migration
-can be imported into Spark.
+This method lets you import exported Spark entities into your workspace. Only entities
+that were exported for data migration can be imported back into Spark.
 
 ### Arguments
 
-You may pass in the specs as an `object` with the following properties:
+The expected argument is an `object` with the following properties:
 
 | Property        | Type                              | Description                                                                       |
 | --------------- | --------------------------------- | --------------------------------------------------------------------------------- |
 | _file_          | `Readable`                        | The ZIP file containing the exported entities.                                    |
 | _destination_   | `ImportDestination`               | The destination service URI.                                                      |
 | _ifPresent_     | `abort \| replace \| add_version` | What to do if the entity already exists in the destination (defaults to `abort`). |
-| _sourceSystem_  | `string`                          | The source system name to import from (e.g., `Spark JS SDK`).                     |
-| _correlationId_ | `string`                          | The correlation ID for the import (useful for tagging).                           |
-| _maxRetries_    | `number`                          | The maximum number of retries when checking the import status.                    |
-| _retryInterval_ | `number`                          | The interval between status check retries in seconds.                             |
+| _sourceSystem_  | `string`                          | Source system name to import from (e.g., `Spark JS SDK`).                         |
+| _correlationId_ | `string`                          | Correlation ID for the import (useful for tagging).                               |
+| _maxRetries_    | `number`                          | Maximum number of retries when checking the import status.                        |
+| _retryInterval_ | `number`                          | Interval between status check retries in seconds.                                 |
 
-The `destination` folder should exist in the tenant in order to import the entities.
-When `destination` is of `string` type, it should be formatted as `folder/service[?version]`.
-However, you can define how to map the exported entities to the destination tenant
-by providing a `ServiceMapping` object.
+The `destination` folder should exist in the target workspace to import the entities.
+you can define how to map the exported entities to the destination tenant by providing
+a `ServiceMapping` object.
 
 | Property  | Type                      | Description                                         |
 | --------- | ------------------------- | --------------------------------------------------- |
@@ -112,8 +113,8 @@ await spark.impex.import({
 ### Returns
 
 When successful, this method returns a JSON payload containing the import summary and
-the imported entities have been created/mapped in the destination tenant. See the example
-below for a sample response.
+the imported entities that have been created/mapped in the destination tenant.
+See the sample response below
 
 ```json
 {
@@ -143,8 +144,8 @@ below for a sample response.
         "service_source": "my-service",
         "version_source": "0.1.0",
         "version_id_source": "uuid",
-        "folder_destination": "floherent",
-        "service_destination": "petFinder",
+        "folder_destination": "my-folder",
+        "service_destination": "my-service",
         "version_destination": "0.1.0",
         "service_uri_destination": "my-folder/my-service[0.1.0]",
         "service_id_destination": "uuid",
@@ -180,25 +181,37 @@ Being transactional, this method will create an import job, and poll its status
 continuously until it completes the import process. You may consider using the
 `imports` resource directly and control the import process manually:
 
-- `Spark.impex.imports.initiate(data)`: Create an import job.
-- `Spark.impex.imports.getStatus(jobId)`: Get the status of an import job.
+- `Spark.impex.imports.initiate(data)` creates an import job.
+- `Spark.impex.imports.getStatus(jobId)` gets an import job's status.
 
-## Good to know
+## Good to Know
 
 The `Spark.impex.export` and `Spark.impex.import` methods together provide a way to
-migrate data between Spark tenants. You can export entities from one tenant and import
-them into another. For that, you can set up both the source and destination tenant
-configuration using the following:
+migrate data between Spark tenants. In other words, you can export entities from one
+tenant and import them into another. For that, you can set up both the source and
+destination tenant configuration using the following:
 
 ```ts
-const spark = new Spark({ env: 'uat', tenant: 'my-tenant' });
-const targetConfig = new Spark({ env: 'prod', tenant: 'my-tenant' }).config;
+import Spark from '@cspark/sdk';
 
 // build setup for migration between tenants
-const migration = spark.migration(targetConfig);
+const migration = Spark.migration(
+  { env: 'uat', tenant: 'my-tenant', token: 'uat token' },
+  { env: 'prod', tenant: 'my-tenant', token: 'prod token' },
+);
+
+// then use the transactional methods
+migration
+  .migrate({
+    services: ['from-folder/my-service'],
+    destination: 'to-folder/my-service',
+    ifPresent: 'add_version',
+  })
+  .then(console.log)
+  .catch(console.error);
 ```
 
-Then, you can use the non-transactional methods to control the export and import
+Alternatively, you may use the non-transactional methods to control the export and import
 processes manually. For example, initiate an export job should be done as follows:
 
 ```ts

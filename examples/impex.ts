@@ -1,5 +1,5 @@
 import { createWriteStream, createReadStream } from 'fs';
-import { type SparkClient } from '@cspark/sdk';
+import Spark, { type SparkClient } from '@cspark/sdk';
 
 function downloadWasm(spark: SparkClient) {
   spark.wasm
@@ -31,8 +31,23 @@ function importEntities(spark: SparkClient) {
     .catch(console.error);
 }
 
+function migrate() {
+  Spark.migration(
+    { env: 'dev', tenant: 'my-tenant', apiKey: 'my-key' },
+    { env: 'prod', tenant: 'my-tenant', apiKey: 'my-key' },
+  )
+    .migrate({
+      services: ['from-folder/my-service'],
+      destination: 'to-folder/my-service',
+      ifPresent: 'add_version',
+    })
+    .then(console.log)
+    .catch(console.error);
+}
+
 export default {
   downloadWasm,
   export: exportEntities,
   import: importEntities,
+  migrate,
 };

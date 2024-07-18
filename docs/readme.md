@@ -3,9 +3,7 @@
 This guide should serve as a comprehensive reference for the SDK. It covers all
 the verbs (or methods) and parameters available in the SDK.
 
-There's no need to look up API-related information on Spark's [User Guide](https://docs.coherent.global).
-The SDK provides a simple interface to interact with Spark's supported APIs,
-which shall help you save time and streamline your development process.
+Additional information can be found on [Spark's User Guide](https://docs.coherent.global).
 
 ## Table of Contents
 
@@ -22,7 +20,7 @@ which shall help you save time and streamline your development process.
 ### EcmaScript Modules vs CommonJS
 
 The SDK is written in TypeScript and compiled to both EcmaScript Modules (ESM) and
-CommonJS (CJS) formats. You may import the SDK in your project using either of these
+CommonJS (CJS) formats. You may import the SDK into your project using either of these
 formats.
 
 **Using ESM:**
@@ -83,11 +81,11 @@ the service if the identifiers are URL-encoded.
 Most of the SDK methods are non-transactional, meaning that a request is expected
 to perform one task only (i.e, hitting one Spark endpoint only). In short, a
 stateless roundtrip.
-However, for convenience purposes, some of the methods can execute a series of
-tasks, handle their internal states, and return the final result in a single call
+For convenience purposes, some of the methods can execute a series of tasks
+handle their internal states, and return the final result in a single call
 (or _transaction)_.
 
-For example:
+For instance:
 
 - `Spark.folders.create(data)` will create a folder and upload a cover image (if any)
   in separate requests.
@@ -101,7 +99,7 @@ For example:
 > when using these methods.
 
 These transactional methods are quite useful as they will handle the entire process
-for you, from start to finish. Unfortunately, they may take a bit longer to complete.
+for you, from start to finish. They may Unfortunately take a bit longer to complete.
 Therefore, you are welcome to use non-transactional methods for more fine-grained
 control over the process.
 
@@ -139,6 +137,16 @@ const logger = {
 const spark = new Spark({ logger: { logger } });
 ```
 
+By the way, you may borrow the `Logger` class from the SDK to help you with a more
+structured, consistent way of logging errors and other messages in your application.
+
+```ts
+import { Logger } from '@cspark/sdk';
+
+const logger = Logger.of(/* logger options if needed */);
+logger.error('something went wrong');
+```
+
 ## HTTP Response
 
 All the methods return a `Promise` that resolves to an `HttpResponse<T>` object
@@ -174,7 +182,7 @@ of the request. The most common errors are:
 - `UnauthorizedError`: when the user is not authenticated/authorized
 - `NotFoundError`: when the requested resource is not found
 - `BadRequestError`: when the request or payload is invalid
-- `ConflictError`: when a resource is duplicated or conflicting
+- `ConflictError`: when a resource is duplicated or conflicting.
 
 The following properties are available in a `SparkApiError`:
 
@@ -227,12 +235,12 @@ as well as the obtained response if available.
 
 The Spark platform offers a wide range of functionalities that can be accessed
 programmatically via RESTful APIs. There are over 60 endpoints available, and the
-SDK currently supports about 1/3 of them.
+SDK currently supports a subset of them.
 
-Even though the SDK does not cover all the APIs available in the platform, it provides
-a good starting point for developers to interact with it. So, if there's an API resource
-that you need to consume and it is not available in the SDK, you can always extend
-this `ApiResource` class to include it. Here's an example of how you can do it:
+Since the SDK does not cover all the endpoints in the platform, it provides a way
+to cover additional endpoints. So, if there's an API resource you would like to
+consume that's not available in the SDK, you can always extend this `ApiResource`
+to include it.
 
 ```ts
 import Spark, { ApiResource, Uri } from '@cspark/sdk';
@@ -305,20 +313,10 @@ async function main(folderName) {
 main('my-folder');
 ```
 
-By the way, you may import the `Logger` class from the SDK to help you with a more
-structured, consistent way of logging errors and other messages in your application.
-
-```ts
-import { Logger } from '@cspark/sdk';
-
-const logger = Logger.of(/* logger options if needed */);
-logger.error('something went wrong');
-```
-
 ### File Handling
 
-There are various ways of handling files in both Node and Browser environments.
-To keep things simple and easy, the following ways are recommended:
+There are various ways to handle files in both Node and Browser environments.
+To keep things simple and easy, the following methods are recommended:
 
 - **In Node environments**, you can use the `fs` (file system) module to read and write
   files from/to disks. The recommended way to read and write files is to use the

@@ -62,6 +62,10 @@ export default class LocalServer {
     return typeof address === 'string' ? address : address?.port;
   }
 
+  get baseUrl() {
+    return new TestBaseUrl(`http://${this.hostname}:${this.port}`, 'my-tenant');
+  }
+
   router(req: http.IncomingMessage, res: http.ServerResponse) {
     const pathname = req.url;
 
@@ -74,11 +78,13 @@ export default class LocalServer {
       res.on('close', () => clearTimeout(timeout));
     }
 
+    // TestApiResource.unauthorized()
     if (pathname === '/test-resource/unauthorized') {
       res.statusCode = 401;
       res.end();
     }
 
+    // TestApiResource.rateLimited()
     if (pathname === '/test-resource/rate-limited') {
       res.statusCode = 429;
       res.setHeader('x-retry-after', '.1'); // propose retry after 100ms
