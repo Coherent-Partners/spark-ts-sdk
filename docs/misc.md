@@ -20,8 +20,8 @@ applications.
 In the context of Spark, a WebAssembly module refers to a cohesive bundle of
 files designed for portability and execution across web and Node.js environments.
 This bundle typically includes the WebAssembly representation of the Spark service's
-encapsulated logic along with associated JavaScript files. By bundling these
-components together, a Spark service becomes executable within both browser and
+encapsulated logic along with associated JavaScript files. By packaging these
+components together, a Spark WASM module becomes executable within both browser and
 Node environments.
 
 Check out the [API reference](https://docs.coherent.global/spark-apis/webassembly-module-api)
@@ -48,17 +48,17 @@ Alternatively, you can pass in the following parameters as an `object`.
 | _versionId_ | `string` | The UUID of a particular version of the service. |
 | _serviceId_ | `string` | The service UUID.                                |
 
-> **NOTE**: As of now, only the `versionId` can be used to download the WebAssembly module.
+> [!NOTE]
+> As of now, only the `versionId` can be used to download the WebAssembly module.
 > The other properties are currently being tested. Otherwise, they'll throw an `UnknownApiError`.
 
 ```ts
-await spark.wasm.download({ versionId: '123e4567-e89b-12d3-a456-426614174000' });
+await spark.wasm.download({ versionId: 'uuid' });
 ```
 
 ### Returns
 
 When successful, this method returns a buffer containing the WebAssembly module.
-Here's an example in Node:
 
 ```ts
 import { createWriteStream } from 'fs';
@@ -67,11 +67,10 @@ import Spark from '@cspark/sdk';
 const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', token: 'bearer token' });
 
 spark.wasm
-  .download('version/123e4567-e89b-12d3-a456-426614174000')
+  .download('version/uuid')
   .then((response) => {
-    // write downloaded file to disk
     const file = createWriteStream('path/to/my-wasm-module.zip');
-    response.buffer.pipe(file);
+    response.buffer.pipe(file); // write downloaded file to disk
   })
   .catch(console.error);
 ```
@@ -100,7 +99,7 @@ await spark.files.download('https://my-spark-file-url');
 ```
 
 Some of the generated files carry a token for access in the URL. In such cases, you
-can use a static method to download the file since it doesn't require a Spark instance.
+can use a static method to download the file since it doesn't require any Spark settings.
 
 ```ts
 import Spark from '@cspark/sdk';
@@ -123,3 +122,5 @@ await Spark.download('https://my-spark-file-url', auth);
 
 When successful, this method returns a buffer containing the file. You may then write
 this buffer to disk (as shown above) or process it further.
+
+[Back to top](#other-apis) or [Main Documentation](./readme.md)

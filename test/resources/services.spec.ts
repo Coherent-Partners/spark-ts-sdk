@@ -1,40 +1,17 @@
 import Spark, { ApiResource } from '@cspark/sdk';
-import LocalServer, { TestBaseUrl } from './_server';
+import LocalServer from './_server';
 
 describe('Spark.services', () => {
   const localSever = new LocalServer();
   const apiRequest = jest.spyOn(ApiResource.prototype as any, 'request');
   let spark: Spark;
 
-  type Inputs = { my_input: number };
-  type Outputs = { my_output: number };
-
   beforeAll(async () => {
     await localSever.start();
-    spark = new Spark({
-      baseUrl: new TestBaseUrl(`http://${localSever.hostname}:${localSever.port}`, 'my-tenant'),
-      apiKey: 'open',
-      logger: false,
-    });
-    spark.config.extraHeaders['my-extra-header'] = 'my-extra-value';
-    spark.config.interceptors.add({
-      beforeRequest: (req) => {
-        expect(req.headers).toHaveProperty('x-tenant-name');
-        expect(req.headers).toHaveProperty('x-request-id');
-        expect(req.headers).toHaveProperty('x-spark-ua');
-        expect(req.headers).toHaveProperty('my-extra-header');
-        return req;
-      },
-      afterRequest: (res) => {
-        expect(res.status).toBeGreaterThanOrEqual(200);
-        return res;
-      },
-    });
+    spark = new Spark({ baseUrl: localSever.baseUrl, apiKey: 'open', logger: false });
   });
 
-  afterAll(async () => {
-    return localSever.stop();
-  });
+  afterAll(async () => localSever.stop());
 
   it('should execute a service with default inputs', async () => {
     const res = await spark.services.execute('my-folder/my-service', { responseFormat: 'original' });
@@ -59,7 +36,7 @@ describe('Spark.services', () => {
   });
 
   it('should execute a service with inputs', async () => {
-    const res = await spark.services.execute<Inputs, Outputs>(
+    const res = await spark.services.execute(
       {
         folder: 'my-folder',
         service: 'my-service',

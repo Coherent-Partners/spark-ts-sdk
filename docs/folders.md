@@ -7,12 +7,12 @@
 | `Spark.folders.getCategories()`  | [Get the list of folder categories](#get-the-folder-categories).                  |
 | `Spark.folders.create(data)`     | [Create a new folder with additional info](#create-a-new-folder).                 |
 | `Spark.folders.find(name)`       | [Find folders by name, status, category, or favorite](#find-folders-by-criteria). |
-| `Spark.folders.update(id, data)` | [Update a folder's information by id](#update-a-folders-information).             |
-| `Spark.folders.delete(id)`       | [Delete a folder by id](#delete-a-folder-by-id).                                  |
+| `Spark.folders.update(id, data)` | [Update a folder's information by ID](#update-a-folders-information).             |
+| `Spark.folders.delete(id)`       | [Delete a folder by ID](#delete-a-folder-by-id).                                  |
 
 ## Get the folder categories
 
-As of now, the platform supports the following folder categories:
+Presently, the platform supports the following folder categories:
 
 ```ts
 type FolderCategory =
@@ -30,15 +30,13 @@ type FolderCategory =
 ```
 
 However, there's a chance that the platform will add more categories in the future.
-To get the list of folder categories, you can use the following method:
+To get the list of these categories, you can use the following method:
 
 ```ts
 await spark.folders.getCategories();
 ```
 
 ### Returns
-
-This method returns an array of folder categories with their icons.
 
 ```json
 {
@@ -68,31 +66,32 @@ This method returns an array of folder categories with their icons.
 
 ## Create a new folder
 
-This method allows you to create a new folder by providing a folder name.
+This method allows you to create a new folder by simply providing a folder name.
 
 > [!IMPORTANT]
 > Remember to choose a folder name that is URL-friendly as it will form part of
-> a Spark service URI. It's recommended to use lowercase letters and hyphens to separate
-> words. Otherwise, special characters like space will be URL-encoded.
+> a Spark service URI. It's recommended to use lowercase letters and/or hyphens
+> instead of whitespaces. Otherwise, special characters like space will be URL-encoded.
 
 ### Arguments
 
-You may pass in the folder name as a `string`.
+You may indicate the folder name as a `string`.
 
 ```ts
 await spark.folders.create('my-folder');
 ```
 
-Alternatively, you can pass in the following parameters as an `object`, which
-will create a folder with some additional information.
+Or, you may provide an `object` that includes some additional information such as
+the folder description, category, start date, launch date, status, and cover image.
+In that case, the property `name` is required.
 
 | Property          | Type                       | Description                                             |
 | ----------------- | -------------------------- | ------------------------------------------------------- |
 | _name_ (required) | `string`                   | The name of the folder.                                 |
 | _description_     | `string`                   | The description of the folder.                          |
-| _category_        | `FolderCategory`           | The category of the folder.                             |
+| _category_        | `FolderCategory`           | The category of the folder (defaults to `Other`).       |
 | _startDate_       | `string \| number \| Date` | The start date (format: `YYYY-MM-DD[THH:MM:SS.SSSZ]`).  |
-| _launchState_     | `string \| number \| Date` | The launch date (format: `YYYY-MM-DD[THH:MM:SS.SSSZ]`). |
+| _launchDate_      | `string \| number \| Date` | The launch date (format: `YYYY-MM-DD[THH:MM:SS.SSSZ]`). |
 | _status_          | `string`                   | The status of the folder.                               |
 | _cover_           | `CoverImage`               | The cover image of the folder.                          |
 | _cover.image_     | `Readable`                 | The image as a binary file.                             |
@@ -160,18 +159,17 @@ Otherwise, it will throw a `SparkApiError`:
 
 ## Find folders by criteria
 
-This method helps find folders by name, status, category, or favorite.
+This method helps you search folders by name, status, category, or favorite.
 
 ### Arguments
 
-You may search a folder by its id.
+You may search a folder by its unique ID.
 
 ```ts
 await spark.folders.find('uuid');
 ```
 
-Alternatively, you can pass in the following parameters as an `object` to filter
-the folders.
+Or, you can pass in the following parameters as an `object` to filter the folders.
 
 | Property   | Type             | Description                               |
 | ---------- | ---------------- | ----------------------------------------- |
@@ -183,7 +181,7 @@ the folders.
 await spark.folders.find({ category: 'Medical', favorite: true });
 ```
 
-Additional search parameters are available:
+Additional search parameters can be provided as a second argument.
 
 | Property | Type     | Description                           |
 | -------- | -------- | ------------------------------------- |
@@ -200,7 +198,7 @@ by the product name.
 
 ### Returns
 
-This method returns an array of folders with their information.
+This method returns all folders with their information that match the search criteria.
 
 ```json
 {
@@ -254,13 +252,13 @@ for more information.
 
 ## Update a folder's information
 
-This method allows you to update a folder's information by its id. Once created,
+This method allows you to update a folder's information by its ID. Once created,
 you can only update the folder's description, category, launch date, start date,
 cover, or status.
 
 ### Arguments
 
-You must provide the folder id and the updated folder information, just as in
+You must provide the folder iD and the updated folder information, just as in
 [creating a new folder](#create-a-new-folder).
 
 ```ts
@@ -280,9 +278,9 @@ The method returns a successful status when the folder is updated.
 }
 ```
 
-## Delete a folder by id
+## Delete a folder by ID
 
-This method allows you to delete a folder by its id.
+This method allows you to delete a folder by its ID.
 
 > [!WARNING]
 > This method should be used with caution as it will delete the folder and all its
@@ -290,7 +288,7 @@ This method allows you to delete a folder by its id.
 
 ### Arguments
 
-You must provide the folder id as `string`.
+You must provide the folder ID as `string`.
 
 ```ts
 await spark.folders.delete('uuid');
@@ -308,3 +306,5 @@ The method returns a successful status when the folder is deleted.
   "errorCode": null
 }
 ```
+
+[Back to top](#folders-api) or [Next: Services API](./services.md)

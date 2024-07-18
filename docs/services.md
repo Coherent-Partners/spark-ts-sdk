@@ -16,38 +16,39 @@
 | `Spark.services.export(uri)`          | [Export Spark services as a zip file](#export-spark-services).                   |
 | `Spark.services.import(data)`         | [Import a Spark service from a zip file](#import-spark-services).                |
 
+A Spark service is the representation of your Excel file in the Spark platform.
+
 ## Create a new Spark service
 
-A Spark service is the representation of your Excel file in the Spark platform.
 This method helps you create a new service in Spark by uploading the Excel file,
-compiling it into a [WASM module](./misc.md), and publishing a new version of it
-as a service.
+compiling it into a [WASM module](./misc.md), and then publishing a new version
+of it as a service.
 
-If you're uncertain of how to prepare an Excel file for Spark, please refer to the
-[Spark documentation](https://docs.coherent.global/getting-started-in-5-minutes)
-for more information.
+If you're uncertain of how to prepare an Excel file for Spark, take a look at the
+[User Guide](https://docs.coherent.global/getting-started-in-5-minutes) for more
+information.
 
 > [!IMPORTANT]
-> You must create a folder before creating a service. Please refer to the
-> [Folder API](./folder.md) to learn more about creating a folder.
+> You must create a folder before you can create a service. Please refer to the
+> [Folders API](./folders.md) to learn more about creating a folder.
 
 ### Arguments
 
 This method accepts an extended version of `UriParams` object as an argument.
 
-| Property        | Type                       | Description                                                                |
-| --------------- | -------------------------- | -------------------------------------------------------------------------- |
-| _folder_        | `string`                   | The folder name.                                                           |
-| _service_       | `string`                   | The service name.                                                          |
-| _file_          | `Readable`                 | The file as a readable stream.                                             |
-| _fileName_      | `string`                   | The name of the Excel file (defaults to `UriParams.service`).              |
-| _versioning_    | `major \| minor \| patch`  | This indicates how to increment the service version (defaults to `minor`). |
-| _startDate_     | `number \| string \| Date` | The effective start date (defaults to `Date.now()` ).                      |
-| _endDate_       | `number \| string \| Date` | The effective end date (defaults to 10 years later).                       |
-| _draftName_     | `string`                   | This overrides the `service` name to a custom name.                        |
-| _trackUser_     | `boolean`                  | Track the user who created the service (defaults to `false`).              |
-| _maxRetries_    | `number`                   | The number of retries to attempt (defaults to `Config.maxRetries`).        |
-| _retryInterval_ | `number`                   | The interval between retries in seconds (defaults to `1` second).          |
+| Property        | Type                       | Description                                                         |
+| --------------- | -------------------------- | ------------------------------------------------------------------- |
+| _folder_        | `string`                   | The folder name.                                                    |
+| _service_       | `string`                   | The service name.                                                   |
+| _file_          | `Readable`                 | The file as a readable stream.                                      |
+| _fileName_      | `string`                   | The name of the Excel file (defaults to `UriParams.service`).       |
+| _versioning_    | `major \| minor \| patch`  | How to increment the service version (defaults to `minor`).         |
+| _startDate_     | `number \| string \| Date` | The effective start date (defaults to `Date.now()` ).               |
+| _endDate_       | `number \| string \| Date` | The effective end date (defaults to 10 years later).                |
+| _draftName_     | `string`                   | This overrides the `service` name to a custom name.                 |
+| _trackUser_     | `boolean`                  | Track the user who created the service (defaults to `false`).       |
+| _maxRetries_    | `number`                   | The number of retries to attempt (defaults to `Config.maxRetries`). |
+| _retryInterval_ | `number`                   | The interval between retries in seconds (defaults to `1` second).   |
 
 ```ts
 await spark.services.create({
@@ -62,10 +63,10 @@ await spark.services.create({
 });
 ```
 
-This method may take a while to run depending on the size of the Excel file and
-the complexity of the service. It's recommended to allocate enough time for the
-method to complete. Therefore, `maxRetries` and `retryInterval` are provided to
-help you manage the process.
+Depending on the size of the Excel file and the complexity of the service, this
+method may take a while to run. Do allocate enough time for the method to complete.
+That is, `maxRetries` and `retryInterval` are provided to help you extend the
+timeout period.
 
 Here's a hierarchy of the service creation process:
 
@@ -75,14 +76,14 @@ Here's a hierarchy of the service creation process:
     - `Spark.services.compilation.getStatus` (4)
   - `Spark.services.publish` (5)
 
-If you want to have more control, you can call the methods in the hierarchy
+If you want to have more control, you can invoke the methods in the hierarchy
 individually. For example, if you only want to compile the service, you can call
-`Spark.services.compile` directly, which will only execute steps (3) and (4).
+`Spark.services.compile()` directly, which will only execute steps (3) and (4).
 
 ### Returns
 
 This method returns a JSON with detailed information on the upload, compilation,
-and publication process.
+and publication processes.
 
 ```json
 {
@@ -103,8 +104,8 @@ and publication process.
       "no_of_cellswithdata": 42
     },
     "response_meta": {
-      "service_id": null,
-      "version_id": "{versionID}",
+      "service_id": "uuid",
+      "version_id": "uuid",
       "version": "0.1.0",
       "process_time": 68,
       "call_id": null,
@@ -148,15 +149,13 @@ and publication process.
 
 ## Execute a Spark service
 
-This method executes a Spark service with the input data and returns the output data.
-It's the most common method for interacting with Spark services.
+This method allows you to execute a Spark service.
 
-Currently, Spark supports two versions of the API: v3 and v4. The SDK will use
-the [v3 format][v3-format] for a single input and the [v4 format][v4-format]
-for multiple inputs.
-
-By default, the SDK uses the v4 format for the output data. You may specify the
-desired response format to retrieve the original format emitted by the API.
+Currently, Spark supports two versions of Execute API: v3 and v4. The SDK will use
+the [v3 format][v3-format] for a single input and the [v4 format][v4-format] for
+multiple inputs.
+By default, the SDK will return the output data in the [v4 format][v4-format]
+unless you prefer to work with the original format emitted by the API.
 
 Check out the [API reference](https://docs.coherent.global/spark-apis/execute-api)
 to learn more about Services API.
@@ -168,7 +167,7 @@ with the input data and metadata as arguments. See the use cases below.
 
 - **Default inputs**:
   the following example demonstrates how to execute a service with default values.
-  Obviously, the SDK ignores those default values. Under the hood, the SDK
+  Obviously, the SDK ignores those default values. Behind the scenes, the SDK
   uses an empty object `{}` as the input data, which is an indicator for Spark to
   use the default inputs defined in the Excel file.
 
@@ -179,15 +178,17 @@ await spark.services.execute({ folder: 'my-folder', service: 'my-service' });
 ```
 
 - **Inputs only**:
-  the above example is the simplest form of executing a service. In most cases, you
-  will need to provide input data to the service. You can do so by passing an `inputs`
-  object as the second argument.
+  the previous example is the simplest form of executing a service. In most cases, you
+  will want to provide input data. You can do so by passing an `inputs` object as
+  the second argument.
 
 ```ts
 await spark.services.execute('my-folder/my-service', { inputs: { my_input: 13 } });
 ```
 
-- **Inputs with metadata**: you can also provide metadata along with the input data.
+- **Inputs with metadata**: metadata can be provided along with the input data.
+  Keep in mind that some metadata fields only apply to the v3 format and will
+  have no effect on the service execution.
 
 ```ts
 const inputs = { my_input: 13 };
@@ -196,9 +197,8 @@ await spark.services.execute('my-folder/my-service', { inputs, ...metadata });
 ```
 
 - **JSON string data**:
-  you may use JSON string data as shown in the [API Tester](https://docs.coherent.global/navigation/api-tester).
-  Basically, you are free to work with raw data as long as it's a valid JSON
-  string and follows the API v3 format.
+  you may use string data as long as it's a valid JSON string and follows either
+  the v3 or v4 format.
 
 ```ts
 await spark.services.execute('my-folder/my-service', { inputs: `{ "my_input": 13 }` });
@@ -227,13 +227,13 @@ await spark.services.execute({ serviceId: 'uuid' });
 
 - using semantic **version**:
   `version` also known as revision number is the semantic version of the service.
-  Keep in mind that using only `version` is not enough to locate a service. You must
-  provide either the `folder` and `service` names or the `serviceId`.
+  However, using only `version` is not enough to locate a service. You must provide
+  either the `folder` and `service` names or the `serviceId`.
 
 ```ts
 await spark.services.execute('my-folder/my-service[0.1.0]');
 // or
-await spark.services.execute({ folder: 'my-folder', service: 'my-service', version: '0.1.0' });
+await spark.services.execute({ serviceId: 'uuid', version: '0.1.0' });
 ```
 
 - using **proxy** endpoints:
@@ -245,9 +245,9 @@ await spark.services.execute('proxy/custom-endpoint');
 await spark.services.execute({ proxy: 'custom-endpoint' });
 ```
 
-As you can tell, there are multiple flavors when it comes to locating a Spark
-service and executing it. You can choose the one that suits best your needs. Here's
-a summary of the parameters you can use for this method:
+As you can tell, there are multiple flavors when it comes to locating and executing
+a Spark service. You can choose the one that suits best your needs. Here's a summary
+of the parameters you can use for this method:
 
 For the first argument, `UriParams` object:
 
@@ -282,14 +282,10 @@ For the second argument, `ExecuteParams` object:
 
 ### Returns
 
-This method returns the output data of the service execution in the following
-format:
+This method returns the output data of the service execution in the following format:
 
 - `original`: the output data as JSON in its original format (as returned by the API).
-- `alike`: the output data as JSON in the v4 format whether it's a single or multiple inputs.
-
-This method returns the output data of the service execution in the following
-format (aka v3 format).
+- `alike`: the output data as JSON in the v4 format whether it's single or multiple inputs.
 
 For instance, the output data of a service execution for a single input looks like this
 when the `responseFormat` is set to `alike`:
@@ -349,26 +345,6 @@ to `original`.
 > The default timeout for this client is 60 seconds, and for Spark servers, it is 55 seconds.
 > Another good practice is to split the batch into smaller chunks and submit separate requests.
 
-When using TypeScript, you can define both input and output data as interfaces
-to help you work with the data more efficiently. See the example below.
-
-```ts
-interface Inputs {
-  my_input: number;
-}
-
-interface Outputs {
-  my_output: number;
-}
-
-const inputs: Inputs = { my_input: 13 };
-const response = await spark.services.execute<Inputs, Outputs>('my-folder/my-service', {
-  inputs,
-  responseFormat: 'original',
-});
-console.log(response.data.response_data.outputs.my_output); // 42
-```
-
 ## Get all the versions of a service
 
 This method returns all the versions of a service.
@@ -426,7 +402,7 @@ await spark.services.getVersions({ folder: 'my-folder', service: 'my-service' })
 
 ## Get the Swagger documentation
 
-This method returns the JSON content or downloads the swagger file of a particular service.
+This method returns the JSON content or downloads the swagger file of a service.
 
 ### Arguments
 
@@ -766,7 +742,7 @@ Additionally, you can specify optional parameters to customize the export proces
 | _serviceUri_      | `string`                | The service URI (e.g., `my-folder/my-service`).                    |
 | _filters_         | `object`                | How to filter out which entities to export.                        |
 | _filters.file_    | `migrate \| onpremises` | For data migration or on-prem deployments (defaults to `migrate`). |
-| _filters.version_ | `latest \| all`         | Which version of the file to export (defaults to `all`).           |
+| _filters.version_ | `latest \| all`         | Which version of the file to export (defaults to `latest`).        |
 | _sourceSystem_    | `string`                | The source system name to export from (e.g., `Spark JS SDK`).      |
 | _correlationId_   | `string`                | The correlation ID for the export (useful for tagging).            |
 | _maxRetries_      | `number`                | The maximum number of retries when checking the export status.     |
