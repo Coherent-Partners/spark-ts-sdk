@@ -39,19 +39,29 @@ await spark.folders.getCategories();
 ### Returns
 
 ```json
-[
-  "Medical",
-  "Critical Illness",
-  "Lifelong Participation",
-  "Universal Life",
-  "Investment Linked",
-  "Annuity",
-  "Term",
-  "VHIS",
-  "VHIS + Medical",
-  "Property & Casualty",
-  "Other"
-]
+{
+  "status": "Success",
+  "message": null,
+  "errorCode": null,
+  "data": [
+    {
+      "key": "Medical",
+      "value": "Medical",
+      "icon": "medical.svg"
+    },
+    {
+      "key": "Critical Illness",
+      "value": "Critical Illness",
+      "icon": "criticalillness.svg"
+    },
+    // ...
+    {
+      "key": "Other",
+      "value": "Other",
+      "icon": "other.svg"
+    }
+  ]
+}
 ```
 
 ## Create a new folder
