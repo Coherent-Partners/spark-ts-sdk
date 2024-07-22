@@ -95,7 +95,7 @@
       "ts"
     ],
     "transform": {
-      "^.+.tsx?$": [
+      "^.+.ts$": [
         "ts-jest",
         {
           "tsconfig": "tsconfig.dev.json"

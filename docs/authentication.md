@@ -36,9 +36,8 @@ const spark = new Spark({ apiKey: 'my-api-key' });
 When accessing publicly available APIs, Spark does not require an API key or any
 other authentication mechanism. Hence, you can create a `SparkClient` instance
 without providing any authentication mechanism by setting the `apiKey` to `open`.
-
-> You should keep in mind that this is internal to the SDK. Spark APIs will not know
-> how to handle this value.
+You should keep in mind that this is internal to the SDK. Spark APIs will not know
+how to handle this value.
 
 ```ts
 const spark = new Spark({ apiKey: 'open' });
@@ -46,12 +45,10 @@ const spark = new Spark({ apiKey: 'open' });
 
 > [!WARNING]
 > You will not be able to read that API key later from the `SparkClient` instance
-> if needed. It's masked for security reasons.
+> if needed. It's masked for security reasons. The client options are available in the
+> `config` property.
 
 ```ts
-const spark = new Spark();
-
-// the client options are available in the `config` property
 console.log(spark.config.auth.apiKey); // '****-rest-of-key'
 ```
 
@@ -85,10 +82,12 @@ how to handle it whether you choose it to prefix your token or not. You can set 
 token directly or define it in the environment variable `CSPARK_BEARER_TOKEN`.
 
 ```ts
-const spark = new Spark({ token: 'Bearer my-access-token' });
+const spark = new Spark({ token: 'Bearer my-access-token' }); // with prefix
+// or
+const spark = new Spark({ token: 'my-access-token' }); // without prefix
 ```
 
-The bearer token also carry additional Spark settings that can be extracted and simplify
+Bearer tokens also carry additional Spark settings that can be extracted and simplify
 the creation of a `SparkClient` instance. To harness this capability, you're required
 to install this [jwt-decode] NPM package. Also, this is not supported in the browser environment.
 

@@ -5,7 +5,7 @@ describe('Serializable', () => {
   const ARRAY: JsonData = [null, false, 1, 'string'];
   const OBJECT: JsonData = { null: null, bool: true, num: 1, str: 'string', array: ARRAY };
 
-  it('should serialize primitive values', () => {
+  it('can serialize primitive values', () => {
     expect(Serializable.serialize(undefined)).toBeUndefined();
     expect(Serializable.serialize(null)).toBe('null');
     expect(Serializable.serialize(true)).toBe('true');
@@ -17,7 +17,7 @@ describe('Serializable', () => {
     );
   });
 
-  it('should deserialize serialized values', () => {
+  it('can deserialize serialized values', () => {
     expect(Serializable.deserialize('null')).toBeNull();
     expect(Serializable.deserialize('true')).toBe(true);
     expect(Serializable.deserialize('0')).toBe(0);
@@ -31,7 +31,7 @@ describe('Serializable', () => {
     expect(() => Serializable.deserialize('string')).toThrow(SparkError);
   });
 
-  it('should serialize data to URL params', () => {
+  it('can serialize URL params', () => {
     expect(Serializable.toUrlParams({ a: 1, b: 'string' })).toBe('a=1&b=string');
     expect(Serializable.toUrlParams({ a: 1, b: 'string', c: null, d: undefined })).toBe('a=1&b=string');
   });
@@ -40,7 +40,7 @@ describe('Serializable', () => {
     expect(() => Serializable.toUrlParams(1 as any)).toThrow(SparkError);
   });
 
-  it('should jsonify a string', () => {
+  it('can jsonify a string', () => {
     expect(new Stringified('null').serialize()).toEqual(null);
     expect(new Stringified('true').serialize()).toEqual(true);
     expect(new Stringified('0').serialize()).toEqual(0);
@@ -50,7 +50,6 @@ describe('Serializable', () => {
 
   it('should be able to assess the data type of serializable data', () => {
     const stringified = new Stringified('{"a":1}');
-
     expect(stringified.isUndefined).toBe(false);
     expect(stringified.isNull).toBe(false);
     expect(stringified.isBoolean).toBe(false);

@@ -322,5 +322,5 @@ conduct, and the process for submitting pull requests.
 [api-key-docs]: https://docs.coherent.global/spark-apis/authorization-api-keys
 [bearer-token-docs]: https://docs.coherent.global/spark-apis/authorization-bearer-token
 [oauth2-docs]: https://docs.coherent.global/spark-apis/authorization-client-credentials
-[contributing-url]: https://github.com/Coherent-Partners/spark-ts-sdk/CONTRIBUTING.md
-[license-url]: https://github.com/Coherent-Partners/spark-ts-sdk/LICENSE
+[contributing-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/CONTRIBUTING.md
+[license-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/LICENSE

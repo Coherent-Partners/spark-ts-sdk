@@ -205,4 +205,7 @@ export class UnknownApiError extends SparkApiError {
   override readonly status = undefined;
 }
 
+// Borrowed from node-fetch for compatibility.
+export { AbortError } from 'node-fetch';
+
 export default SparkError;

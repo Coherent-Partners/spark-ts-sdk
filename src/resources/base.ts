@@ -113,11 +113,10 @@ export abstract class ApiResource {
   /**
    * Aborts the current request.
    *
-   * This method is used to abort the current request. It is useful when the user
-   * wants to cancel a request that is taking too long or is no longer needed.
+   * This method is useful when the user wants to cancel a request that is taking
+   * too long or is no longer needed. It is recommended to call this method before
+   * making a new request to avoid any conflicts.
    *
-   * It is recommended to call this method before making a new request to avoid
-   * any conflicts.
    * @see AbortController for more details.
    */
   abort(): void {
