@@ -8,7 +8,6 @@ const terser = require('@rollup/plugin-terser');
 const bundle = {
   format: 'umd',
   name: '@cspark/sdk',
-  sourcemap: true,
   exports: 'named',
 };
 
@@ -27,7 +26,7 @@ exports.default = [
   },
   {
     input: 'src/index.ts',
-    output: { dir: 'lib/esm', format: 'esm', sourcemap: true },
+    output: { dir: 'lib/esm', format: 'esm' },
     external: ['node-fetch'],
     plugins: [
       nodeResolve({ preferBuiltins: false }),

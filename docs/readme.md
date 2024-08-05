@@ -35,12 +35,13 @@ import Spark from '@cspark/sdk';
 const { SparkClient: Spark } = require('@cspark/sdk');
 ```
 
-To avoid confusion and maintain consistency across the examples used in the SDK
-documentation, the ESM format will be used in all the code snippets.
+To maintain consistency across the examples used in the SDK documentation, the ESM
+format will be used in all the code snippets. For brevity, the import statement
+may be omitted in some cases.
 
 ### Spark URI Locator
 
-You may notice by now that `folder` and `service` when combined form a
+You may notice by now that `folder` and `service` names when combined form a
 base identifier to locate a resource in the Spark platform for a particular
 environment and tenant. I term this _Service URI_ locator.
 
@@ -50,7 +51,7 @@ these identifiers.
 The SDK will take care of encoding them when necessary. Otherwise, you risk running
 into issues when trying to locate a resource.
 
-For instance, executing a Spark service using these identifiers
+For instance, executing a Spark service using these identifiers:
 
 - folder: `my folder` (when encoded => `my%20folder`)
 - service: `my service` (when encoded => `my%20service`)
@@ -72,17 +73,17 @@ await spark.services.execute(serviceUri, { inputs: [{}] });
 
 Behind the scenes, the `Use case 1` (single input) uses the URI locator as part of
 the final URL to locate the service to execute. Hence, it works fine whether the
-identifiers are URL-encoded or not. However, when using a list of inputs in `Use case 2`,
-the method uses the URI locator as part of the payload, which will fail to locate
-the service if the identifiers are URL-encoded.
+identifiers are URL-encoded or not. On the other hand, when using a list of inputs
+in `Use case 2`, the method uses the URI locator as part of the payload, which will
+fail to locate the service if the identifiers are URL-encoded.
 
 ### Transactional vs Non-Transactional Methods
 
 Most of the SDK methods are non-transactional, meaning that a request is expected
 to perform one task only (i.e, hitting one Spark endpoint only). In short, a
 stateless roundtrip.
-For convenience purposes, some of the methods can execute a series of tasks
-handle their internal states, and return the final result in a single call
+For convenience purposes, some of the methods can execute a series of tasks,
+handle their internal states and return the final result in a single call
 (or _transaction)_.
 
 For instance:
@@ -99,14 +100,14 @@ For instance:
 > when using these methods.
 
 These transactional methods are quite useful as they will handle the entire process
-for you, from start to finish. They may Unfortunately take a bit longer to complete.
+for you, from start to finish. They may unfortunately take a bit longer to complete.
 Therefore, you are welcome to use non-transactional methods for more fine-grained
 control over the process.
 
 ## HTTP Request
 
 The SDK is built on top of the [node-fetch](https://www.npmjs.com/package/node-fetch)
-library, which provides an elegant, feature-rich HTTP module. The SDK built a layer
+library, which provides an elegant, feature-rich HTTP module. The SDK builds a layer
 on top of it to simplify the process of making HTTP requests to the Spark platform.
 
 The SDK is also shipped with a built-in logger that will log all HTTP requests

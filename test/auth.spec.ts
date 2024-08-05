@@ -6,12 +6,12 @@ describe('Authorization', () => {
   const API_KEY = 'some-api-key';
   const OAUTH = { clientId: 'some-id', clientSecret: 'some-secret' };
 
-  it('should create an open authorization', () => {
+  it('can create an open authorization', () => {
     expect(Authorization.from({ apiKey: 'open' }).isOpen).toBe(true);
     expect(Authorization.from({ token: 'open' }).isOpen).toBe(true);
   });
 
-  it('should create an authorization with API key', () => {
+  it('can create an authorization with API key', () => {
     const auth = Authorization.from({ apiKey: API_KEY });
     expect(auth).toBeDefined();
     expect(auth.apiKey).toBe('********-key');
@@ -23,7 +23,7 @@ describe('Authorization', () => {
     expect(auth.token).toBeUndefined();
   });
 
-  it('should create an authorization with bearer token', () => {
+  it('can create an authorization with bearer token', () => {
     const auth = Authorization.from({ token: 'Bearer ' + TOKEN });
     expect(auth).toBeDefined();
     expect(auth.token).toBe(TOKEN);
@@ -37,7 +37,7 @@ describe('Authorization', () => {
     expect(Authorization.from({ token: TOKEN }).asHeader).toEqual({ Authorization: `Bearer ${TOKEN}` });
   });
 
-  it('should create an authorization with JSON OAuth', () => {
+  it('can create an authorization from JSON OAuth', () => {
     const auth = Authorization.from({ oauth: OAUTH });
     expect(auth).toBeDefined();
     expect(auth.oauth).toBeInstanceOf(OAuth);
@@ -50,7 +50,7 @@ describe('Authorization', () => {
     expect(auth.token).toBeUndefined();
   });
 
-  it('should create an authorization with file OAuth', () => {
+  it('can create an authorization from file OAuth', () => {
     const auth = Authorization.from({ oauth: './test/sample-ccg.txt' });
     expect(auth).toBeDefined();
     expect(auth.oauth).toBeInstanceOf(OAuth);

@@ -42,7 +42,7 @@ export class Config {
     this.retryInterval = numberValidator.isValid(retryInterval) ? retryInterval! : DEFAULT_RETRY_INTERVAL;
     this.allowBrowser = this.auth.isOpen || !!options.allowBrowser;
     this.logger = Logger.for(options.logger);
-    this.environment = env;
+    this.environment = this.baseUrl.env;
 
     this.#options = JSON.stringify({
       baseUrl: this.baseUrl.toString(),
@@ -56,7 +56,7 @@ export class Config {
     });
 
     if (!this.allowBrowser && Utils.isBrowser()) {
-      throw new SparkError(
+      throw SparkError.sdk(
         ''.concat(
           'It looks like you are running in a browser-like environment.\n\n',
           'This is disabled by default, as it risks exposing your secret API credentials to attackers.\n',
@@ -99,12 +99,12 @@ export class JwtConfig extends Config {
   /**
    * Decodes a Spark-issued JWT and extracts the base URL and tenant name.
    * @param token {string} - the JWT to decode.
-   * @returns {ClientOptions} the decoded base URL and tenant name.
+   * @returns {ClientOptions} the token itself, and decoded base URL and tenant name.
    *
    * This method is not supported in browser environments and is not intended for general
    * use of token decoding. Additionally, it requires the `jwt-decode` module to be installed.
    */
-  static decode(token: string): ClientOptions {
+  static decode(token: string): Pick<ClientOptions, 'baseUrl' | 'tenant' | 'token'> {
     if (Utils.isBrowser()) throw SparkError.sdk('JWT decoding is not supported in browser environments');
 
     const jwtDecode = loadModule('jwt-decode')?.jwtDecode;
@@ -129,8 +129,8 @@ export class JwtConfig extends Config {
    * Builds a Config from the given JWT token.
    * @param {ClientOptions} options - the distinct parameters to build a Config from.
    * @param {string} options.token - the JWT token to decode.
-   * @returns a Config
-   * @throws {SparkError} if a Config cannot be built from the given JWT token.
+   * @returns {Config} necessary setting (base url and tenant) to create a Spark instance.
+   * @throws {SparkError} if basic config cannot be built from the given JWT token.
    */
   static from({ token = Utils.readEnv(ENV_VARS.BEARER_TOKEN), ...options }: ClientOptions = {}): Config {
     if (!token) throw SparkError.sdk('Bearer token is required');
@@ -153,14 +153,16 @@ export class BaseUrl {
     const matches = url.origin.match(/https:\/\/([^\.]+)\.((?:[^\.]+\.)?[^\.]+)\.coherent\.global/);
     if (matches && matches.length >= 3) {
       const [, service, env] = matches;
-      this.service = service?.toLowerCase();
+      this.service = ['excel', 'keycloak', 'utility', 'entitystore'].includes(service?.toLowerCase())
+        ? service.toLowerCase()
+        : 'excel';
       this.env = env?.toLowerCase();
-      this.url = ['excel', 'keycloak', 'utility', 'entitystore'].includes(this.service)
-        ? url
-        : new URL(`https://excel.${this.env}.coherent.global/${tenant}`);
+      this.url = new URL(`https://${this.service}.${this.env}.coherent.global/${tenant}`);
     } else {
-      this.env = undefined; // no environment needed for local development.
       this.url = url;
+      // no environment or service needed for local development.
+      this.service = undefined;
+      this.env = undefined;
     }
   }
 

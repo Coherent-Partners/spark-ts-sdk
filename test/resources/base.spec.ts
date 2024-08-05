@@ -1,12 +1,11 @@
-import { AbortError } from 'node-fetch';
 import Utils from '@cspark/sdk/utils';
-import Spark, { SparkError, SparkApiError, Uri } from '@cspark/sdk';
+import Spark, { SparkError, SparkApiError, AbortError, Uri } from '@cspark/sdk';
 import LocalServer, { TestApiResource } from './_server';
 
 describe('Uri', () => {
   const BASE_URL = 'https://excel.test.coherent.global/tenant-name';
 
-  it('should build url from partial resources', () => {
+  it('can build url from partial resources', () => {
     expect(Uri.partial('folders/f/services/s', { base: BASE_URL, endpoint: 'execute' }).value).toBe(
       'https://excel.test.coherent.global/tenant-name/api/v3/folders/f/services/s/execute',
     );
@@ -26,7 +25,7 @@ describe('Uri', () => {
     );
   });
 
-  it('should build url from uri params', () => {
+  it('can build url from uri params', () => {
     expect(Uri.from({ folder: 'f', service: 's' }, { base: BASE_URL, endpoint: 'execute' }).value).toBe(
       'https://excel.test.coherent.global/tenant-name/api/v3/folders/f/services/s/execute',
     );
@@ -67,7 +66,7 @@ describe('Uri', () => {
     );
   });
 
-  it('can concatenate with query params', () => {
+  it('can concatenate url with query params', () => {
     const uri = Uri.from({ folder: 'f', service: 's' }, { base: BASE_URL, endpoint: 'execute' });
     expect(uri.concat({ a: 'b' })).toBe(
       'https://excel.test.coherent.global/tenant-name/api/v3/folders/f/services/s/execute?a=b',
@@ -78,7 +77,7 @@ describe('Uri', () => {
     );
   });
 
-  it('should throw an error if wrong uri params', () => {
+  it('should throw an error if uri params are incorrect', () => {
     expect(() => Uri.validate('')).toThrow(SparkError);
     expect(() => Uri.validate('f//')).toThrow(SparkError);
     expect(() => Uri.from(undefined, { base: BASE_URL })).not.toThrow(SparkError);

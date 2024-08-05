@@ -233,7 +233,7 @@ class Import extends ApiResource {
     const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'import' });
     const metadata = {
       inputs: { services_modify: buildServiceMappings(params.destination) },
-      services_existing: params.ifPresent ?? 'abort',
+      services_existing: params.ifPresent ?? 'add_version',
       source_system: params.sourceSystem ?? SPARK_SDK,
       correlation_id: params.correlationId,
     };
