@@ -1,5 +1,6 @@
 import { SparkSdkError } from '@cspark/sdk';
 import { Config, JwtConfig, BaseUrl } from '@cspark/sdk/config';
+import { Version } from '@cspark/sdk/version';
 import * as Constants from '@cspark/sdk/constants';
 
 describe('Config', () => {
@@ -61,6 +62,13 @@ describe('Config', () => {
 });
 
 describe('JwtConfig', () => {
+  const version = new Version(process?.version?.replace('v', ''));
+
+  // should run this suite if node v16+, otherwise would fail.
+  // jwt-decode depends on atob which is not available in node v14 and below.
+  // It should've considered using Buffer.from instead of atob.
+  if (16 > +version.major) return;
+
   const TOKEN = ''.concat(
     'eyJhbGciOiJIUzI1NiJ9.', // this uses HS256 algorithm for testing but Coherent uses RS256 algorithm.
     'eyJpc3MiOiJodHRwczovL2tleWNsb2FrLm15LWVudi5jb2hlcmVudC5nbG9iYWwvYXV0aC9yZWFsbXMvbXktdGVuYW50IiwicmVhbG0iOiJteS10ZW5hbnQifQ.',

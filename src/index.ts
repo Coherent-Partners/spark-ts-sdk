@@ -1,5 +1,5 @@
 // Public API
-export { version, about } from './version';
+export { version, about, VERSION } from './version';
 export { Authorization } from './auth';
 export { BaseUrl, JwtConfig } from './config';
 export { Uri, UriParams, ApiResource, createChunks } from './resources';
