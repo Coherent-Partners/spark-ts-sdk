@@ -75,15 +75,15 @@ that were exported for data migration can be imported back into Spark.
 
 The expected argument is an `object` with the following properties:
 
-| Property        | Type                              | Description                                                                       |
-| --------------- | --------------------------------- | --------------------------------------------------------------------------------- |
-| _file_          | `Readable`                        | The ZIP file containing the exported entities.                                    |
-| _destination_   | `ImportDestination`               | The destination service URI.                                                      |
-| _ifPresent_     | `abort \| replace \| add_version` | What to do if the entity already exists in the destination (defaults to `abort`). |
-| _sourceSystem_  | `string`                          | Source system name to import from (e.g., `Spark JS SDK`).                         |
-| _correlationId_ | `string`                          | Correlation ID for the import (useful for tagging).                               |
-| _maxRetries_    | `number`                          | Maximum number of retries when checking the import status.                        |
-| _retryInterval_ | `number`                          | Interval between status check retries in seconds.                                 |
+| Property        | Type                              | Description                                                                             |
+| --------------- | --------------------------------- | --------------------------------------------------------------------------------------- |
+| _file_          | `Readable`                        | The ZIP file containing the exported entities.                                          |
+| _destination_   | `ImportDestination`               | The destination service URI.                                                            |
+| _ifPresent_     | `abort \| replace \| add_version` | What to do if the entity already exists in the destination (defaults to `add_version`). |
+| _sourceSystem_  | `string`                          | Source system name to import from (e.g., `Spark JS SDK`).                               |
+| _correlationId_ | `string`                          | Correlation ID for the import (useful for tagging).                                     |
+| _maxRetries_    | `number`                          | Maximum number of retries when checking the import status.                              |
+| _retryInterval_ | `number`                          | Interval between status check retries in seconds.                                       |
 
 The `destination` folder should exist in the target workspace to import the entities.
 you can define how to map the exported entities to the destination tenant by providing

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.4 (2024-08-05)
+
+- No longer support sourcemaps in the SDK
+- Apply minor improvements in the base URL options
+- Add members `env` and `service` to the `BaseUrl` class
+- Add more test coverage in Spark configuration
+
 ## 0.2.3 (2024-07-16)
 
 - Extract Spark settings from JWT token if enabled

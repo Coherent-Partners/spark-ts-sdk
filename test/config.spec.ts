@@ -89,14 +89,14 @@ describe('JwtConfig', () => {
 });
 
 describe('BaseUrl', () => {
-  const VALID_URL = 'https://excel.test.coherent.global/tenant';
+  const VALID_URL = 'https://excel.my.env.coherent.global/tenant';
 
   it('can build base URL from parts', () => {
-    expect(BaseUrl.from({ url: 'https://spark.test.coherent.global/tenant' }).full).toBe(VALID_URL);
-    expect(BaseUrl.from({ url: 'https://excel.test.coherent.global/tenant' }).full).toBe(VALID_URL);
-    expect(BaseUrl.from({ url: 'https://spark.test.coherent.global', tenant: 'tenant' }).full).toBe(VALID_URL);
-    expect(BaseUrl.from({ url: 'https://excel.test.coherent.global', tenant: 'tenant' }).full).toBe(VALID_URL);
-    expect(BaseUrl.from({ env: 'test', tenant: 'tenant' }).full).toBe(VALID_URL);
+    expect(BaseUrl.from({ url: 'https://spark.my.env.coherent.global/tenant' }).full).toBe(VALID_URL);
+    expect(BaseUrl.from({ url: 'https://excel.my.env.coherent.global/tenant' }).full).toBe(VALID_URL);
+    expect(BaseUrl.from({ url: 'https://spark.my.env.coherent.global', tenant: 'tenant' }).full).toBe(VALID_URL);
+    expect(BaseUrl.from({ url: 'https://excel.my.env.coherent.global', tenant: 'tenant' }).full).toBe(VALID_URL);
+    expect(BaseUrl.from({ env: 'my.env', tenant: 'tenant' }).full).toBe(VALID_URL);
   });
 
   it('should throw an error when params are incorrect', () => {
