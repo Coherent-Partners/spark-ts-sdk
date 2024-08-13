@@ -1,5 +1,5 @@
 import Utils from '@cspark/sdk/utils';
-import Spark, { SparkError, SparkApiError, AbortError, Uri } from '@cspark/sdk';
+import Spark, { SparkError, SparkApiError, AbortError, Uri, ApiResource } from '@cspark/sdk';
 import LocalServer, { TestApiResource } from './_server';
 
 describe('Uri', () => {
@@ -163,8 +163,32 @@ describe('ApiResource', () => {
   it('can retry request upon rate limit failure', async () => {
     const spy = jest.spyOn(Utils, 'sleep');
 
-    await expect(testResource.rateLimited()).rejects.toThrow(SparkApiError); // should trigger 3 retries
+    await expect(testResource.rateLimited()).rejects.toThrow(SparkApiError); // should trigger 3 times
     expect(spy).toHaveBeenCalledTimes(spark.config.maxRetries);
     expect(spy).toHaveBeenLastCalledWith(100); // server suggests retry after 100ms
+  });
+
+  it('can be extended to support additional resources', async () => {
+    const uri = { version: 'extended', endpoint: 'resource' };
+
+    type Status = { status: string };
+
+    class Other extends ApiResource {
+      fetchData() {
+        return this.request<Status>(Uri.from(undefined, { base: this.config.baseUrl.value, ...uri }));
+      }
+    }
+
+    const extended = spark.extend(new Other(spark.config)).extend({
+      prop: 'more',
+      type: class extends ApiResource {
+        fetchMore() {
+          return this.request<Status>(Uri.from(undefined, { base: this.config.baseUrl.value, ...uri }));
+        }
+      },
+    });
+
+    expect((await extended.other.fetchData()).data.status).toBe('fetched');
+    expect((await extended.more.fetchMore()).data.status).toBe('fetched');
   });
 });

@@ -1,7 +1,7 @@
 import http from 'http';
 import { once } from 'events';
-import { BaseUrl, Config } from '@cspark/sdk/config';
-import { ApiResource, Uri } from '@cspark/sdk';
+import { Config } from '@cspark/sdk/config';
+import { ApiResource, Uri, BaseUrl } from '@cspark/sdk';
 
 // Use a custom BaseUrl for testing purposes.
 export class TestBaseUrl extends BaseUrl {
@@ -87,6 +87,13 @@ export default class LocalServer {
       res.statusCode = 429;
       res.setHeader('x-retry-after', '.1'); // propose retry after 100ms
       res.end();
+    }
+
+    // OtherResource.fetchData()
+    if (pathname === '/extended/resource') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end('{"status": "fetched"}');
     }
 
     // Spark.folders.getCategories()

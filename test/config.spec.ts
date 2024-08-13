@@ -1,5 +1,5 @@
-import { SparkSdkError } from '@cspark/sdk';
-import { Config, JwtConfig, BaseUrl } from '@cspark/sdk/config';
+import { JwtConfig, BaseUrl, SparkSdkError } from '@cspark/sdk';
+import { Config } from '@cspark/sdk/config';
 import { Version } from '@cspark/sdk/version';
 import * as Constants from '@cspark/sdk/constants';
 
@@ -10,7 +10,7 @@ describe('Config', () => {
 
   it('should throw an SDK error if base URL or authentication is missing', () => {
     expect(() => new Config()).toThrow(SparkSdkError);
-    expect(() => new Config({ apiKey: 'some key' })).toThrow(SparkSdkError);
+    expect(() => new Config({ apiKey: API_KEY })).toThrow(SparkSdkError);
     expect(() => new Config({ baseUrl: `${BASE_URL}/${TENANT}` })).toThrow(SparkSdkError);
   });
 
@@ -21,7 +21,6 @@ describe('Config', () => {
 
   it('should create a client config from correct base URL and API key', () => {
     const config = new Config({ baseUrl: BASE_URL, apiKey: API_KEY, tenant: TENANT });
-    expect(config).toBeDefined();
     expect(config.baseUrl.value).toBe(BASE_URL);
     expect(config.baseUrl.tenant).toBe(TENANT);
     expect(config.auth.apiKey).toBe('********-key');
@@ -29,7 +28,6 @@ describe('Config', () => {
 
   it('can infer tenant name from base URL', () => {
     const config = new Config({ baseUrl: `${BASE_URL}/${TENANT}`, apiKey: API_KEY });
-    expect(config).toBeDefined();
     expect(config.baseUrl.value).toBe(BASE_URL);
     expect(config.baseUrl.tenant).toBe(TENANT);
     expect(config.auth.apiKey).toBe('********-key');
@@ -37,7 +35,6 @@ describe('Config', () => {
 
   it('can build base URL from other url parts', () => {
     const config = new Config({ tenant: TENANT, env: 'test', apiKey: API_KEY });
-    expect(config).toBeDefined();
     expect(config.baseUrl.value).toBe(BASE_URL);
     expect(config.baseUrl.tenant).toBe(TENANT);
     expect(config.auth.apiKey).toBe('********-key');
@@ -45,7 +42,6 @@ describe('Config', () => {
 
   it('can be created with default values if not provided', () => {
     const config = new Config({ baseUrl: BASE_URL, apiKey: API_KEY, tenant: TENANT });
-    expect(config).toBeDefined();
     expect(config.allowBrowser).toBe(false);
     expect(config.timeout).toBe(Constants.DEFAULT_TIMEOUT_IN_MS);
     expect(config.maxRetries).toBe(Constants.DEFAULT_MAX_RETRIES);
@@ -53,11 +49,15 @@ describe('Config', () => {
 
   it('can create a copy with new values', () => {
     const config = new Config({ baseUrl: BASE_URL, apiKey: API_KEY, tenant: TENANT });
-    const newConfig = config.copyWith({ apiKey: 'new-key', tenant: 'new-tenant' });
-    expect(newConfig).toBeDefined();
-    expect(newConfig.baseUrl.value).toBe(BASE_URL);
-    expect(newConfig.auth.apiKey).toBe('***-key');
-    expect(newConfig.baseUrl.tenant).toBe('new-tenant');
+    const copy = config.copyWith({ apiKey: 'new-key', tenant: 'new-tenant', env: 'prod' });
+    expect(config.baseUrl.value).toBe(BASE_URL);
+    expect(config.baseUrl.tenant).toBe(TENANT);
+    expect(config.auth.apiKey).toBe('********-key');
+
+    expect(copy).toBeInstanceOf(Config);
+    expect(copy.baseUrl.value).toBe('https://excel.prod.coherent.global');
+    expect(copy.auth.apiKey).toBe('***-key');
+    expect(copy.baseUrl.tenant).toBe('new-tenant');
   });
 });
 
@@ -77,7 +77,6 @@ describe('JwtConfig', () => {
 
   it('can decode a JWT token to some client options', () => {
     const decoded = JwtConfig.decode(TOKEN);
-    expect(decoded).toBeDefined();
     expect(decoded.token).toBe(TOKEN);
     expect(decoded.baseUrl).toBe('https://excel.my-env.coherent.global');
     expect(decoded.tenant).toBe('my-tenant');
@@ -85,7 +84,6 @@ describe('JwtConfig', () => {
 
   it('can build a client config from a JWT token', () => {
     const config = JwtConfig.from({ token: TOKEN });
-    expect(config).toBeDefined();
     expect(config.baseUrl.value).toBe('https://excel.my-env.coherent.global');
     expect(config.baseUrl.tenant).toBe('my-tenant');
     expect(config.auth.token).toBe(TOKEN);
@@ -105,6 +103,21 @@ describe('BaseUrl', () => {
     expect(BaseUrl.from({ url: 'https://spark.my.env.coherent.global', tenant: 'tenant' }).full).toBe(VALID_URL);
     expect(BaseUrl.from({ url: 'https://excel.my.env.coherent.global', tenant: 'tenant' }).full).toBe(VALID_URL);
     expect(BaseUrl.from({ env: 'my.env', tenant: 'tenant' }).full).toBe(VALID_URL);
+  });
+
+  it('can copy base URL with new values', () => {
+    const baseUrl = BaseUrl.from({ url: VALID_URL });
+    expect(baseUrl.copyWith({ env: 'new-env' }).full).toBe('https://excel.new-env.coherent.global/tenant');
+    expect(baseUrl.copyWith({ tenant: 'new-tenant' }).full).toBe('https://excel.my.env.coherent.global/new-tenant');
+    expect(baseUrl.copyWith({ env: 'new-env', tenant: 'new-tenant' }).full).toBe(
+      'https://excel.new-env.coherent.global/new-tenant',
+    );
+    expect(baseUrl.copyWith({ url: 'https://excel.new-env.coherent.global' }).full).toBe(
+      'https://excel.new-env.coherent.global/tenant',
+    );
+    expect(baseUrl.copyWith({ url: 'https://excel.new-env.coherent.global', tenant: 'new-tenant' }).full).toBe(
+      'https://excel.new-env.coherent.global/new-tenant',
+    );
   });
 
   it('should throw an error when params are incorrect', () => {

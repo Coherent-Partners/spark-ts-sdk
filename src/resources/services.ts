@@ -188,8 +188,6 @@ export class Services extends ApiResource {
    * @param {string | GetSchemaParams} uri - how to locate the service
    * @returns {Promise<HttpResponse>} the service schema
    */
-  getSchema(uri: string): Promise<HttpResponse>;
-  getSchema(params: GetSchemaParams): Promise<HttpResponse>;
   getSchema(uri: string | GetSchemaParams): Promise<HttpResponse> {
     const { folder, service } = Uri.validate(uri);
     const endpoint = `product/${folder}/engines/get/${service}`;
@@ -203,8 +201,6 @@ export class Services extends ApiResource {
    * @param {string | GetMetadataParams} uri - how to locate the service
    * @returns {Promise<HttpResponse<MetadataFound>>} the service metadata.
    */
-  getMetadata(uri: string): Promise<HttpResponse<MetadataFound>>;
-  getMetadata(params: GetMetadataParams): Promise<HttpResponse<MetadataFound>>;
   getMetadata(uri: string | GetMetadataParams): Promise<HttpResponse<MetadataFound>> {
     return this.request(Uri.from(Uri.validate(uri), { base: this.config.baseUrl.full, endpoint: 'metadata' }));
   }
@@ -214,8 +210,6 @@ export class Services extends ApiResource {
    * @param {string | GetVersionsParams} uri - how to locate the service
    * @returns {Promise<HttpResponse<VersionListed>>} the list of versions
    */
-  getVersions(uri: string): Promise<HttpResponse<VersionListed>>;
-  getVersions(params: GetVersionsParams): Promise<HttpResponse<VersionListed>>;
   async getVersions(uri: string | GetVersionsParams): Promise<HttpResponse<VersionListed>> {
     const { folder, service } = Uri.validate(uri);
     const endpoint = `product/${folder}/engines/getversions/${service}`;
@@ -230,8 +224,6 @@ export class Services extends ApiResource {
    * @returns {Promise<HttpResponse>} the Swagger documentation as binary data
    * via the `HttpResponse.buffer` property.
    */
-  getSwagger(uri: string): Promise<HttpResponse>;
-  getSwagger(params: GetSwaggerParams): Promise<HttpResponse>;
   getSwagger(uri: string | GetSwaggerParams): Promise<HttpResponse> {
     const { folder, service, versionId = '', downloadable = false, subservice = 'All' } = Uri.validate(uri);
     const endpoint = `downloadswagger/${subservice}/${downloadable}/${versionId}`;
@@ -245,8 +237,6 @@ export class Services extends ApiResource {
    * @param {string | DownloadParams} uri - how to locate the service
    * @returns {Promise<HttpResponse>} the file as binary data via the `HttpResponse.buffer` property.
    */
-  download(uri: string): Promise<HttpResponse>;
-  download(params: DownloadParams): Promise<HttpResponse>;
   download(uri: string | DownloadParams): Promise<HttpResponse> {
     const { folder, service, version = '', fileName: filename = '', type = 'original' } = Uri.validate(uri);
     const endpoint = `product/${folder}/engines/${service}/download/${version}`;
@@ -266,8 +256,6 @@ export class Services extends ApiResource {
    * may want to check the {@link Compilation.getStatus} method to monitor the
    * recompilation job before subsequent actions.
    */
-  recompile(uri: string): Promise<HttpResponse<ServiceRecompiled>>;
-  recompile(params: RecompileParams): Promise<HttpResponse<ServiceRecompiled>>;
   recompile(uri: string | RecompileParams): Promise<HttpResponse<ServiceRecompiled>> {
     const { folder, service, versionId, releaseNotes, ...params } = Uri.validate(uri);
     const url = Uri.from({ folder, service }, { base: this.config.baseUrl.full, endpoint: 'recompileNodgen' });
@@ -294,8 +282,6 @@ export class Services extends ApiResource {
    *
    * @transactional
    */
-  async export(uri: string): Promise<HttpResponse[]>;
-  async export(params: ExportParams): Promise<HttpResponse[]>;
   async export(uri: string | ExportParams): Promise<HttpResponse[]> {
     const { folder, service, version, versionId, ...params } = Uri.validate(uri);
     const serviceUri = params.serviceUri ?? Uri.encode({ folder, service, version }, false);

@@ -7,7 +7,7 @@ import { SparkError } from '../error';
 import { Logger } from '../logger';
 import { about as sdkInfo, sdkUaHeader } from '../version';
 import { _fetch, _download, HttpOptions, HttpResponse } from '../http';
-import Utils, { StringUtils, Maybe, sanitizeUri, getAbortController } from '../utils';
+import Utils, { StringUtils, Maybe, getAbortController } from '../utils';
 
 /**
  * Base class for all API resources.
@@ -125,6 +125,29 @@ export abstract class ApiResource {
 }
 
 /**
+ * This interface is used to help you provide the necessary info to cover unsupported Spark APIs.
+ * It works in conjunction with the client (e.g., `SparkClient.extend(Extensible)`).
+ *
+ * @template Resource - the new API resource with additional capabilities.
+ */
+export interface Extensible<Resource extends ApiResource> {
+  /**
+   * The property name used to expose a resource with additional members.
+   *
+   * It is recommended to use camel case for the property name. Be sure to choose a name that
+   * a name that is descriptive, unique and does not conflict with any existing properties
+   * in the client or other resources.
+   */
+  prop: string;
+
+  /** The constructable resource with extra capabilities. */
+  type: { new (...args: any[]): Resource };
+
+  /** Additional arguments to pass to the resource constructor if needed. */
+  args?: any[];
+}
+
+/**
  * Optional parameters for building a Spark URI.
  *
  * Spark may use distinct parameters to build a Spark URI to locate a specific
@@ -133,22 +156,21 @@ export abstract class ApiResource {
  * custom endpoint (a.k.a proxy endpoint), and a version may be public.
  *
  * @see Uri for more details.
- *
- * @param folder - the folder name
- * @param service - the service name
- * @param serviceId - the service ID (UUID)
- * @param version - the semantic version (a.k.a revision number - e.g., "4.2.1")
- * @param versionId - the version ID
- * @param proxy - the custom endpoint a.k.a proxy
- * @param public - whether the endpoint is public
  */
 export interface UriParams {
+  /** The folder name. */
   readonly folder?: string;
+  /** The service name. */
   readonly service?: string;
+  /** The service ID (UUID). */
   readonly serviceId?: string;
+  /** The semantic version (a.k.a revision number - e.g., "4.2.1"). */
   readonly version?: string;
+  /** The version ID (UUID). */
   readonly versionId?: string;
+  /** The custom endpoint a.k.a proxy. */
   readonly proxy?: string;
+  /** Whether the endpoint is public. */
   readonly public?: boolean;
 }
 
@@ -164,10 +186,10 @@ export interface UriParams {
  *
  * Should a user pass in a string, the `Uri` will attempt to parse it and extract
  * the UriParams from the following:
- * 1. `folder/service[?version]` or (even `folders/folder/services/service[?version]`)
- * 2. `service/serviceId`
- * 3. `version/versionId`
- * 4. `proxy/custom-endpoint`
+ * 1. `{folder}/{service}[?{version}]` or (even `folders/{folder}/services/{service}[?{version}]`)
+ * 2. `service/{serviceId}`
+ * 3. `version/{versionId}`
+ * 4. `proxy/{endpoint}`
  *
  * Should a user pass in a `UriParams` object, the `Uri` will use the parameters
  * as-is to build the URI accordingly.
@@ -180,9 +202,7 @@ export interface UriParams {
 export class Uri {
   private constructor(private readonly url: URL) {}
 
-  /**
-   * The final URL string without query parameters.
-   */
+  /** The final URL string without query parameters. */
   get value(): string {
     return this.url.toString();
   }
@@ -206,7 +226,7 @@ export class Uri {
     if (versionId) path += `/version/${versionId}`;
     else if (serviceId) path += `/service/${serviceId}`;
     else if (folder && service) path += `/folders/${folder}/services/${service}`;
-    else if (proxy) path += `/proxy/${sanitizeUri(proxy)}`;
+    else if (proxy) path += `/proxy/${Utils.sanitizeUri(proxy)}`;
 
     if (endpoint && !proxy) path += `/${endpoint}`;
     try {

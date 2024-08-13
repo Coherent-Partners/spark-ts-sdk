@@ -28,11 +28,11 @@ describe('Validators', () => {
   });
 
   it('should auto reset errors upon new instances', () => {
-    let validator = Validators.baseUrl.getInstance();
+    const validator = Validators.baseUrl.getInstance();
     expect(validator.isValid('http://incorrect-url')).toBeFalsy();
     expect(validator.errors.length).toBe(1);
 
-    validator = Validators.baseUrl.getInstance();
+    Validators.baseUrl.getInstance();
     expect(validator.errors.length).toBe(0);
   });
 });

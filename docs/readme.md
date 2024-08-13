@@ -239,7 +239,7 @@ programmatically via RESTful APIs. There are over 60 endpoints available, and th
 SDK currently supports a subset of them.
 
 Since the SDK does not cover all the endpoints in the platform, it provides a way
-to cover additional endpoints. So, if there's an API resource you would like to
+to cover additional ones. So, if there's an API resource you would like to
 consume that's not available in the SDK, you can always extend this `ApiResource`
 to include it.
 
@@ -260,14 +260,13 @@ class MyResource extends ApiResource {
 }
 
 // 2. Build a Spark client.
-const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', token: 'bearer token' });
-
-// 3. Your custom resource relies on the Spark configuration to build the request.
-const myResource = new MyResource(spark.config);
+const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', token: 'bearer token' })
+  // 3. Extend the Spark client with the custom resource.
+  .extend({ prop: 'myResource', type: MyResource });
 
 // 4. Use the custom resource to fetch data.
-myResource.fetchData().then((response) => {
-  // 5. do something with the response.
+spark.myResource.fetchData().then((response) => {
+  // 5. Do something with the response.
   console.log(response.data);
 });
 ```

@@ -1,7 +1,7 @@
-import { Maybe } from './utils';
+import { Maybe, StringUtils } from './utils';
 import { Config, type BaseUrl } from './config';
 import { LogLevel, LoggerOptions } from './logger';
-import { Authorization, OAuthMethod } from './auth';
+import { Authorization, AuthMethod } from './auth';
 import * as API from './resources';
 
 /**
@@ -24,7 +24,7 @@ import * as API from './resources';
  * certain order of precedence (OAuth2 > API key > Bearer token). When using OAuth2,
  * the client will temporarily store the token and refresh it upon expiry.
  */
-export interface ClientOptions extends OAuthMethod {
+export interface ClientOptions extends AuthMethod {
   /**
    * Overrides the base URL read from `process.env['CSPARK_BASE_URL']`.
    *
@@ -104,6 +104,14 @@ export interface ClientOptions extends OAuthMethod {
  * @see https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/docs
  */
 export class Client {
+  /**
+   * The configuration being used by the client.
+   *
+   * It includes a curated set of the provided options used to customize the behavior
+   * of the client and the resources it provides access to. IE, the client relies
+   * on this configuration to make requests to the Spark APIs.
+   * @see Config for more details.
+   */
   readonly config!: Config;
 
   constructor(options?: ClientOptions | Config) {
@@ -143,6 +151,50 @@ export class Client {
   /** The resource to manage a service's WebAssembly module. */
   get wasm(): API.Wasm {
     return new API.Wasm(this.config);
+  }
+
+  /**
+   * Creates a client and extends its capabilities with additional API resources.
+   * @param {API.ApiResource} resource - the additional resource to extend the client with.
+   * @param {ClientOptions} options - client configuration.
+   * @returns the new client with extended functionality.
+   *
+   * @see API.Extensible for more details.
+   *
+   * @example
+   * ```typescript
+   * class Test extends ApiResource { foo() { ... } }
+   * const client = Client.extend({ prop: 'test', type: Test });
+   * client.test.foo();
+   * ```
+   */
+  static extend<R extends API.ApiResource>(resource: API.Extensible<R>, options: ClientOptions | Config) {
+    const { prop, type, args = [] } = resource;
+    const client = new Client(options);
+    return Object.assign(client, { [prop]: new type(client.config, ...args) });
+  }
+
+  /**
+   * Extends the client with additional API resources.
+   * @param {API.ApiResource | API.Extensible} resource - the additional resource to extend the client with.
+   * The resource can either be an instance of a subclass of `ApiResource` or an object of type
+   * `API.Extensible` that specifies the resource's property name (prop), a subclass definition
+   * of `ApiResource` (type), and optional constructor arguments (args).
+   * @returns the extended client with the new resource.
+   *
+   * When the resource is an instance of `ApiResource`, the property name will be inferred
+   * from the class name using camel case (e.g., `class MyResource` => `myResource`). The
+   * extended client will have a new property with the same name as the resource to
+   * access its class members.
+   */
+  extend<R extends API.ApiResource>(resource: R | API.Extensible<R>) {
+    if (resource instanceof API.ApiResource) {
+      const prop = StringUtils.toCamelCase(resource.constructor.name);
+      return Object.assign(this, { [prop]: resource });
+    }
+
+    const { prop, type, args = [] } = resource;
+    return Object.assign(this, { [prop]: new type(this.config, ...args) });
   }
 
   /**

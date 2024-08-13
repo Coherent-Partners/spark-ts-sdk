@@ -179,6 +179,10 @@ export abstract class StringUtils {
   static join(value: string | string[] | undefined, separator: string = ','): undefined | string {
     return Array.isArray(value) ? value.join(separator) : value;
   }
+
+  static toCamelCase(text: string): string {
+    return text.charAt(0).toLowerCase() + text.slice(1);
+  }
 }
 
 export abstract class NumberUtils {

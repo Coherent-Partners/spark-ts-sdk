@@ -1,4 +1,4 @@
-import { type SparkClient, Logger, JwtConfig } from '@cspark/sdk';
+import { type SparkClient, Logger, JwtConfig, ApiResource } from '@cspark/sdk';
 
 function build(token: string) {
   const config = JwtConfig.from({ token });
@@ -30,8 +30,21 @@ function printLogs() {
   logger.fatal('fatal message');
 }
 
+function extendResource(spark: SparkClient) {
+  const extended = spark.extend({
+    prop: 'test',
+    type: class extends ApiResource {
+      fetchData() {
+        this.logger.debug('fetching data...');
+      }
+    },
+  });
+  extended.test.fetchData();
+}
+
 export default {
   build,
   retrieveToken,
   printLogs,
+  extendResource,
 };
