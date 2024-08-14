@@ -76,9 +76,9 @@ export class Config {
   }
 
   copyWith(options: ClientOptions = {}): Config {
-    const { baseUrl: url = this.baseUrl.value, tenant = this.baseUrl.tenant, env = this.environment } = options;
+    const { baseUrl: url, tenant, env } = options;
     return new Config({
-      baseUrl: url instanceof BaseUrl ? url : BaseUrl.from({ url, tenant, env }),
+      baseUrl: url instanceof BaseUrl ? url.copyWith({ tenant, env }) : this.baseUrl.copyWith({ url, tenant, env }),
       apiKey: options.apiKey ?? this.auth.apiKey,
       token: options.token ?? this.auth.token,
       oauth: options.oauth ?? this.auth.oauth,
@@ -225,6 +225,11 @@ export class BaseUrl {
    */
   to(service: 'excel' | 'keycloak' | 'utility' | 'entitystore', withTenant = false): string {
     return (withTenant ? this.full : this.value).replace(this.service ?? /excel/, service);
+  }
+
+  copyWith(options: { url?: string; tenant?: string; env?: string } = {}): BaseUrl {
+    const { url, tenant = this.tenant, env = this.env } = options;
+    return url ? BaseUrl.from({ url, tenant }) : BaseUrl.from({ tenant, env });
   }
 
   toString(): string {

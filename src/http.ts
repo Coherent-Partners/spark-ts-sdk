@@ -2,12 +2,12 @@ import { type Readable as ByteStream } from 'stream';
 import nodeFetch, { RequestInit, AbortError } from 'node-fetch';
 import { AbortSignal } from 'node-fetch/externals';
 
-import { Config } from './config';
+import { type Config } from './config';
 import { Streamer } from './streaming';
 import { JsonData, Serializable } from './data';
 import { SparkError, SparkApiError, SparkSdkError } from './error';
 import { RETRY_RANDOMIZATION_FACTOR } from './constants';
-import Utils, { loadModule } from './utils';
+import Utils, { Nullable, loadModule } from './utils';
 
 export interface Multipart {
   readonly name: string;
@@ -23,78 +23,50 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
  * Exposes some options when building HTTP requests.
  */
 export interface RequestOptions<T = JsonData> {
-  /**
-   * Key-value pairs of headers to be sent with the request.
-   */
+  /** Key-value pairs of headers to be sent with the request. */
   readonly headers?: Record<string, string>;
 
-  /**
-   * Key-value pairs of query params to be sent with the request.
-   */
+  /** Key-value pairs of query params to be sent with the request. */
   readonly params?: Record<string, string>;
 
-  /**
-   * Request body data
-   */
+  /** Request body data. */
   readonly body?: T;
 
-  /**
-   * Stream of a file
-   */
+  /** Stream of a file. */
   readonly file?: ByteStream;
 
-  /**
-   * Parts of multipart data
-   */
+  /** Parts of multipart data. */
   readonly multiparts?: Multipart[];
 
-  /**
-   * Token used for request cancellation
-   */
-  readonly cancellationToken?: AbortSignal | null | undefined;
+  /** Token used for request cancellation. */
+  readonly cancellationToken?: Nullable<AbortSignal>;
 
-  /**
-   * Number of retries to attempt
-   */
+  /** Number of retries to attempt. */
   readonly retries?: number;
 }
 
 export interface HttpOptions<T> extends RequestOptions<T> {
-  /**
-   * Client configuration.
-   */
+  /** Client configuration. */
   readonly config: Config;
 
-  /**
-   * A string to set request's method (GET, POST, etc.). Defaults to GET.
-   */
+  /** A string to set request's method (GET, POST, etc.). Defaults to GET. */
   readonly method?: HttpMethod;
 
-  /**
-   * Request body content type
-   */
+  /** Request body content type. */
   readonly contentType?: string;
 }
 
 export interface HttpResponse<T = JsonData> {
-  /**
-   * The status code of the response. (This will be 200 for a success).
-   */
+  /** The status code of the response. (This will be 200 for a success). */
   readonly status: number;
 
-  /**
-   * Response body data
-   */
+  /** Response body data. */
   readonly data: T;
 
-  /**
-   * Binary array buffer of response body
-   */
+  /** Binary array buffer of response body. */
   readonly buffer: ByteStream;
 
-  /**
-   * Response headers
-   */
+  /** Response headers. */
   readonly headers: Record<string, string>;
 }
 
@@ -104,10 +76,10 @@ export interface Interceptor {
 }
 
 /**
- * Calculate the exponential backoff time with randomized jitter
- * @param {int} retries Which retry number this one will be
- * @param {int} baseInterval The base retry interval set in config
- * @returns {int} The number of milliseconds after which to retry
+ * Calculate the exponential backoff time with randomized jitter.
+ * @param {int} retries - which retry number this one will be
+ * @param {int} baseInterval - the base retry interval set in config
+ * @returns the number of milliseconds after which to retry
  */
 export function getRetryTimeout(retries: number, baseInterval: number = 1): number {
   const randomization = Math.random() * RETRY_RANDOMIZATION_FACTOR;
@@ -254,8 +226,8 @@ export async function _fetch<Req = JsonData, Resp = JsonData>(
     } catch (cause) {
       if (cause instanceof AbortError) throw cause;
       // is it relevant to retry request when client's internet is down? 🤔
-      if (isInternetError((cause as any)?.code)) throw SparkError.api(0, `cannot connect to <${resource}>`);
-      throw SparkError.api(-1, { message: `failed to fetch <${resource}>`, cause: cause as Error });
+      if (isInternetError((cause as any)?.code)) throw SparkError.api(0, `cannot connect to <${url}>`);
+      throw SparkError.api(-1, { message: `failed to fetch <${url}>`, cause: cause as Error });
     }
   })();
 

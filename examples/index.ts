@@ -21,6 +21,7 @@ const spark = new Spark({ token, env: 'my-env', tenant: 'my-tenant' });
 Config.build(token);
 Config.printLogs();
 Config.retrieveToken(spark);
+Config.extendResource(spark);
 
 Folder.getCategories(spark);
 Folder.create(spark);

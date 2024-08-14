@@ -13,7 +13,6 @@ describe('Authorization', () => {
 
   it('can create an authorization with API key', () => {
     const auth = Authorization.from({ apiKey: API_KEY });
-    expect(auth).toBeDefined();
     expect(auth.apiKey).toBe('********-key');
     expect(auth.isEmpty).toBe(false);
     expect(auth.isOpen).toBe(false);
@@ -25,7 +24,6 @@ describe('Authorization', () => {
 
   it('can create an authorization with bearer token', () => {
     const auth = Authorization.from({ token: 'Bearer ' + TOKEN });
-    expect(auth).toBeDefined();
     expect(auth.token).toBe(TOKEN);
     expect(auth.isEmpty).toBe(false);
     expect(auth.isOpen).toBe(false);
@@ -39,7 +37,6 @@ describe('Authorization', () => {
 
   it('can create an authorization from JSON OAuth', () => {
     const auth = Authorization.from({ oauth: OAUTH });
-    expect(auth).toBeDefined();
     expect(auth.oauth).toBeInstanceOf(OAuth);
     expect(auth.oauth?.clientId).toBe(OAUTH.clientId);
     expect(auth.oauth?.clientSecret).toBe('*******cret');
@@ -52,7 +49,6 @@ describe('Authorization', () => {
 
   it('can create an authorization from file OAuth', () => {
     const auth = Authorization.from({ oauth: './test/sample-ccg.txt' });
-    expect(auth).toBeDefined();
     expect(auth.oauth).toBeInstanceOf(OAuth);
     expect(auth.oauth?.clientId).toBe(OAUTH.clientId);
     expect(auth.oauth?.clientSecret).toBe('*******cret');

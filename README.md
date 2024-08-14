@@ -165,7 +165,9 @@ const spark = new Spark({ apiKey: 'my-api-key' });
   limited time and should be refreshed periodically.
 
 ```ts
-const spark = new Spark({ token: 'Bearer 123' });
+const spark = new Spark({ token: 'Bearer my-access-token' }); // with prefix
+// or
+const spark = new Spark({ token: 'my-access-token' }); // without prefix
 ```
 
 - `oauth` (default: `process.env['CSPARK_CLIENT_ID']` and `process.env['CSPARK_CLIENT_SECRET']` or

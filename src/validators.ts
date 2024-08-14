@@ -1,4 +1,4 @@
-import { StringUtils, NumberUtils, type Maybe } from './utils';
+import { StringUtils, NumberUtils, Maybe } from './utils';
 import { SparkError } from './error';
 
 export abstract class Validator<T> {

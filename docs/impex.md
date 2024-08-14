@@ -120,7 +120,7 @@ See the sample response below
 {
   "object": "import",
   "id": "uuid",
-  "response_timestamp": "1970-12-03T04:56:78.186Z",
+  "response_timestamp": "1970-12-03T04:56:56.186Z",
   "status": "closed",
   "status_url": "https://excel.my-env.coherent.global/my-tenant/api/v4/import/job-uuid/status",
   "process_time": 123,

@@ -6,7 +6,7 @@ import { Logger } from './logger';
 
 import { OAuth2 as OAuthManager } from './resources/oauth2';
 
-export interface OAuthMethod {
+export interface AuthMethod {
   /**
    * The API key (a.k.a synthetic key) to use for each request, if any.
    * By default, it'll be read from `process.env['CSPARK_API_KEY']`.
@@ -50,14 +50,14 @@ export interface OAuthMethod {
  * The client can be authorized using exclusively an API key, a bearer token, or
  * OAuth2 credentials.
  *
- * NOTE: The order of precedence is API key > Bearer token > OAuth.
+ * NOTE: The order of precedence is OAuth > API key > Bearer token.
  */
 export class Authorization {
   readonly #apiKey!: Maybe<string>;
   readonly token!: Maybe<string>;
   readonly oauth!: Maybe<OAuth>;
 
-  private constructor({ apiKey, token, oauth }: OAuthMethod) {
+  private constructor({ apiKey, token, oauth }: AuthMethod) {
     const clientId = Utils.readEnv(ENV_VARS.CLIENT_ID);
     const clientSecret = Utils.readEnv(ENV_VARS.CLIENT_SECRET);
     const oauthPath = Utils.readEnv(ENV_VARS.OAUTH_PATH);
@@ -99,7 +99,7 @@ export class Authorization {
    * The type of authorization method provided.
    * @returns {'apiKey' | 'token' | 'oauth'}
    */
-  get type(): keyof OAuthMethod | undefined {
+  get type(): keyof AuthMethod | undefined {
     return this.#apiKey ? 'apiKey' : this.token ? 'token' : this.oauth ? 'oauth' : undefined;
   }
 
@@ -110,7 +110,7 @@ export class Authorization {
     return {};
   }
 
-  static from(method: OAuthMethod): Authorization {
+  static from(method: AuthMethod): Authorization {
     const auth = new this(method);
     if (auth.isEmpty) {
       throw SparkError.sdk({
@@ -199,7 +199,7 @@ export class OAuth {
     return JSON.stringify({
       clientId: this.clientId,
       clientSecret: this.#clientSecret,
-      accessToken: this.accessToken,
+      accessToken: Utils.mask(this.accessToken ?? ''),
     });
   }
 
@@ -209,7 +209,7 @@ export class OAuth {
 
   /**
    * Retrieves an OAuth2 access token using the client ID and secret.
-   * @param {Config} config Spark configuration.
+   * @param {Config} config - SDK configuration.
    *
    * When the access token is expired, the client will automatically refresh it
    * before making the next request using this method.
@@ -231,7 +231,7 @@ export class OAuth {
 
   /**
    * Refreshes the OAuth2 access token using the client ID and secret.
-   * @param {Config} config Spark configuration.
+   * @param {Config} config - SDK configuration.
    *
    * Currently, a wrapper around `retrieveToken` method.
    * @see OAuth#retrieveToken

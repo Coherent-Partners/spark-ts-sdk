@@ -249,7 +249,7 @@ As you can tell, there are multiple flavors when it comes to locating and execut
 a Spark service. You can choose the one that suits best your needs. Here's a summary
 of the parameters you can use for this method:
 
-For the first argument, `UriParams` object:
+For the first argument, when `UriParams` object:
 
 | Property    | Type      | Description                                      |
 | ----------- | --------- | ------------------------------------------------ |
@@ -365,11 +365,11 @@ await spark.services.getVersions({ folder: 'my-folder', service: 'my-service' })
 [
   {
     "id": "uuid",
-    "createdAt": "1970-12-03T04:56:78.186Z",
+    "createdAt": "1970-12-03T04:56:58.186Z",
     "engine": "my-service",
     "revision": "0.2.0",
-    "effectiveStartDate": "1970-12-03T04:56:78.186Z",
-    "effectiveEndDate": "1990-12-03T04:56:78.186Z",
+    "effectiveStartDate": "1970-12-03T04:56:58.186Z",
+    "effectiveEndDate": "1990-12-03T04:56:58.186Z",
     "isActive": true,
     "releaseNote": "some release note",
     "childEngines": null,
@@ -382,11 +382,11 @@ await spark.services.getVersions({ folder: 'my-folder', service: 'my-service' })
   },
   {
     "id": "86451865-dc5e-4c7c-a7f6-c35435f57dd1",
-    "createdAt": "1970-12-03T04:56:78.186Z",
+    "createdAt": "1970-12-03T04:56:58.186Z",
     "engine": "my-service",
     "revision": "0.1.0",
-    "effectiveStartDate": "1970-12-03T04:56:78.186Z",
-    "effectiveEndDate": "1980-12-03T04:56:78.186Z",
+    "effectiveStartDate": "1970-12-03T04:56:58.186Z",
+    "effectiveEndDate": "1980-12-03T04:56:58.186Z",
     "isActive": false,
     "releaseNote": null,
     "childEngines": null,
@@ -782,16 +782,16 @@ You must provide a readable stream of the zip file to import and a service URI
 locator. The method accepts a set of optional parameters to customize the import
 process.
 
-| Property        | Type                              | Description                                                                       |
-| --------------- | --------------------------------- | --------------------------------------------------------------------------------- |
-| _destination_   | `ImportDestination`               | The destination service URI (required).                                           |
-| _file_          | `Readable`                        | The ZIP file containing the exported entities (required).                         |
-| _config_        | `Config`                          | The workspace configuration if different from current.                            |
-| _ifPresent_     | `abort \| replace \| add_version` | What to do if the entity already exists in the destination (defaults to `abort`). |
-| _sourceSystem_  | `string`                          | The source system name to import from (e.g., `Spark JS SDK`).                     |
-| _correlationId_ | `string`                          | The correlation ID for the import (useful for tagging).                           |
-| _maxRetries_    | `number`                          | The maximum number of retries when checking the import status.                    |
-| _retryInterval_ | `number`                          | The interval between status check retries in seconds.                             |
+| Property        | Type                              | Description                                                                             |
+| --------------- | --------------------------------- | --------------------------------------------------------------------------------------- |
+| _destination_   | `ImportDestination`               | The destination service URI (required).                                                 |
+| _file_          | `Readable`                        | The ZIP file containing the exported entities (required).                               |
+| _config_        | `Config`                          | The workspace configuration if different from current.                                  |
+| _ifPresent_     | `abort \| replace \| add_version` | What to do if the entity already exists in the destination (defaults to `add_version`). |
+| _sourceSystem_  | `string`                          | The source system name to import from (e.g., `Spark JS SDK`).                           |
+| _correlationId_ | `string`                          | The correlation ID for the import (useful for tagging).                                 |
+| _maxRetries_    | `number`                          | The maximum number of retries when checking the import status.                          |
+| _retryInterval_ | `number`                          | The interval between status check retries in seconds.                                   |
 
 > [!IMPORTANT]
 > The `destination` property is a way to specify how the service mapping should be
