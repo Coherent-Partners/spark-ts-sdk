@@ -164,8 +164,8 @@ export class Client {
    * @example
    * ```typescript
    * class Test extends ApiResource { foo() { ... } }
-   * const client = Client.extend({ prop: 'test', type: Test });
-   * client.test.foo();
+   * const spark = SparkClient.extend({ prop: 'test', type: Test }, JwtConfig.decode('bearer token'));
+   * spark.test.foo();
    * ```
    */
   static extend<R extends API.ApiResource>(resource: API.Extensible<R>, options: ClientOptions | Config) {

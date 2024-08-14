@@ -1,7 +1,7 @@
 import { SparkError } from '../error';
 import { HttpResponse, getRetryTimeout } from '../http';
 import { ApiResource, ApiResponse, Uri, UriParams } from './base';
-import Utils, { DateUtils } from '../utils';
+import Utils, { DateUtils, NumberUtils } from '../utils';
 
 export class History extends ApiResource {
   get downloads(): LogDownload {
@@ -32,9 +32,10 @@ export class History extends ApiResource {
    * Rehydrates the executed model into the original excel file.
    * @param {string} uri - how to locate the service
    * @param {string} callId - callId to rehydrate if not provided in the params.
+   * @param {number} [index] - optional index of the rehydrated file for v4 format.
    * @returns {Promise<HttpResponse<LogRehydrated>>} the rehydrated log
    */
-  async rehydrate(uri: string, callId: string): Promise<HttpResponse<LogRehydrated>>;
+  async rehydrate(uri: string, callId: string, index?: number): Promise<HttpResponse<LogRehydrated>>;
   /**
    * Rehydrates the executed model into the original excel file.
    * @param {RehydrateParams} params - uri, callId and other optional params
@@ -44,17 +45,20 @@ export class History extends ApiResource {
    * to produce a downloadable Excel file.
    */
   async rehydrate(params: RehydrateParams): Promise<HttpResponse<LogRehydrated>>;
-  async rehydrate(uri: string | RehydrateParams, callId?: string): Promise<HttpResponse<LogRehydrated>> {
+  async rehydrate(uri: string | RehydrateParams, callId?: string, index?: number) {
     const { folder, service, ...params } = Uri.validate(uri);
     callId = (callId ?? params?.callId)?.trim();
+    index ??= params?.index;
+
     if (!callId) {
-      const error = SparkError.sdk({ message: 'callId is required', cause: callId });
+      const error = SparkError.sdk({ message: 'callId is required when rehydrating', cause: { callId } });
       this.logger.error(error.message);
       throw error;
     }
 
     const url = Uri.from({ folder, service }, { base: this.config.baseUrl.full, endpoint: `download/${callId}` });
-    const response = await this.request<LogRehydrated>(url);
+    const options = NumberUtils.isArrayIndex(index) ? { params: { index: index!.toFixed(0) } } : {};
+    const response = await this.request<LogRehydrated>(url, options);
     const downloadUrl = response.data?.response_data?.download_url;
 
     if (!downloadUrl) {
@@ -213,6 +217,7 @@ interface RehydrateParams extends Pick<UriParams, 'folder' | 'service'> {
   folder: string;
   service: string;
   callId: string;
+  index?: number;
 }
 
 /** Download file types: 'csv' or 'json'. Defaults to 'json'. */

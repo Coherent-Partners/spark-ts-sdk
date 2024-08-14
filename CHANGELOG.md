@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.5 (2024-08-14)
+
+- Easily extend additional API resources:
+  - `Spark.extend(extension, config)` static method to add new resources to Spark client
+  - `Spark.extend(resource \| extension)` instance method to add new resources to Spark client
+- Rehydrate service execution logs for v4 format using zero-based `RehydrateParams.index`
+- Add GitHub issue templates
+
 ## 0.2.4 (2024-08-05)
 
 - No longer support sourcemaps in the SDK

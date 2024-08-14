@@ -187,15 +187,23 @@ export abstract class StringUtils {
 
 export abstract class NumberUtils {
   static isNumber(value: unknown): value is number {
-    return !Number.isNaN(value) || typeof value === 'number' || value instanceof Number;
+    return (typeof value === 'number' || value instanceof Number) && !Number.isNaN(value);
   }
 
   static isPositive(value: unknown): boolean {
-    return NumberUtils.isNumber(value) && (value as number) > 0;
+    return NumberUtils.isNumber(value) && value > 0;
   }
 
   static isBetween(value: unknown, min: number, max: number): boolean {
-    return NumberUtils.isNumber(value) && (value as number) >= min && (value as number) <= max;
+    return NumberUtils.isNumber(value) && value >= min && value <= max;
+  }
+
+  static isArrayIndex(value: unknown, length: number = 0): boolean {
+    if (!NumberUtils.isNumber(value)) return false;
+
+    value = +value.toFixed(0); // Ensure it's an integer.
+    if (length > 0) return NumberUtils.isBetween(value, 0, length - 1);
+    return (value as number) >= 0;
   }
 }
 

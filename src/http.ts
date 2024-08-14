@@ -226,8 +226,8 @@ export async function _fetch<Req = JsonData, Resp = JsonData>(
     } catch (cause) {
       if (cause instanceof AbortError) throw cause;
       // is it relevant to retry request when client's internet is down? 🤔
-      if (isInternetError((cause as any)?.code)) throw SparkError.api(0, `cannot connect to <${resource}>`);
-      throw SparkError.api(-1, { message: `failed to fetch <${resource}>`, cause: cause as Error });
+      if (isInternetError((cause as any)?.code)) throw SparkError.api(0, `cannot connect to <${url}>`);
+      throw SparkError.api(-1, { message: `failed to fetch <${url}>`, cause: cause as Error });
     }
   })();
 

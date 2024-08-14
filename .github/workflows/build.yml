@@ -11,20 +11,28 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+
+      - name: Set up Node environment
+        uses: actions/setup-node@v3
         with:
           node-version: 18
+
       - name: Install dependencies
         run: yarn install
+
       - name: Format codebase
         run: yarn run format
+
       - name: Analyze codebase
         run: yarn run lint
+
       - name: Run unit tests
         run: yarn test
+
       - name: Build project
         run: yarn build
+
       - name: Persist build results
         uses: actions/upload-artifact@v3
         with:

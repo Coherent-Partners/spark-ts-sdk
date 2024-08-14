@@ -31,15 +31,23 @@ await spark.logs.rehydrate('my-folder/my-service', 'call-id');
 Or, you can conveniently pass in the parameters as an `object`, which
 includes the service URI and the call ID. Otherwise, it will throw a `SparkSdkError`.
 
-| Property  | Type     | Description                           |
-| --------- | -------- | ------------------------------------- |
-| _folder_  | `string` | The folder name.                      |
-| _service_ | `string` | The service name.                     |
-| _callId_  | `string` | The call ID of the service execution. |
+| Property  | Type     | Description                                                                                                 |
+| --------- | -------- | ----------------------------------------------------------------------------------------------------------- |
+| _folder_  | `string` | The folder name.                                                                                            |
+| _service_ | `string` | The service name.                                                                                           |
+| _callId_  | `string` | The call ID of the service execution.                                                                       |
+| _index_   | `number` | For [v4 format][v4-format], indicate which record of the list to rehydrate (e.g., `0` is the first record). |
 
 ```ts
-await spark.logs.rehydrate({ folder: 'my-folder', service: 'my-service', callId: 'call-id' });
+await spark.logs.rehydrate({ folder: 'my-folder', service: 'my-service', callId: 'call-id' }); // for v3 format
+// or
+await spark.logs.rehydrate({ folder: 'my-folder', service: 'my-service', callId: 'call-id', index: 0 }); // for v4 format
 ```
+
+Do note that the `index` parameter is only valid for the synchronous batch execution (aka v4 format).
+If you're rehydrating an API call log that used v4 format and you do not specify the `index` parameter,
+the Spark platform will default to the last record. And if the `index` is out of bounds, the platform will
+throw a bad request error.
 
 > [!TIP]
 > Another way of achieving the same result is by setting the `downloadable` metadata
@@ -74,7 +82,7 @@ when successful, this method returns:
     "correlation_id": null,
     "parameterset_version_id": null,
     "system": "SPARK",
-    "request_timestamp": "1970-12-03T04:56:78.186Z"
+    "request_timestamp": "1970-12-03T04:56:56.186Z"
   },
   "error": null
 }
@@ -169,7 +177,7 @@ When successful, this method returns:
   "response_meta": {
     // similar to the rehydrate method...
     "system": "SPARK",
-    "request_timestamp": "1970-12-03T04:56:78.186Z"
+    "request_timestamp": "1970-12-03T04:56:56.186Z"
   },
   "error": null
 }
@@ -182,8 +190,8 @@ if you requested a JSON file, the logs should be similar to this:
 [
   {
     "EngineCallId": "uuid",
-    "LogTime": "1970-12-03T04:56:78.186Z",
-    "TransactionDate": "1970-12-03T04:56:78.186Z",
+    "LogTime": "1970-12-03T04:56:56.186Z",
+    "TransactionDate": "1970-12-03T04:56:56.186Z",
     "SourceSystem": "Spark JS SDK",
     "Purpose": "JSON Download",
     "UserName": "john.doe@coherent.global",
@@ -207,7 +215,7 @@ if you requested a JSON file, the logs should be similar to this:
         "correlation_id": "",
         "parameterset_version_id": null,
         "system": "SPARK",
-        "request_timestamp": "1970-12-03T04:56:78.186Z"
+        "request_timestamp": "1970-12-03T04:56:56.186Z"
       },
       "request_data": { "inputs": { "my_input": 13 } },
       "request_meta": {
@@ -215,7 +223,7 @@ if you requested a JSON file, the logs should be similar to this:
         "service_id": "uuid",
         "version": "1.2.3",
         "version_id": "uuid",
-        "transaction_date": "1970-12-03T04:56:78.186Z",
+        "transaction_date": "1970-12-03T04:56:56.186Z",
         "call_purpose": "JSON Download",
         "source_system": "Spark JS SDK",
         "correlation_id": "",
@@ -236,10 +244,14 @@ And its CSV equivalent should look like this:
 
 ```csv
 Description,Log Time,Transaction date,Version,Version ID,User name,Source system,Correlation ID,Call purpose,Call ID,Calc time (ms),Total time (ms),my_input,my_output,Error Details,Warning Details
-,1970-12-03T04:56:78+00:00,1970-12-03T04:56:78+00:00,1.2.3,uuid,john.doe@coherent.global,SPARK,,Spark JS SDK,uuid,10,561,13,42,,
+,1970-12-03T04:56:56+00:00,1970-12-03T04:56:56+00:00,1.2.3,uuid,john.doe@coherent.global,SPARK,,Spark JS SDK,uuid,10,561,13,42,,
 ```
 
 Check out the [API reference](https://docs.coherent.global/spark-apis/api-call-history-apis/download-log-as-csv)
 for more information.
 
 [Back to top](#log-history-api) or [Next: ImpEx API](./impex.md)
+
+<!-- References -->
+
+[v4-format]: https://docs.coherent.global/spark-apis/execute-api/execute-api-v4

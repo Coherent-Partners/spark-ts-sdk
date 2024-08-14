@@ -122,11 +122,11 @@ When successful, the method returns the folder information.
     "category": "Other",
     "description": "Created by Spark JS SDK",
     "coverImagePath": null,
-    "createdAt": "1970-12-03T04:56:78.186Z",
+    "createdAt": "1970-12-03T04:56:56.186Z",
     "isStarred": true,
     "status": "Design",
-    "startDate": "1970-12-03T04:56:78.186Z",
-    "launchDate": "1980-12-03T04:56:78.186Z",
+    "startDate": "1970-12-03T04:56:56.186Z",
+    "launchDate": "1980-12-03T04:56:56.186Z",
     "calculationEngines": {
       "count": 0,
       "next": "False",
@@ -137,7 +137,7 @@ When successful, the method returns the folder information.
       "status": "Success"
     },
     "sections": [],
-    "lastModifiedDate": "1970-12-03T04:56:78.186Z",
+    "lastModifiedDate": "1970-12-03T04:56:56.186Z",
     "kanbanStatus": "Test 01",
     "createdBy": "john.doe@coherent.global",
     "activeServiceCount": 0
