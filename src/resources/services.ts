@@ -127,11 +127,13 @@ export class Services extends ApiResource {
       ? Uri.from({ public: uri.public }, { base: this.config.baseUrl.full, version: 'api/v4', endpoint: 'execute' })
       : Uri.from(uri, { base: this.config.baseUrl.full, endpoint: uri.versionId || uri.serviceId ? '' : 'execute' });
 
-    const body = executable.isBatch
+    const payload = executable.isBatch
       ? { inputs: executable.inputs, ...metadata.value }
       : { request_data: { inputs: executable.inputs }, request_meta: metadata.value };
 
-    return this.request(url, { method: 'POST', body }).then((response: HttpResponse<any>) => {
+    const [body, headers] = Serializable.compress(payload, params.encoding);
+
+    return this.request(url, { method: 'POST', body, headers }).then((response: HttpResponse<any>) => {
       const { responseFormat: format = 'alike' } = params;
       if (format === 'original' || executable.isBatch) return response;
       return {
@@ -265,7 +267,7 @@ export class Services extends ApiResource {
       releaseNotes: releaseNotes ?? `Recompiled via ${SPARK_SDK}`,
       upgradeType: params.upgrade ?? 'patch',
       neuronCompilerVersion: params.compiler ?? 'StableLatest',
-      tags: Array.isArray(params.tags) ? params.tags.join(',') : params?.tags,
+      tags: StringUtils.join(params?.tags),
       versionLabel: params?.label,
       effectiveStartDate: startDate.toISOString(),
       effectiveEndDate: endDate.toISOString(),
@@ -467,6 +469,7 @@ interface ExecuteParams<I = Record<string, any>> {
   // Data for calculation
   inputs?: Inputs<I>;
   responseFormat?: 'original' | 'alike';
+  encoding?: 'gzip' | 'deflate';
 
   // Metadata for calculation
   activeSince?: string | number | Date;

@@ -267,18 +267,19 @@ For the second argument, `ExecuteParams` object:
 | ----------------- | ------------------------------------------------ | ------------------------------------------------------------ |
 | _inputs_          | `null \| string \| Record<string, any> \| any[]` | The input data (single or many).                             |
 | _responseFormat_  | `original \| alike`                              | Response data format to use (defaults to `alike`).           |
+| _encoding_        | `gzip \| deflate`                                | Compress the payload using this encoding.                    |
 | _activeSince_     | `string \| number \| Date`                       | The transaction date (helps pinpoint a version).             |
 | _sourceSystem_    | `string`                                         | The source system (defaults to `Spark JS SDK`).              |
 | _correlationId_   | `string`                                         | The correlation ID.                                          |
 | _callPurpose_     | `string`                                         | The call purpose.                                            |
-| _tablesAsArray_   | `string \| string[]`                             | Filter which table to output as JSON array.                  |
 | _compilerType_    | `string`                                         | The compiler type (defaults to `Neuron`).                    |
 | _debugSolve_      | `boolean`                                        | Enable debugging for solve functions.                        |
-| _selectedOutputs_ | `string \| string[]`                             | Select which output to return.                               |
-| _outputsFilter_   | `string`                                         | Use to perform advanced filtering of outputs .               |
+| _outputsFilter_   | `string`                                         | Use to perform advanced filtering of outputs.                |
 | _echoInputs_      | `boolean`                                        | Whether to echo the input data (alongside the outputs).      |
-| _subservices_     | `string \| string[]`                             | The list of sub-services to output.                          |
 | _downloadable_    | `boolean`                                        | Produce a downloadable rehydrated Excel file for the inputs. |
+| _tablesAsArray_   | `string \| string[]`                             | Filter which table to output as JSON array.                  |
+| _selectedOutputs_ | `string \| string[]`                             | Select which output to return.                               |
+| _subservices_     | `string \| string[]`                             | The list of sub-services to output.                          |
 
 ### Returns
 

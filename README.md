@@ -2,8 +2,8 @@
 
 [![npm version][version-img]][version-url]
 
-The Coherent Spark Node.js SDK (currently in **Beta**) is designed to elevate the developer
-experience and provide convenient access to Coherent Spark APIs.
+The Coherent Spark Node.js SDK is designed to elevate the developer experience and
+provide convenient access to Coherent Spark APIs.
 
 👋 **Just a heads-up:**
 

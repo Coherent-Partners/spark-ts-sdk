@@ -81,7 +81,7 @@ export class Config {
       baseUrl: url instanceof BaseUrl ? url.copyWith({ tenant, env }) : this.baseUrl.copyWith({ url, tenant, env }),
       apiKey: options.apiKey ?? this.auth.apiKey,
       token: options.token ?? this.auth.token,
-      oauth: options.oauth ?? this.auth.oauth,
+      oauth: options.oauth ?? this.auth.oauth?.toJson(),
       timeout: options.timeout ?? this.timeout,
       maxRetries: options.maxRetries ?? this.maxRetries,
       retryInterval: options.retryInterval ?? this.retryInterval,
