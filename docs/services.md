@@ -2,19 +2,20 @@
 
 # Services API
 
-| Verb                                  | Description                                                                      |
-| ------------------------------------- | -------------------------------------------------------------------------------- |
-| `Spark.services.create(data)`         | [Create a new Spark service](#create-a-new-spark-service).                       |
-| `Spark.services.execute(uri, inputs)` | [Execute a Spark service](#execute-a-spark-service).                             |
-| `Spark.services.getVersions(uri)`     | [Get all the versions of a service](#get-all-the-versions-of-a-service).         |
-| `Spark.services.getSwagger(uri)`      | [Get the Swagger documentation of a service](#get-the-swagger-documentation).    |
-| `Spark.services.getSchema(uri)`       | [Get the schema for a given service](#get-the-schema-for-a-service).             |
-| `Spark.services.getMetadata(uri)`     | [Get the metadata of a service](#get-the-metadata-of-a-service).                 |
-| `Spark.services.download(uri)`        | [Download the excel file of a service](#download-the-excel-file-of-a-service).   |
-| `Spark.services.recompile(uri)`       | [Recompile a service using specific compiler version](#recompile-a-service).     |
-| `Spark.services.validate(uri, data)`  | [Validate input data using static or dynamic validations](#validate-input-data). |
-| `Spark.services.export(uri)`          | [Export Spark services as a zip file](#export-spark-services).                   |
-| `Spark.services.import(data)`         | [Import a Spark service from a zip file](#import-spark-services).                |
+| Verb                                    | Description                                                                            |
+| --------------------------------------- | -------------------------------------------------------------------------------------- |
+| `Spark.services.create(data)`           | [Create a new Spark service](#create-a-new-spark-service).                             |
+| `Spark.services.execute(uri, inputs)`   | [Execute a Spark service](#execute-a-spark-service).                                   |
+| `Spark.services.transform(uri, inputs)` | [Execute a Spark service using Transforms](#execute-a-spark-service-using-transforms). |
+| `Spark.services.getVersions(uri)`       | [Get all the versions of a service](#get-all-the-versions-of-a-service).               |
+| `Spark.services.getSwagger(uri)`        | [Get the Swagger documentation of a service](#get-the-swagger-documentation).          |
+| `Spark.services.getSchema(uri)`         | [Get the schema for a given service](#get-the-schema-for-a-service).                   |
+| `Spark.services.getMetadata(uri)`       | [Get the metadata of a service](#get-the-metadata-of-a-service).                       |
+| `Spark.services.download(uri)`          | [Download the excel file of a service](#download-the-excel-file-of-a-service).         |
+| `Spark.services.recompile(uri)`         | [Recompile a service using specific compiler version](#recompile-a-service).           |
+| `Spark.services.validate(uri, data)`    | [Validate input data using static or dynamic validations](#validate-input-data).       |
+| `Spark.services.export(uri)`            | [Export Spark services as a zip file](#export-spark-services).                         |
+| `Spark.services.import(data)`           | [Import a Spark service from a zip file](#import-spark-services).                      |
 
 A Spark service is the representation of your Excel file in the Spark platform.
 
@@ -151,7 +152,7 @@ and publication processes.
 
 This method allows you to execute a Spark service.
 
-Currently, Spark supports two versions of Execute API: v3 and v4. The SDK will use
+Currently, Spark supports two versions of Execute API: `v3` and `v4`. The SDK will use
 the [v3 format][v3-format] for a single input and the [v4 format][v4-format] for
 multiple inputs.
 By default, the SDK will return the output data in the [v4 format][v4-format]
@@ -345,6 +346,106 @@ to `original`.
 > Executing multiple inputs is a synchronous operation and may take some time to complete.
 > The default timeout for this client is 60 seconds, and for Spark servers, it is 55 seconds.
 > Another good practice is to split the batch into smaller chunks and submit separate requests.
+
+## Execute a Spark service using Transforms
+
+This method allows you to execute a Spark service using unstructured data. It is
+quite useful especially when the service in question does not conform to the client
+application's data structure. This is the perfect opportunity to use a middle layer
+such as Transforms on the Spark side to adapt the service execution to the client
+application.
+
+Check out the [API reference](https://docs.coherent.global/spark-apis/transforms-api)
+to learn more about Transforms API.
+
+### Arguments
+
+The method accepts a string or a `UriParams` object as the first argument and a
+second object with the input data and metadata as arguments. Additional properties
+concerning the _transforms_ can be provided as part of the second argument.
+
+| Property     | Type              | Description                                               |
+| ------------ | ----------------- | --------------------------------------------------------- |
+| _using_      | `string`          | The transform name (defaults to the service name if any). |
+| _apiVersion_ | `v3 \| v4`        | The target API version (defaults to `v3`).                |
+| _encoding_   | `gzip \| deflate` | Apply this content encoding between client and server.    |
+
+> NOTE: When using `encoding`, the SDK will automatically compress and decompress the
+> payload using the specified encoding.
+
+As for the metadata of a Spark service execution, this method follows the same
+pattern as the [Spark.services.execute()](#execute-a-spark-service) method. You
+can provide them as keyword arguments.
+
+```ts
+await spark.services.transform('my-folder/my-service', {
+  inputs: { value: 42 },
+  using: 'my-transform',
+  encoding: 'gzip',
+  callPurpose: 'Demo',
+});
+```
+
+### Returns
+
+When successful, this method returns the output data of the service execution in
+accordance with the rules defined in the [Transform document](https://docs.coherent.global/spark-apis/transforms-api#example)
+if any.
+
+## Get all the versions of a service
+
+This method returns all the versions of a service.
+
+### Arguments
+
+The method accepts a string or keyword arguments `folder` and `service`.
+
+```py
+spark.services.get_versions('my-folder/my-service')
+# or
+spark.services.get_versions(folder='my-folder', service='my-service')
+```
+
+### Returns
+
+```json
+[
+  {
+    "id": "uuid",
+    "createdAt": "1970-12-03T04:56:56.186Z",
+    "engine": "my-service",
+    "revision": "0.2.0",
+    "effectiveStartDate": "1970-12-03T04:56:56.186Z",
+    "effectiveEndDate": "1990-12-03T04:56:56.186Z",
+    "isActive": true,
+    "releaseNote": "some release note",
+    "childEngines": null,
+    "versionLabel": "",
+    "defaultEngineType": "Neuron",
+    "tags": null,
+    "product": "my-folder",
+    "author": "john.doe@coherent.global",
+    "originalFileName": "my-service-v2.xlsx"
+  },
+  {
+    "id": "86451865-dc5e-4c7c-a7f6-c35435f57dd1",
+    "createdAt": "1970-12-03T04:56:56.186Z",
+    "engine": "my-service",
+    "revision": "0.1.0",
+    "effectiveStartDate": "1970-12-03T04:56:56.186Z",
+    "effectiveEndDate": "1980-12-03T04:56:56.186Z",
+    "isActive": false,
+    "releaseNote": null,
+    "childEngines": null,
+    "versionLabel": "",
+    "defaultEngineType": "XConnector",
+    "tags": null,
+    "product": "my-folder",
+    "author": "jane.doe@coherent.global",
+    "originalFileName": "my-service.xlsx"
+  }
+]
+```
 
 ## Get all the versions of a service
 

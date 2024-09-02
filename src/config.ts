@@ -58,10 +58,10 @@ export class Config {
     if (!this.allowBrowser && Utils.isBrowser()) {
       throw SparkError.sdk(
         ''.concat(
-          'It looks like you are running in a browser-like environment.\n\n',
-          'This is disabled by default, as it risks exposing your secret API credentials to attackers.\n',
+          'looks like you are running in a browser-like environment.\n\n',
+          'This is disabled by default as it risks exposing your secret API credentials to attackers.\n',
           'If you understand the risks and have appropriate mitigations in place,\n',
-          'you can set the `allowBrowser` option to `true`, e.g.,\n\nnew Spark({ allowBrowser: true, ... });\n',
+          'you can set the `allowBrowser` option to `true`, e.g.,\n\nnew SparkClient({ allowBrowser: true, ... });\n',
         ),
       );
     }

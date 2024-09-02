@@ -36,11 +36,16 @@ export interface RecompileParams extends Pick<UriParams, 'folder' | 'service' | 
   tags?: string | string[];
 }
 
-export interface CreateParams extends CompileParams {
+export interface ConfigParams {
+  /** Defaults to `Config.maxRetries` */
+  maxRetries?: number;
+  /** Defaults to `Config.retryInterval` */
+  retryInterval?: number;
+}
+
+export interface CreateParams extends CompileParams, ConfigParams {
   draftName?: string;
   trackUser?: boolean;
-  maxRetries?: number;
-  retryInterval?: number;
 }
 
 export interface CompileParams extends Pick<UriParams, 'folder' | 'service'> {
@@ -53,12 +58,10 @@ export interface CompileParams extends Pick<UriParams, 'folder' | 'service'> {
   endDate?: string | number | Date;
 }
 
-export interface GetStatusParams extends Pick<UriParams, 'folder' | 'service'> {
+export interface GetStatusParams extends Pick<UriParams, 'folder' | 'service'>, ConfigParams {
   folder: string;
   service: string;
   jobId: string;
-  maxRetries?: number;
-  retryInterval?: number;
 }
 
 export interface PublishParams extends Pick<UriParams, 'folder' | 'service'> {
@@ -73,33 +76,27 @@ export interface PublishParams extends Pick<UriParams, 'folder' | 'service'> {
   trackUser?: boolean;
 }
 
-export interface ExportParams extends Pick<UriParams, 'folder' | 'service' | 'version' | 'versionId'> {
+export interface ExportParams extends Pick<UriParams, 'folder' | 'service' | 'version' | 'versionId'>, ConfigParams {
   serviceUri?: string;
   filters?: ExportFilters;
   sourceSystem?: string;
   correlationId?: string;
-  maxRetries?: number;
-  retryInterval?: number;
 }
 
-export interface ImportParams {
+export interface ImportParams extends ConfigParams {
   file: Readable;
   destination: ImportDestination;
   config?: Config;
   ifPresent?: IfEntityPresent;
   sourceSystem?: string;
   correlationId?: string;
-  maxRetries?: number;
-  retryInterval?: number;
 }
 
-export interface MigrateParams {
+export interface MigrateParams extends ConfigParams {
   destination: ImportDestination;
   config: Config;
   filters?: ExportFilters;
   ifPresent?: IfEntityPresent;
   sourceSystem?: string;
   correlationId?: string;
-  maxRetries?: number;
-  retryInterval?: number;
 }

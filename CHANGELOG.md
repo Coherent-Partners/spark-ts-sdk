@@ -4,9 +4,11 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
-## 0.2.6-beta.0 (2024-08-23)
+## 0.2.6 (2024-09-02)
 
 - Enable gzip and deflate encoding for request payload during service execution
+- Execute a service using Transforms API
+- Apply minor improvements
 
 ## 0.2.5 (2024-08-14)
 

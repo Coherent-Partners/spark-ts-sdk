@@ -7,7 +7,7 @@ import { SparkError } from '../error';
 import { SPARK_SDK } from '../constants';
 import { HttpResponse, Multipart, getRetryTimeout } from '../http';
 import { ApiResource, Uri, UriOptions, UriParams } from './base';
-import { UpgradeType, ExportFilters, IfEntityPresent } from './types';
+import { UpgradeType, ExportFilters, IfEntityPresent, ConfigParams } from './types';
 
 export class ImpEx {
   private constructor(readonly config: Config) {}
@@ -332,21 +332,17 @@ interface ServiceMapping {
   upgrade?: UpgradeType;
 }
 
-interface StatusParams {
+interface StatusParams extends ConfigParams {
   url?: string;
-  maxRetries?: number;
-  retryInterval?: number;
 }
 
-interface ExportParams {
+interface ExportParams extends ConfigParams {
   folders?: string[];
   services?: string[];
   versionIds?: string[];
   filters?: ExportFilters;
   sourceSystem?: string;
   correlationId?: string;
-  maxRetries?: number;
-  retryInterval?: number;
 }
 
 type ExportBody = {
@@ -359,13 +355,13 @@ type ExportBody = {
   correlation_id?: string;
 };
 
-interface ExportInit {
+type ExportInit = {
   id: string;
   object: string;
   status_url: string;
-}
+};
 
-export interface ExportResult {
+export type ExportResult = {
   id: string;
   object: string;
   status: string;
@@ -392,16 +388,14 @@ export interface ExportResult {
       version_id_source: string;
     }[];
   };
-}
+};
 
-interface ImportParams {
+interface ImportParams extends ConfigParams {
   file: Readable;
   destination: ImportDestination;
   ifPresent?: IfEntityPresent;
   sourceSystem?: string;
   correlationId?: string;
-  maxRetries?: number;
-  retryInterval?: number;
 }
 
 type ImportBody = {
@@ -417,13 +411,13 @@ type ImportBody = {
   correlation_id?: string;
 };
 
-interface ImportInit {
+type ImportInit = {
   id: string;
   object: string;
   status_url: string;
-}
+};
 
-export interface ImportResult {
+export type ImportResult = {
   id: string;
   object: string;
   status: string;
@@ -461,9 +455,9 @@ export interface ImportResult {
       status: string;
     }[];
   };
-}
+};
 
-interface MigrateParams {
+interface MigrateParams extends ConfigParams {
   folders?: string[];
   services?: string[];
   versionIds?: string[];
@@ -472,6 +466,4 @@ interface MigrateParams {
   destination: ImportDestination;
   sourceSystem?: string;
   correlationId?: string;
-  maxRetries?: number;
-  retryInterval?: number;
 }
