@@ -79,10 +79,14 @@ export class Services extends ApiResource {
   }
 
   /**
-   * Executes a service using default inputs.
+   * Executes a service.
+   * @param {string | UriParams} uri - use the `{folder}/{service}[?{version}]`,
+   * `service/{serviceId}`, `version/{versionId}` format to locate the service;
+   * or use fine-grained details to locate the service. The `UriParams` object
+   * can be used to specify the service location and additional parameters like
+   * the version ID, service ID, proxy service URI, etc.
+   * @see {@link UriParams} for more details.
    *
-   * @param {string} uri - use the `{folder}/{service}[?{version}]` or `service/{serviceId}` or
-   * `version/{versionId}` format to locate the service.
    * @param {ExecuteParams<Input>} [params] - the optional execution parameters (inputs, metadata, etc.)
    * The inputs can be provided the following ways:
    * - as `null` or `undefined` to use the default inputs
@@ -95,24 +99,6 @@ export class Services extends ApiResource {
    * the SDK uses an empty object `{}` as the input data, which is an indicator for
    * Spark to use the default inputs defined in the Excel file.
    */
-  execute<Input, Output>(uri: string, params?: ExecuteParams<Input>): Promise<HttpResponse<ServiceExecuted<Output>>>;
-  /**
-   * Executes a service using default inputs.
-   *
-   * @param {UriParams} uri - use fine-grained details to locate the service
-   * The `UriParams` object can be used to specify the service location and additional
-   * parameters like the version ID, service ID, proxy service URI, etc.
-   * @see {@link UriParams} for more details.
-   *
-   * @param {ExecuteParams<Input>} [params] - the optional execution parameters (inputs, metadata, etc.)
-   * The inputs can be provided the following ways:
-   * - as `null` or `undefined` to use the default inputs
-   * - as a JSON string
-   * - as a JSON object for single execution
-   * - as an array of JSON objects for synchronous batch execution
-   * @returns {Promise<HttpResponse<ServiceExecuted<Output>>>} the service execution response
-   */
-  execute<Input, Output>(uri: UriParams, params?: ExecuteParams<Input>): Promise<HttpResponse<ServiceExecuted<Output>>>;
   async execute<Input, Output>(
     uri: string | UriParams,
     params: ExecuteParams<Input> = {},
@@ -127,11 +113,13 @@ export class Services extends ApiResource {
       ? Uri.from({ public: uri.public }, { base: this.config.baseUrl.full, version: 'api/v4', endpoint: 'execute' })
       : Uri.from(uri, { base: this.config.baseUrl.full, endpoint: uri.versionId || uri.serviceId ? '' : 'execute' });
 
-    const body = executable.isBatch
-      ? { inputs: executable.inputs, ...metadata.value }
-      : { request_data: { inputs: executable.inputs }, request_meta: metadata.value };
+    const payload = executable.isBatch
+      ? { inputs: executable.inputs, ...metadata.values }
+      : { request_data: { inputs: executable.inputs }, request_meta: metadata.values };
 
-    return this.request(url, { method: 'POST', body }).then((response: HttpResponse<any>) => {
+    const [body, headers] = Serializable.compress(payload, params.encoding);
+
+    return this.request(url, { method: 'POST', body, headers }).then((response: HttpResponse<any>) => {
       const { responseFormat: format = 'alike' } = params;
       if (format === 'original' || executable.isBatch) return response;
       return {
@@ -155,6 +143,29 @@ export class Services extends ApiResource {
   }
 
   /**
+   * Executes a service using transforms.
+   *
+   * This is similar to the `execute` method, except that it enables preprocessing
+   * and postprocessing of the payload. That is, when dealing with unstructured data (or data
+   * does not comply with Spark request or response formats), transforms can be applied
+   * before the request and/or after the response.
+   * @param {string | UriParams} uri - where the service is located
+   * @param {TransformParams} params - the optional execution parameters (inputs, metadata, etc.)
+   * @returns @returns {Promise<HttpResponse<Output>>} the service execution response
+   */
+  transform<Output>(uri: string | UriParams, params: TransformParams): Promise<HttpResponse<Output>> {
+    uri = Uri.validate(uri);
+
+    const { inputs, ...meta } = params;
+    const metadata = new ExecuteMeta(meta, uri, meta.apiVersion === 'v4');
+    const endpoint = `transforms/${meta.using ?? uri.service}/for/${Uri.encode({ folder: uri.folder, service: uri.service })}`;
+    const url = Uri.from(undefined, { base: this.config.baseUrl.full, version: 'api/v4', endpoint });
+    const [body, headers] = Serializable.compress(inputs, params.encoding);
+
+    return this.request(url, { method: 'POST', body, headers: { ...headers, ...metadata.asHeaders } });
+  }
+
+  /**
    * Validates the inputs for a service.
    * @param {string | UriParams} uri - where the service is located
    * @param {ValidateParams} params - optionally the validation parameters (inputs, metadata, etc.)
@@ -171,7 +182,7 @@ export class Services extends ApiResource {
     const body = {
       request_data: { inputs: executable.inputs },
       request_meta: {
-        ...metadata.value,
+        ...metadata.values,
         validation_type: StringUtils.isNotEmpty(meta.validationType)
           ? meta.validationType === 'dynamic'
             ? 'dynamic'
@@ -208,9 +219,9 @@ export class Services extends ApiResource {
   /**
    * Gets the list of versions of a Spark service.
    * @param {string | GetVersionsParams} uri - how to locate the service
-   * @returns {Promise<HttpResponse<VersionListed>>} the list of versions
+   * @returns {Promise<HttpResponse<VersionInfo[]>>} the list of versions
    */
-  async getVersions(uri: string | GetVersionsParams): Promise<HttpResponse<VersionListed>> {
+  async getVersions(uri: string | GetVersionsParams): Promise<HttpResponse<VersionInfo[]>> {
     const { folder, service } = Uri.validate(uri);
     const endpoint = `product/${folder}/engines/getversions/${service}`;
     const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
@@ -265,7 +276,7 @@ export class Services extends ApiResource {
       releaseNotes: releaseNotes ?? `Recompiled via ${SPARK_SDK}`,
       upgradeType: params.upgrade ?? 'patch',
       neuronCompilerVersion: params.compiler ?? 'StableLatest',
-      tags: Array.isArray(params.tags) ? params.tags.join(',') : params?.tags,
+      tags: StringUtils.join(params?.tags),
       versionLabel: params?.label,
       effectiveStartDate: startDate.toISOString(),
       effectiveEndDate: endDate.toISOString(),
@@ -385,10 +396,10 @@ type CompilerType = 'Neuron' | 'Type3' | 'Type2' | 'Type1' | 'Xconnector';
 
 type ValidationType = 'static' | 'dynamic';
 
-interface ServiceApiResponse<TData, TMeta = Record<string, any>> extends Pick<ApiResponse, 'status' | 'error'> {
+type ServiceApiResponse<TData, TMeta = Record<string, any>> = Pick<ApiResponse, 'status' | 'error'> & {
   response_data: TData;
   response_meta: TMeta;
-}
+};
 
 type ServiceCompiled = ServiceApiResponse<{
   lines_of_code: number;
@@ -439,7 +450,7 @@ type ServicePublished = ServiceApiResponse<{ version_id: string }>;
 
 type ServiceRecompiled = ServiceApiResponse<{ versionId: string; revision: string; jobId: string }>;
 
-interface VersionInfo {
+type VersionInfo = {
   id: string;
   createdAt: string;
   engine: string;
@@ -455,18 +466,18 @@ interface VersionInfo {
   product: string;
   author: string;
   originalFileName: string;
-}
-
-type VersionListed = VersionInfo[];
+};
 
 type JsonInputs = Record<string, any>;
 type ArrayInputs<T = any> = T[];
 type Inputs<T> = undefined | null | string | JsonInputs | ArrayInputs<T>;
+type EncodingType = 'gzip' | 'deflate';
 
 interface ExecuteParams<I = Record<string, any>> {
   // Data for calculation
   inputs?: Inputs<I>;
   responseFormat?: 'original' | 'alike';
+  encoding?: EncodingType;
 
   // Metadata for calculation
   activeSince?: string | number | Date;
@@ -483,6 +494,13 @@ interface ExecuteParams<I = Record<string, any>> {
   selectedOutputs?: undefined | string | string[];
   tablesAsArray?: undefined | string | string[];
   outputsFilter?: string;
+}
+
+interface TransformParams extends Omit<ExecuteParams, 'inputs'> {
+  inputs: any; // override the inputs type
+  apiVersion?: 'v3' | 'v4';
+  encoding?: EncodingType;
+  using?: string;
 }
 
 interface ValidateParams extends ExecuteParams {
@@ -517,97 +535,44 @@ class ExecuteInputs<T> {
 }
 
 class ExecuteMeta {
-  private _activeSince: string | undefined = undefined;
-  private _sourceSystem: string | undefined = undefined;
-  private _correlationId: string | undefined = undefined;
-  private _callPurpose: string | undefined = undefined;
-  private _compilerType: string | undefined = undefined;
-  private _subservices: string | undefined = undefined;
-  private _debugSolve: boolean | undefined = undefined;
-  private _downloadable: boolean | undefined = undefined;
-  private _echoInputs: boolean | undefined = undefined;
-  private _selectedOutputs: string | undefined = undefined;
-  private _tablesAsArray: string | undefined = undefined;
-  private _outputsFilter: string | undefined = undefined;
-  private _inputKey: string | undefined = undefined;
-
   readonly #supportedCompilerTypes = ['neuron', 'type3', 'type2', 'type1', 'xconnector'];
+  #activeSince: string | undefined;
+  #sourceSystem: string | undefined;
+  #correlationId: string | undefined;
+  #callPurpose: string | undefined;
+  #compilerType: string | undefined;
+  #subservices: string | undefined;
+  #debugSolve: boolean | undefined;
+  #downloadable: boolean | undefined;
+  #echoInputs: boolean | undefined;
+  #selectedOutputs: string | undefined;
+  #tablesAsArray: string | undefined;
+  #outputsFilter: string | undefined;
+  #inputKey: string | undefined;
 
   constructor(
     metadata: Omit<ExecuteParams, 'inputs'>,
     readonly uri: UriParams,
     readonly isBatch: boolean,
   ) {
-    this.#activeSince = metadata.activeSince;
-    this.#sourceSystem = metadata.sourceSystem;
+    this.#activeSince = DateUtils.isDate(metadata.activeSince) ? metadata.activeSince.toISOString() : undefined;
+    this.#sourceSystem = metadata.sourceSystem ?? SPARK_SDK;
     this.#correlationId = metadata.correlationId;
-    this.#callPurpose = metadata.callPurpose;
-    this.#compilerType = metadata.compilerType;
-    this.#subservices = metadata.subservices;
+    this.#subservices = StringUtils.join(metadata.subservices);
     this.#debugSolve = metadata.debugSolve;
     this.#downloadable = metadata.downloadable;
     this.#echoInputs = metadata.echoInputs;
-    this.#selectedOutputs = metadata.selectedOutputs;
-    this.#tablesAsArray = metadata.tablesAsArray;
+    this.#selectedOutputs = StringUtils.join(metadata.selectedOutputs);
+    this.#tablesAsArray = StringUtils.join(metadata.tablesAsArray);
     this.#outputsFilter = metadata.outputsFilter;
-  }
 
-  set #activeSince(date: undefined | string | number | Date) {
-    this._activeSince = DateUtils.isDate(date) ? date.toISOString() : undefined;
-  }
-
-  set #sourceSystem(system: string | undefined) {
-    this._sourceSystem = system ?? SPARK_SDK;
-  }
-
-  set #correlationId(id: string | undefined) {
-    this._correlationId = id;
-  }
-
-  set #callPurpose(purpose: string | undefined) {
-    this._callPurpose = StringUtils.isNotEmpty(purpose)
-      ? purpose
+    const type = metadata.compilerType?.toLowerCase() as CompilerType;
+    this.#compilerType = this.#supportedCompilerTypes.includes(type) ? StringUtils.capitalize(type) : 'Neuron';
+    this.#callPurpose = StringUtils.isNotEmpty(metadata.callPurpose)
+      ? metadata.callPurpose
       : this.isBatch
         ? 'Sync Batch Execution'
         : 'Single Execution';
-  }
-
-  set #compilerType(type: CompilerType | undefined) {
-    type = type?.toLowerCase() as CompilerType;
-    if (StringUtils.isNotEmpty(type) && this.#supportedCompilerTypes.includes(type)) {
-      this._compilerType = StringUtils.capitalize(type);
-    } else {
-      // default if value not supported or provided. No need to throw an error.
-      this._compilerType = 'Neuron';
-    }
-  }
-
-  set #subservices(services: string | string[] | undefined) {
-    this._subservices = StringUtils.join(services);
-  }
-
-  set #debugSolve(debug: boolean | undefined) {
-    this._debugSolve = debug;
-  }
-
-  set #downloadable(download: boolean | undefined) {
-    this._downloadable = download;
-  }
-
-  set #echoInputs(echo: boolean | undefined) {
-    this._echoInputs = echo;
-  }
-
-  set #selectedOutputs(outputs: string | string[] | undefined) {
-    this._selectedOutputs = StringUtils.join(outputs);
-  }
-
-  set #tablesAsArray(tables: string | string[] | undefined) {
-    this._tablesAsArray = StringUtils.join(tables);
-  }
-
-  set #outputsFilter(filter: string | undefined) {
-    this._outputsFilter = filter;
   }
 
   /**
@@ -617,44 +582,49 @@ class ExecuteMeta {
    * or inferred). Meaning, parsing and validating the inputs will dictate the
    * structure of the metadata; hence, why the metadata is dynamic.
    */
-  get value() {
-    const uri = this.uri;
-    const { folder, service, version, serviceId } = uri;
+  get values() {
+    const { folder, service, version, serviceId, versionId } = this.uri;
     const serviceUri = serviceId || Uri.encode({ folder, service, version }, false) || undefined;
 
-    if (this.isBatch) {
-      return {
-        service: serviceUri,
-        version_id: uri.versionId,
-        version_by_timestamp: this._activeSince,
-        subservice: this._subservices,
-        output: this._selectedOutputs,
-        call_purpose: this._callPurpose,
-        source_system: this._sourceSystem,
-        correlation_id: this._correlationId,
-        unique_record_key: this._inputKey, // async only
-      } as const;
-    }
+    const values = this.isBatch
+      ? {
+          service: serviceUri,
+          version_id: versionId,
+          version_by_timestamp: this.#activeSince,
+          subservice: this.#subservices,
+          output: this.#selectedOutputs,
+          call_purpose: this.#callPurpose,
+          source_system: this.#sourceSystem,
+          correlation_id: this.#correlationId,
+          unique_record_key: this.#inputKey, // async only
+        }
+      : {
+          // URI locator via metadata (v3 also supports service URI in url path)
+          service_id: serviceId,
+          version_id: versionId,
+          version: version,
 
-    return {
-      // URI locator via metadata (v3 also supports URI in url path)
-      service_id: uri.serviceId,
-      version_id: uri.versionId,
-      version: uri.version,
+          // v3 expects extra metadata
+          transaction_date: this.#activeSince,
+          call_purpose: this.#callPurpose,
+          source_system: this.#sourceSystem,
+          correlation_id: this.#correlationId,
+          array_outputs: this.#tablesAsArray,
+          compiler_type: this.#compilerType,
+          debug_solve: this.#debugSolve,
+          excel_file: this.#downloadable,
+          requested_output: this.#selectedOutputs,
+          requested_output_regex: this.#outputsFilter,
+          response_data_inputs: this.#echoInputs,
+          service_category: this.#subservices,
+        };
 
-      // v3 expects extra metadata
-      transaction_date: this._activeSince,
-      call_purpose: this._callPurpose,
-      source_system: this._sourceSystem,
-      correlation_id: this._correlationId,
-      array_outputs: this._tablesAsArray,
-      compiler_type: this._compilerType,
-      debug_solve: this._debugSolve,
-      excel_file: this._downloadable,
-      requested_output: this._selectedOutputs,
-      requested_output_regex: this._outputsFilter,
-      response_data_inputs: this._echoInputs,
-      service_category: this._subservices,
-    } as const;
+    // filter out undefined values.
+    return Object.fromEntries(Object.entries(values).filter(([, value]) => value !== undefined));
+  }
+
+  get asHeaders() {
+    // NOTE: this has to be a single line string: "'{\"call_purpose\":\"Single Execution\"}'"
+    return { [this.isBatch ? 'x-meta' : 'x-request-meta']: `'${JSON.stringify(this.values)}'` };
   }
 }

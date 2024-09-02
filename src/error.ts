@@ -124,29 +124,29 @@ export class SparkApiError extends SparkError {
   static when<TReq, TResp>(status: number, error: ErrorMessage<ApiErrorCause<TReq, TResp>>): SparkApiError {
     switch (status) {
       case 0:
-        return new InternetError(error, 0);
+        return new InternetError(error, status);
       case 400:
-        return new BadRequestError(error, 400);
+        return new BadRequestError(error, status);
       case 401:
-        return new UnauthorizedError(error, 401);
+        return new UnauthorizedError(error, status);
       case 403:
-        return new ForbiddenError(error, 403);
+        return new ForbiddenError(error, status);
       case 404:
-        return new NotFoundError(error, 404);
+        return new NotFoundError(error, status);
       case 409:
-        return new ConflictError(error, 409);
+        return new ConflictError(error, status);
       case 415:
-        return new UnsupportedMediaTypeError(error, 415);
+        return new UnsupportedMediaTypeError(error, status);
       case 422:
-        return new UnprocessableEntityError(error, 422);
+        return new UnprocessableEntityError(error, status);
       case 429:
-        return new RateLimitError(error, 429);
+        return new RateLimitError(error, status);
       case 500:
-        return new InternalServerError(error, 500);
+        return new InternalServerError(error, status);
       case 503:
-        return new ServiceUnavailableError(error, 503);
+        return new ServiceUnavailableError(error, status);
       case 504:
-        return new GatewayTimeoutError(error, 504);
+        return new GatewayTimeoutError(error, status);
       default:
         return new UnknownApiError(error);
     }

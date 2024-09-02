@@ -56,7 +56,7 @@ export interface HttpOptions<T> extends RequestOptions<T> {
   readonly contentType?: string;
 }
 
-export interface HttpResponse<T = JsonData> {
+export interface HttpResponse<T = JsonData | Serializable> {
   /** The status code of the response. (This will be 200 for a success). */
   readonly status: number;
 
@@ -78,7 +78,7 @@ export interface Interceptor {
 /**
  * Calculate the exponential backoff time with randomized jitter.
  * @param {int} retries - which retry number this one will be
- * @param {int} baseInterval - the base retry interval set in config
+ * @param {int} [baseInterval] - the base retry interval set in config
  * @returns the number of milliseconds after which to retry
  */
 export function getRetryTimeout(retries: number, baseInterval: number = 1): number {
@@ -86,7 +86,7 @@ export function getRetryTimeout(retries: number, baseInterval: number = 1): numb
   return Math.ceil(retries * baseInterval * 1000 * randomization);
 }
 
-async function createRequestInit<T>(options: HttpOptions<T>): Promise<RequestInit> {
+async function buildRequest<T>(options: HttpOptions<T>): Promise<RequestInit> {
   const {
     method = 'GET',
     headers = {},
@@ -100,12 +100,13 @@ async function createRequestInit<T>(options: HttpOptions<T>): Promise<RequestIni
     body: ByteStream | string;
   }> => {
     if (options.multiparts) {
-      const FormData = Utils.isBrowser() ? window.FormData : loadModule('form-data');
+      const isBrowser = Utils.isBrowser();
+      const FormData = isBrowser ? window.FormData : loadModule('form-data');
       const formData = new FormData();
 
       for (const item of options.multiparts) {
         if (item.fileStream) {
-          if (Utils.isBrowser()) {
+          if (isBrowser) {
             formData.append(item.name, item.fileStream, { filename: item.fileName ?? 'file' });
           } else {
             const buffer = await readStream(item.fileStream);
@@ -121,14 +122,14 @@ async function createRequestInit<T>(options: HttpOptions<T>): Promise<RequestIni
           );
         } else {
           throw new SparkSdkError({
-            message: 'Multipart item must have either serializable body or fileStream',
+            message: 'Multipart item must have either serializable body or file stream',
             cause: item,
           });
         }
       }
 
       return {
-        contentType: Utils.isBrowser() ? undefined : `multipart/form-data; boundary=${formData.getBoundary()}`,
+        contentType: isBrowser ? undefined : `multipart/form-data; boundary=${formData.getBoundary()}`,
         body: formData,
       };
     }
@@ -150,12 +151,12 @@ async function createRequestInit<T>(options: HttpOptions<T>): Promise<RequestIni
 
       case 'application/octet-stream':
         if (!fileStream) {
-          throw SparkError.sdk('fileStream required for application/octet-stream content type');
+          throw SparkError.sdk('file stream required for application/octet-stream content type');
         }
         return { contentType, body: fileStream };
 
       default:
-        throw SparkError.sdk(`Unsupported content type: ${contentType}`);
+        throw SparkError.sdk(`unsupported content type: ${contentType}`);
     }
   })();
 
@@ -176,23 +177,6 @@ function isInternetError(errorCode: string): boolean {
     errorCode === 'EHOSTUNREACH' ||
     errorCode === 'ENETUNREACH'
   );
-}
-
-/**
- * Calculate the SHA1 hash of the data
- */
-export async function calculateMd5Hash(data: string | Buffer): Promise<string> {
-  if (Utils.isBrowser()) {
-    const dataBuffer = typeof data === 'string' ? new TextEncoder().encode(data) : data;
-    const hashBuffer = await window.crypto.subtle.digest('SHA-1', dataBuffer);
-    return Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, '0')) // convert bytes to hex
-      .join('');
-  }
-
-  // Node environment
-  const createHash = loadModule('crypto').createHash;
-  return createHash('sha1').update(data).digest('hex');
 }
 
 async function readStream(stream: ByteStream): Promise<Buffer> {
@@ -218,13 +202,13 @@ export async function _fetch<Req = JsonData, Resp = JsonData>(
   const { config } = fetchOptions;
 
   // Prepare and make request using fetch API
-  const requestInit = await createRequestInit(fetchOptions);
+  const request = await buildRequest(fetchOptions);
   const url = Utils.formatUrl(resource, fetchOptions.params);
   const response = await (async () => {
     try {
-      return await nodeFetch(url, { ...requestInit, redirect: 'manual', timeout: config.timeout });
+      return await nodeFetch(url, { ...request, redirect: 'manual', timeout: config.timeout });
     } catch (cause) {
-      if (cause instanceof AbortError) throw cause;
+      if (typeof cause === 'object' && cause instanceof AbortError) throw cause;
       // is it relevant to retry request when client's internet is down? 🤔
       if (isInternetError((cause as any)?.code)) throw SparkError.api(0, `cannot connect to <${url}>`);
       throw SparkError.api(-1, { message: `failed to fetch <${url}>`, cause: cause as Error });
@@ -233,21 +217,19 @@ export async function _fetch<Req = JsonData, Resp = JsonData>(
 
   // Extract response data and headers
   const contentType = response.headers.get('content-type') ?? '';
-  const responseBytesBuffer = await response.arrayBuffer();
-  const content = Streamer.fromBuffer(responseBytesBuffer);
-  const jsonData = ((): Resp => {
-    if (contentType.includes('application/json')) {
-      const text = new TextDecoder().decode(responseBytesBuffer);
-      return Serializable.deserialize(text);
-    }
-    return null as Resp;
-  })();
+  const responseBytes = await response.arrayBuffer();
 
   let httpResponse: HttpResponse<Resp> = {
     status: response.status,
-    data: jsonData,
-    buffer: content,
     headers: Object.fromEntries(response.headers.entries()),
+    buffer: Streamer.fromBuffer(responseBytes),
+    data: ((): Resp => {
+      if (contentType.includes('application/json')) {
+        const text = new TextDecoder().decode(responseBytes);
+        return Serializable.deserialize(text);
+      }
+      return null as Resp;
+    })(),
   };
 
   // Apply afterRequest interceptors if any.
@@ -279,18 +261,18 @@ export async function _fetch<Req = JsonData, Resp = JsonData>(
     }
 
     throw SparkApiError.when(httpResponse.status, {
-      message: `failed to fetch <${resource}>`,
+      message: `failed to fetch <${url}>`,
       cause: {
         request: {
           url,
-          method: requestInit.method!,
-          headers: requestInit.headers as Record<string, string>,
-          body: requestInit.body,
+          method: request.method!,
+          headers: request.headers as Record<string, string>,
+          body: request.body,
         },
         response: {
           headers: httpResponse.headers,
           body: httpResponse.data,
-          raw: new TextDecoder().decode(responseBytesBuffer),
+          raw: new TextDecoder().decode(responseBytes),
         },
       },
     });
@@ -312,22 +294,22 @@ export async function _download(
     .then(async (response) => {
       if (!response.ok || response.status >= 400) throw response;
       return {
-        buffer: Streamer.fromBuffer(await response.arrayBuffer()),
         status: response.status,
         headers: Object.fromEntries(response.headers.entries()),
+        buffer: Streamer.fromBuffer(await response.arrayBuffer()),
         data: null,
       };
     })
     .catch(async (response) => {
       if (response instanceof AbortError) throw response;
-      if (isInternetError((response as any)?.code)) throw SparkError.api(0, `cannot connect to <${resource}>`);
+      if (isInternetError((response as any)?.code)) throw SparkError.api(0, `cannot connect to <${url}>`);
       if (response instanceof Error) {
-        throw new SparkSdkError({ message: `failed to fetch <${resource}>`, cause: response });
+        throw new SparkSdkError({ message: `failed to fetch <${url}>`, cause: response });
       }
 
       const raw = new TextDecoder().decode(await response?.arrayBuffer());
       throw SparkApiError.when(response.status, {
-        message: `failed to download resource from <${resource}>`,
+        message: `failed to download resource from <${url}>`,
         cause: {
           request: { url, method, headers, body: null },
           response: { headers: response.headers, body: response.data, raw },

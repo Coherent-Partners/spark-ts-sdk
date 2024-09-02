@@ -2,6 +2,7 @@ import { SparkError } from '../error';
 import { HttpResponse, getRetryTimeout } from '../http';
 import { ApiResource, ApiResponse, Uri, UriParams } from './base';
 import Utils, { DateUtils, NumberUtils } from '../utils';
+import { ConfigParams } from './types';
 
 export class History extends ApiResource {
   get downloads(): LogDownload {
@@ -11,7 +12,7 @@ export class History extends ApiResource {
   /**
    * Finds logs by date range, call id, username, call purpose, etc.
    * @param {string | SearchParams} uri - Search parameters
-   * @param {Paging} paging - Paging options (page, size, sort)
+   * @param {Paging} [paging] - Paging options (page, size, sort)
    * @returns {Promise<HttpResponse<LogListed>>}
    *
    * Be mindful of the date range, as it may return a large number of logs. If only
@@ -241,21 +242,14 @@ interface CreateJobParams extends Pick<UriParams, 'folder' | 'service' | 'versio
   timezoneOffset?: string;
 }
 
-interface DownloadParams extends CreateJobParams {
-  /** Defaults to `Config.maxRetries` */
-  maxRetries?: number;
-  retryInterval?: number;
-}
+interface DownloadParams extends CreateJobParams, ConfigParams {}
 
-interface GetStatusParams extends Pick<UriParams, 'folder' | 'service'> {
+interface GetStatusParams extends Pick<UriParams, 'folder' | 'service'>, ConfigParams {
   folder: string;
   service: string;
   jobId: string;
   /** Defaults to 'json' */
   type?: DownloadFileType;
-  /** Defaults to `Config.maxRetries` */
-  maxRetries?: number;
-  retryInterval?: number;
 }
 
 interface SearchParams extends Pick<UriParams, 'folder' | 'service'> {
@@ -277,7 +271,7 @@ interface Paging {
   sort?: string;
 }
 
-interface LogInfo {
+type LogInfo = {
   id: string;
   transactionDate: string;
   timeStamp: string;
@@ -294,13 +288,13 @@ interface LogInfo {
   username: string;
   isBatchCall: boolean | null;
   correlationId: string | null;
-}
+};
 
-interface LogApiResponse<T> extends Pick<ApiResponse, 'status'> {
+type LogApiResponse<T> = Pick<ApiResponse, 'status'> & {
   data: T;
   errorCode: string | null;
   message: string | null;
-}
+};
 
 type HistoryApiResponse<T = Record<string, any>> = ApiResponse & { response_data: T };
 

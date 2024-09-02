@@ -1,3 +1,5 @@
+import { gzip, ungzip, deflate, inflate } from 'pako';
+
 import { SparkError } from './error';
 import { StringUtils } from './utils';
 
@@ -81,6 +83,26 @@ export abstract class Serializable<From = any, To = string> {
     const json = content.isString ? content.asString.deserialize() : data;
     return new URLSearchParams(Object.entries(json as object).filter(([, value]) => value != null)).toString();
   }
+
+  static gzip(data: JsonData): GzipEncoding {
+    return new GzipEncoding(data);
+  }
+
+  static deflate(data: JsonData): DeflateEncoding {
+    return new DeflateEncoding(data);
+  }
+
+  static compress(payload: any, encoding?: 'gzip' | 'deflate') {
+    const headers = encoding ? { 'Content-Encoding': encoding, 'Accept-Encoding': encoding } : {};
+    switch (encoding) {
+      case 'gzip':
+        return [Serializable.gzip(payload), headers];
+      case 'deflate':
+        return [Serializable.deflate(payload), headers];
+      default:
+        return [payload, headers];
+    }
+  }
 }
 
 /**
@@ -108,5 +130,29 @@ export class Jsonified extends Serializable<JsonData, string> {
 
   deserialize(): JsonData {
     return this.value;
+  }
+}
+
+export class GzipEncoding extends Serializable<any, Uint8Array> {
+  serialize(): Uint8Array {
+    const text = Serializable.serialize(this.value);
+    return gzip(new TextEncoder().encode(text));
+  }
+
+  deserialize<T>(): T | string {
+    const text = ungzip(this.value, { to: 'string' });
+    return Serializable.deserialize<T | string>(text, () => text);
+  }
+}
+
+export class DeflateEncoding extends Serializable<any, Uint8Array> {
+  serialize(): Uint8Array {
+    const text = Serializable.serialize(this.value);
+    return deflate(new TextEncoder().encode(text));
+  }
+
+  deserialize<T>(): T | string {
+    const text = inflate(this.value, { to: 'string' });
+    return Serializable.deserialize<T | string>(text, () => text);
   }
 }

@@ -200,12 +200,7 @@ export class Client {
   /**
    * Downloads a file from the given URL.
    * @param url - valid URL
-   */
-  static download(url: string): ReturnType<typeof API.download>;
-  /**
-   * Downloads a file from the given URL.
-   * @param url - valid URL
-   * @param auth - optional authorization
+   * @param {Authorization} [auth] - optional Spark authorization
    */
   static download(url: string, auth?: Authorization) {
     return API.download(url, auth);
@@ -213,15 +208,9 @@ export class Client {
 
   /**
    * Prepares migration data from one tenant to another.
-   * @param {ClientOptions} from - source tenant options.
-   * @param {ClientOptions} to - target tenant options
+   * @param {ClientOptions | Config} from - source tenant options or configuration.
+   * @param {ClientOptions | Config} to - target tenant options or configuration.
    * @throws {SparkError} if invalid options are provided.
-   */
-  static migration(from: ClientOptions, to: ClientOptions): API.Migration;
-  /**
-   * Prepares migration data from one tenant to another.
-   * @param {Config} from - source tenant configuration.
-   * @param {Config} to - target tenant configuration
    */
   static migration(from: Config | ClientOptions, to: Config | ClientOptions) {
     return API.ImpEx.migration({
@@ -232,21 +221,8 @@ export class Client {
 
   /**
    * Prepares migration data from one tenant to another.
-   * @param {ClientOptions} to - target tenant options
-   * The current tenant configuration will be used as the source.
-   * @throws {SparkError} if invalid options are provided.
-   */
-  migration(to: ClientOptions): API.Migration;
-  /**
-   * Prepares migration data from one tenant to another.
-   * @param {Config} to - target tenant configuration
-   * The current tenant configuration will be used as the source.
-   */
-  migration(to: Config): API.Migration;
-  /**
-   * Prepares migration data from one tenant to another.
-   * @param {Config} to - target tenant configuration
-   * @param {Config} from - optional source tenant configuration; if not provided,
+   * @param {Config | ClientOptions} to - target tenant options or configuration
+   * @param {Config | ClientOptions} [from] - optional source tenant configuration; if not provided,
    * the current tenant configuration will be used as the source.
    */
   migration(to: Config | ClientOptions, from: Config | ClientOptions = this.config) {

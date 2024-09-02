@@ -33,6 +33,16 @@ export function executeMany(spark: SparkClient) {
     .catch(console.error);
 }
 
+export function transform(spark: SparkClient) {
+  spark.services
+    .transform('my-folder/my-service', {
+      inputs: { value: 42 },
+      using: 'my-transform',
+      encoding: 'gzip',
+    })
+    .then((response) => console.log(response.data));
+}
+
 function getVersions(spark: SparkClient) {
   spark.services
     .getVersions('my-folder/my-service')
@@ -133,4 +143,5 @@ export default {
   migrate,
   executeOne,
   executeMany,
+  transform,
 };

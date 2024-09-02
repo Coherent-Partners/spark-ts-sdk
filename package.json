@@ -1,6 +1,6 @@
 {
   "name": "@cspark/sdk",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "A Node.js SDK for interacting with Coherent Spark APIs",
   "author": "Coherent <team@coherent.global>",
   "homepage": "https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/docs/readme.md",
@@ -41,7 +41,8 @@
   "dependencies": {
     "buffer": "6.0.3",
     "form-data": "4.0.0",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "~2.7.0",
+    "pako": "~2.1.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
@@ -52,6 +53,7 @@
     "@types/jest": "^29.5.1",
     "@types/node": "*",
     "@types/node-fetch": "^2.6.11",
+    "@types/pako": "^2.0.3",
     "@types/papaparse": "^5.3.14",
     "@typescript-eslint/eslint-plugin": "7.1.0",
     "@typescript-eslint/parser": "7.1.0",

@@ -4,11 +4,17 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.6 (2024-09-02)
+
+- Enable gzip and deflate encoding for request payload during service execution
+- Execute a service using Transforms API
+- Apply minor improvements
+
 ## 0.2.5 (2024-08-14)
 
 - Easily extend additional API resources:
   - `Spark.extend(extension, config)` static method to add new resources to Spark client
-  - `Spark.extend(resource \| extension)` instance method to add new resources to Spark client
+  - `Spark.extend(resource | extension)` instance method to add new resources to Spark client
 - Rehydrate service execution logs for v4 format using zero-based `RehydrateParams.index`
 - Add GitHub issue templates
 
@@ -32,7 +38,7 @@ for commit guidelines.
 - Use two response formats for `Spark.services.execute()`: `original` or `alike`
 - Fix typos in the documentation
 
-## 0.2.1 (2024-07-06)
+## 0.2.1 (2024-07-06) - Deprecated
 
 - Breaking changes: merge `Spark.services.batches.execute()` (removed) into `Spark.services.execute()`
   - `Spark.services.execute()` now supports both sync batch and service executions
@@ -73,23 +79,13 @@ for commit guidelines.
 - Refactor `Config.interceptors` and `Config.headers` to be more flexible
 - Refactor CI/CD workflows to test multiple Node.js versions and environments
 
-## 0.1.0-beta.3 (2024-04-18)
+## 0.1.0-beta.x (2024-04-18)
 
 - Add documentation comments
 - Update readme.
-
-## 0.1.0-beta.2 (2024-04-16)
-
 - Add documentation for SDK usage
 - Add a logger facade
 - Add experimental verbs (currently being tested)
-
-## 0.1.0-beta.1 (2024-03-20)
-
 - Update build configuration and package exports
 - Fix ESM build
 - Add support for API call history.
-
-## 0.1.0-beta.0 (2024-02-28)
-
-Initial beta release.

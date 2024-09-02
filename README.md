@@ -2,8 +2,8 @@
 
 [![npm version][version-img]][version-url]
 
-The Coherent Spark Node.js SDK (currently in **Beta**) is designed to elevate the developer
-experience and provide convenient access to Coherent Spark APIs.
+The Coherent Spark Node.js SDK is designed to elevate the developer experience and
+provide convenient access to Coherent Spark APIs.
 
 👋 **Just a heads-up:**
 
@@ -269,6 +269,7 @@ OAuth2.0 Client Credentials flow:
 
 - `Spark.services.create(data)` creates a new Spark service.
 - `Spark.services.execute(uri, data)` executes a Spark service.
+- `Spark.services.transform(uri, inputs)` executes a Spark service using `Transforms`.
 - `Spark.services.getVersions(uri)` lists all the versions of a service.
 - `Spark.services.getSwagger(uri)` gets the Swagger documentation of a service.
 - `Spark.services.getSchema(uri)` gets the schema of a service.

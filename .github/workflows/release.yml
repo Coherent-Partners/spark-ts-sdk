@@ -23,6 +23,15 @@ jobs:
         run: yarn build
 
       - name: Publish to NPM
-        run: npm publish --access public
+        run: |
+          set -eux
+          npm config set '//registry.npmjs.org/:_authToken' "$NPM_TOKEN"
+          VERSION="$(node -p "require('./package.json').version")"
+          if [[ "$VERSION" =~ -([a-zA-Z]+) ]]; then
+            TAG="${BASH_REMATCH[1]}"
+          else
+            TAG="latest"
+          fi
+          yarn publish --access public --tag "$TAG"
         env:
           NPM_TOKEN: ${{ secrets.NPM_API_TOKEN }}
