@@ -12,7 +12,7 @@
  *
  * Every API call will be logged to the console and saved to a log file.
  */
-import Spark, { SparkOptions, LoggerService } from '@cspark/sdk';
+import Spark, { SparkOptions, LoggerService } from '../../src';
 import { readFileSync, createWriteStream } from 'fs';
 import { join } from 'path';
 

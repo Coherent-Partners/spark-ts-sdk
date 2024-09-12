@@ -26,13 +26,18 @@ exports.default = [
   },
   {
     input: 'src/index.ts',
-    output: { dir: 'lib/esm', format: 'esm' },
+    output: { file: 'lib/esm/index.mjs', format: 'esm' },
     external: ['node-fetch'],
     plugins: [
       nodeResolve({ preferBuiltins: false }),
       commonjs(),
       json(),
-      typescript({ tsconfig: './tsconfig.esm.json', declaration: true }),
+      typescript({ tsconfig: './tsconfig.esm.json', removeComments: true }),
     ],
+  },
+  {
+    input: 'src/index.ts',
+    output: [{ file: 'lib/types.d.ts', format: 'esm' }],
+    plugins: [nodeResolve(), require('rollup-plugin-dts').dts()],
   },
 ];

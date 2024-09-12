@@ -1,5 +1,5 @@
-import { SparkError } from '@cspark/sdk';
-import { Serializable, JsonData, Stringified, Jsonified } from '@cspark/sdk/data';
+import { SparkError } from '../src/error';
+import { Serializable, JsonData, Stringified, Jsonified } from '../src/data';
 
 describe('Serializable', () => {
   const ARRAY: JsonData = [null, false, 1, 'string'];

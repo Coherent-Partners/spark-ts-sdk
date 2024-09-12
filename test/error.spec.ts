@@ -1,5 +1,5 @@
-import { SparkError, SparkSdkError, SparkApiError } from '@cspark/sdk';
-import { BadRequestError, UnauthorizedError } from '@cspark/sdk/error';
+import { SparkError, SparkSdkError, SparkApiError } from '../src';
+import { BadRequestError, UnauthorizedError } from '../src/error';
 
 describe('SparkError', () => {
   it('can be of base error', () => {

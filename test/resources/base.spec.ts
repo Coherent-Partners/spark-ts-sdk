@@ -1,5 +1,5 @@
-import Utils from '@cspark/sdk/utils';
-import Spark, { SparkError, SparkApiError, AbortError, Uri, ApiResource } from '@cspark/sdk';
+import Utils from '../../src/utils';
+import Spark, { SparkError, SparkApiError, AbortError, Uri, ApiResource } from '../../src';
 import LocalServer, { TestApiResource } from './_server';
 
 describe('Uri', () => {

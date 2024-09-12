@@ -26,7 +26,7 @@ export class SparkError extends Error {
     readonly cause?: any,
   ) {
     super(message);
-    this.name = this.constructor.name;
+    this.name = 'SparkError';
   }
 
   /**
@@ -84,6 +84,7 @@ export class SparkSdkError extends SparkError {
   constructor(error: ErrorMessage) {
     super(error.message, error.cause);
     this.timestamp = new Date().toISOString();
+    this.name = 'SparkSdkError';
   }
 
   toJson(): Pick<SparkSdkError, 'name' | 'message' | 'cause' | 'timestamp'> {
@@ -108,6 +109,7 @@ export class SparkApiError extends SparkError {
   ) {
     super(`${status || ''} ${error.message}`.trim(), error.cause);
     this.status = status;
+    this.name = 'SparkApiError';
   }
 
   get requestId(): string {
@@ -155,57 +157,67 @@ export class SparkApiError extends SparkError {
 
 export class InternetError extends SparkApiError {
   override readonly status = 0;
+  override readonly name = 'InternetError';
 }
 
 export class BadRequestError extends SparkApiError {
   override readonly status = 400;
+  override readonly name = 'BadRequestError';
 }
 
 export class UnauthorizedError extends SparkApiError {
   override readonly status = 401;
+  override readonly name = 'UnauthorizedError';
 }
 
 export class ForbiddenError extends SparkApiError {
   override readonly status = 403;
+  override readonly name = 'ForbiddenError';
 }
 
 export class NotFoundError extends SparkApiError {
   override readonly status = 404;
+  override readonly name = 'NotFoundError';
 }
 
 export class ConflictError extends SparkApiError {
   override readonly status = 409;
+  override readonly name = 'ConflictError';
 }
 
 export class UnsupportedMediaTypeError extends SparkApiError {
   override readonly status = 415;
+  override readonly name = 'UnsupportedMediaTypeError';
 }
 
 export class UnprocessableEntityError extends SparkApiError {
   override readonly status = 422;
+  override readonly name = 'UnprocessableEntityError';
 }
 
 export class RateLimitError extends SparkApiError {
   override readonly status = 429;
+  override readonly name = 'RateLimitError';
 }
 
 export class InternalServerError extends SparkApiError {
   override readonly status = 500;
+  override readonly name = 'InternalServerError';
 }
 
 export class ServiceUnavailableError extends SparkApiError {
   override readonly status = 503;
+  override readonly name = 'ServiceUnavailableError';
 }
 
 export class GatewayTimeoutError extends SparkApiError {
   override readonly status = 504;
+  override readonly name = 'GatewayTimeoutError';
 }
 
 export class UnknownApiError extends SparkApiError {
   override readonly status = undefined;
+  override readonly name = 'UnknownApiError';
 }
-
-// Borrowed from node-fetch for compatibility.
-export { AbortError } from 'node-fetch';
 
 export default SparkError;

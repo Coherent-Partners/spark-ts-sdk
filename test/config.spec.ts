@@ -1,7 +1,7 @@
-import { JwtConfig, BaseUrl, SparkSdkError } from '@cspark/sdk';
-import { Config } from '@cspark/sdk/config';
-import { Version } from '@cspark/sdk/version';
-import * as Constants from '@cspark/sdk/constants';
+import { JwtConfig, BaseUrl, SparkSdkError } from '../src';
+import { Config } from '../src/config';
+import { Version } from '../src/version';
+import * as Constants from '../src/constants';
 
 describe('Config', () => {
   const BASE_URL = 'https://excel.test.coherent.global';

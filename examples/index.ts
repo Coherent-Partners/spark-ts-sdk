@@ -6,7 +6,7 @@
  * 4. comment out the unneeded examples
  * 5. run the example using `yarn run demo`
  */
-import Spark from '@cspark/sdk';
+import Spark from '../src';
 
 import Config from './config';
 import Folder from './folders';

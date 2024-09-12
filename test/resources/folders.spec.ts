@@ -1,4 +1,4 @@
-import Spark from '@cspark/sdk';
+import Spark from '../../src';
 import LocalServer from './_server';
 
 describe('Spark.folders', () => {

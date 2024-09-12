@@ -1,4 +1,4 @@
-import { Log, Logger, LoggerOptions, DEFAULT_LOGGER_OPTIONS } from '@cspark/sdk/logger';
+import { Log, Logger, LoggerOptions, DEFAULT_LOGGER_OPTIONS } from '../src/logger';
 
 describe('Logger', () => {
   const CUSTOM_OPTIONS: LoggerOptions = {

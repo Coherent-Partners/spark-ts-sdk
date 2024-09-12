@@ -1,4 +1,4 @@
-import { type SparkClient, Logger, JwtConfig, ApiResource } from '@cspark/sdk';
+import { type SparkClient, Logger, JwtConfig, ApiResource } from '../src';
 
 function build(token: string) {
   const config = JwtConfig.from({ token });

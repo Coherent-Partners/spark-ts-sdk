@@ -1,5 +1,5 @@
-import { SparkSdkError, Authorization } from '@cspark/sdk';
-import { OAuth } from '@cspark/sdk/auth';
+import { SparkSdkError, Authorization } from '../src';
+import { OAuth } from '../src/auth';
 
 describe('Authorization', () => {
   const TOKEN = 'some-access-token';

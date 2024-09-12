@@ -1,5 +1,5 @@
 import { createWriteStream, createReadStream } from 'fs';
-import { type SparkClient } from '@cspark/sdk';
+import { type SparkClient } from '../src';
 
 function create(spark: SparkClient) {
   const file = createReadStream('my-service.xlsx');
