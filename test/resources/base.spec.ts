@@ -1,6 +1,7 @@
 import Utils from '../../src/utils';
-import Spark, { SparkError, SparkApiError, AbortError, Uri, ApiResource } from '../../src';
+import Spark, { SparkError, SparkApiError, Uri, ApiResource } from '../../src';
 import LocalServer, { TestApiResource } from './_server';
+import { AbortError } from 'node-fetch';
 
 describe('Uri', () => {
   const BASE_URL = 'https://excel.test.coherent.global/tenant-name';

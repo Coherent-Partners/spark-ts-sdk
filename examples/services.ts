@@ -95,6 +95,13 @@ function recompile(spark: SparkClient) {
     .catch(console.error);
 }
 
+function del(spark: SparkClient) {
+  spark.services
+    .delete('my-folder/my-service')
+    .then((response) => console.log(response.data))
+    .catch(console.error);
+}
+
 function exportAsZip(spark: SparkClient) {
   spark.services
     .export({ folder: 'my-folder', service: 'my-service', filters: { version: 'latest' } })
@@ -138,6 +145,7 @@ export default {
   validate,
   download,
   recompile,
+  delete: del,
   export: exportAsZip,
   import: importFromZip,
   migrate,
