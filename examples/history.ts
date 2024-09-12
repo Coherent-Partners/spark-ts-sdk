@@ -1,5 +1,5 @@
 import { createWriteStream } from 'fs';
-import { type SparkClient } from '@cspark/sdk';
+import { type SparkClient } from '../src';
 
 function find(spark: SparkClient) {
   spark.logs

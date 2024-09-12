@@ -3,6 +3,13 @@
 
 . "$(dirname -- "$0")/_/husky.sh"
 
+BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+
+if [ "$BRANCH_NAME" = "main" ]; then
+  echo "WARNING: Commits to main are not allowed!"
+  exit 64
+fi
+
 npx --no-install lint-staged
 
 RESULT=$?

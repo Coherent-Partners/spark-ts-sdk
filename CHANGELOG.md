@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.7 (2024-09-13)
+
+- Update build configuration and package exports
+- Update ESM target to ES2015 for backward compatibility
+- Add support for deleting a service.
+
 ## 0.2.6 (2024-09-02)
 
 - Enable gzip and deflate encoding for request payload during service execution

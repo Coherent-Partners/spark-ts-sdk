@@ -1,5 +1,5 @@
 import { SparkError } from '@cspark/sdk';
-import Validators from '@cspark/sdk/validators';
+import Validators from '../src/validators';
 
 describe('Validators', () => {
   it('should validate empty string', () => {

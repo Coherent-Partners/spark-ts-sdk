@@ -286,6 +286,19 @@ export class Services extends ApiResource {
   }
 
   /**
+   * Deletes a Spark service.
+   * @param {string | Pick<UriParams, 'folder' | 'service'>} uri - locate the service using folder, service only
+   * @returns {Promise<HttpResponse<ServiceDeleted>>} the deletion status
+   */
+  delete(uri: string | Pick<UriParams, 'folder' | 'service'>): Promise<HttpResponse<ServiceDeleted>> {
+    const { folder, service } = Uri.validate(uri);
+    const endpoint = `product/${folder}/engines/delete/${service}`;
+    const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
+
+    return this.request(url, { method: 'DELETE' });
+  }
+
+  /**
    * Exports a Spark service as a zip file.
    * @param {string | ExportParams} uri - service to export
    * @returns {Promise<HttpResponse[]>} a list of exported files
@@ -440,6 +453,13 @@ type ServiceExecuted<Output = Record<string, any>> = {
   compiler_version: string;
   correlation_id: string;
   request_timestamp: string;
+};
+
+type ServiceDeleted = {
+  data: null;
+  errorCode: string | null;
+  message: string | null;
+  status: string;
 };
 
 type MetadataFound = ServiceApiResponse<ServiceExecuted>;

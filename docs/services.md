@@ -16,6 +16,7 @@
 | `Spark.services.validate(uri, data)`    | [Validate input data using static or dynamic validations](#validate-input-data).       |
 | `Spark.services.export(uri)`            | [Export Spark services as a zip file](#export-spark-services).                         |
 | `Spark.services.import(data)`           | [Import a Spark service from a zip file](#import-spark-services).                      |
+| `Spark.services.delete(uri)`            | [Delete a new Spark service](#delete-a-spark-service).                                 |
 
 A Spark service is the representation of your Excel file in the Spark platform.
 
@@ -917,6 +918,39 @@ await spark.services.import({
 This method returns a JSON payload containing the import summary and the imported
 entities have been created/mapped in the destination tenant. See the example in the
 [import method](./impex.md#import-spark-entities) for a sample response.
+
+## Delete a Spark service
+
+This method allows you to delete an existing Spark service using its folder and
+service names.
+
+> [!WARNING]
+> This method should be used with caution as it will delete the service, including all its
+> versions. Once deleted, the service cannot be recovered.
+
+### Arguments
+
+You may provide the service URI as a string or an object with the folder and service
+names.
+
+```ts
+await spark.service.delete('my-folder/my-service');
+// or
+await spark.service.delete({ folder: 'my-folder', service: 'my-service' });
+```
+
+### Returns
+
+The method returns a successful status when the service is deleted.
+
+```json
+{
+  "status": "Success",
+  "data": null,
+  "message": null,
+  "errorCode": null
+}
+```
 
 [Back to top](#services-api) or [Next: Batches API](./batches.md)
 

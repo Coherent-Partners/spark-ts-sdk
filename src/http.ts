@@ -1,5 +1,5 @@
 import { type Readable as ByteStream } from 'stream';
-import nodeFetch, { RequestInit, AbortError } from 'node-fetch';
+import nodeFetch, { RequestInit } from 'node-fetch';
 import { AbortSignal } from 'node-fetch/externals';
 
 import { type Config } from './config';
@@ -208,7 +208,7 @@ export async function _fetch<Req = JsonData, Resp = JsonData>(
     try {
       return await nodeFetch(url, { ...request, redirect: 'manual', timeout: config.timeout });
     } catch (cause) {
-      if (typeof cause === 'object' && cause instanceof AbortError) throw cause;
+      if ((cause as any)?.name === 'AbortError') throw cause;
       // is it relevant to retry request when client's internet is down? 🤔
       if (isInternetError((cause as any)?.code)) throw SparkError.api(0, `cannot connect to <${url}>`);
       throw SparkError.api(-1, { message: `failed to fetch <${url}>`, cause: cause as Error });
@@ -301,7 +301,7 @@ export async function _download(
       };
     })
     .catch(async (response) => {
-      if (response instanceof AbortError) throw response;
+      if (response?.name === 'AbortError') throw response;
       if (isInternetError((response as any)?.code)) throw SparkError.api(0, `cannot connect to <${url}>`);
       if (response instanceof Error) {
         throw new SparkSdkError({ message: `failed to fetch <${url}>`, cause: response });

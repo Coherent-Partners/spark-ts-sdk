@@ -263,7 +263,7 @@ OAuth2.0 Client Credentials flow:
 - `Spark.folders.create(data)` creates a new folder with additional info.
 - `Spark.folders.find(name)` finds folders by name, status, category, or favorite.
 - `Spark.folders.update(id, data)` updates a folder's information by id.
-- `Spark.folders.delete(id)` deletes a folder by id.
+- `Spark.folders.delete(id)` deletes a folder by id, including all its services.
 
 [Services API](./docs/services.md) - manages Spark services:
 
@@ -279,6 +279,7 @@ OAuth2.0 Client Credentials flow:
 - `Spark.services.validate(uri, data)` validates input data using static or dynamic validations.
 - `Spark.services.export(uri)` exports Spark services as a zip file.
 - `Spark.services.import(data)` imports Spark services from a zip file into the Spark platform.
+- `Spark.services.delete(uri)` deletes an existing service, including all its versions.
 
 [Batches API](./docs/batches.md) - manages asynchronous batch processing:
 

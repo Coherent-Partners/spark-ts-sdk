@@ -1,6 +1,6 @@
 {
   "name": "@cspark/sdk",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "A Node.js SDK for interacting with Coherent Spark APIs",
   "author": "Coherent <team@coherent.global>",
   "homepage": "https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/docs/readme.md",
@@ -14,8 +14,8 @@
   ],
   "repository": "github:Coherent-Partners/spark-ts-sdk",
   "main": "./lib/cjs/index.js",
-  "module": "./lib/esm/index.js",
-  "types": "./lib/esm/index.d.ts",
+  "module": "./lib/esm/index.mjs",
+  "types": "./lib/types.d.ts",
   "browser": "./lib/bundle.js",
   "files": [
     "lib"
@@ -30,7 +30,6 @@
     "test": "jest",
     "prebuild": "rm -rf lib",
     "build": "tsc && rollup -c",
-    "postbuild": "echo '{\"type\":\"module\"}' > lib/esm/package.json",
     "demo": "tsc -p tsconfig.dev.json && node lib/examples/index.js",
     "prepare": "husky install"
   },
@@ -41,7 +40,7 @@
   "dependencies": {
     "buffer": "6.0.3",
     "form-data": "4.0.0",
-    "node-fetch": "~2.7.0",
+    "node-fetch": "2.7.0",
     "pako": "~2.1.0"
   },
   "devDependencies": {
@@ -68,22 +67,12 @@
     "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
     "rollup": "^4.4.0",
+    "rollup-plugin-dts": "^6.1.1",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "4.2.0",
+    "tslib": "^2.7.0",
     "typescript": "~5.3.0"
-  },
-  "exports": {
-    ".": {
-      "types": "./lib/esm/index.d.ts",
-      "require": "./lib/cjs/index.js"
-    },
-    "./*": {
-      "types": "./lib/esm/*.d.ts",
-      "require": "./lib/cjs/*.js",
-      "import": "./lib/esm/index.js",
-      "default": "./lib/esm/index.js"
-    }
   },
   "jest": {
     "rootDir": "test",

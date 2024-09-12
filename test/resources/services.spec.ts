@@ -1,4 +1,4 @@
-import Spark, { ApiResource } from '@cspark/sdk';
+import Spark, { ApiResource } from '../../src';
 import LocalServer from './_server';
 
 describe('Spark.services', () => {

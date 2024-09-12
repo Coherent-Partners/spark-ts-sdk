@@ -1,5 +1,5 @@
 import { createWriteStream, createReadStream } from 'fs';
-import Spark, { type SparkClient } from '@cspark/sdk';
+import Spark, { type SparkClient } from '../src';
 
 function getCategories(spark: SparkClient) {
   spark.folders

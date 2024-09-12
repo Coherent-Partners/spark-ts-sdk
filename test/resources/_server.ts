@@ -1,7 +1,7 @@
 import http from 'http';
 import { once } from 'events';
-import { Config } from '@cspark/sdk/config';
-import { ApiResource, Uri, BaseUrl } from '@cspark/sdk';
+import { Config } from '../../src/config';
+import { ApiResource, Uri, BaseUrl } from '../../src';
 
 // Use a custom BaseUrl for testing purposes.
 export class TestBaseUrl extends BaseUrl {

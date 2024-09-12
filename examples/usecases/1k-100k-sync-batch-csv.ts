@@ -20,7 +20,7 @@
  * NOTE: `Papaparse` is the module used to parse the CSV file. You will need to
  * install it to run this example.
  */
-import Spark, { SparkOptions, LoggerService } from '@cspark/sdk';
+import Spark, { SparkOptions, LoggerService } from '../../src';
 import { createReadStream, createWriteStream } from 'fs';
 import { join } from 'path';
 import Papa from 'papaparse';
