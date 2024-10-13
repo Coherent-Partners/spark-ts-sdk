@@ -141,7 +141,7 @@ download job.
 | _type_               | `csv \| json`              | The file type (defaults to `json`).                              |
 | _callIds_            | `string[]`                 | An array of call IDs to download logs for.                       |
 | _startDate_          | `string \| number \| Date` | The start date (format: `YYYY-MM-DD[THH:MM:SS.SSSZ]`).           |
-| _endState_           | `string \| number \| Date` | The end date (format: `YYYY-MM-DD[THH:MM:SS.SSSZ]`).             |
+| _endDate_            | `string \| number \| Date` | The end date (format: `YYYY-MM-DD[THH:MM:SS.SSSZ]`).             |
 | _correrationId_      | `string`                   | The correlation ID (possible fallback for `callIds`).            |
 | _sourceSystem_       | `string`                   | The source system (possible fallback for `callIds`).             |
 | _maxRetries_         | `number`                   | The maximum number of retries (defaults to `Config.maxRetries`). |

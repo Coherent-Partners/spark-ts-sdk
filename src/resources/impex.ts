@@ -30,6 +30,7 @@ export class ImpEx {
 
   /**
    * Exports Spark entities such as versions, services, or folders.
+   *
    * @param {ExportParams} params - what to export
    * @returns {Promise<HttpResponse[]>} a list of exported files
    * @throws {SparkError} when the export job fails
@@ -55,7 +56,8 @@ export class ImpEx {
   }
 
   /**
-   * Import Spark entities into the platform.
+   * Imports Spark entities into the platform.
+   *
    * @param {ImportParams} params - what to import
    * @returns {Promise<HttpResponse<ImportResult>>} - the import job results
    * @throws {SparkError} when the import job fails
@@ -98,6 +100,7 @@ export class Migration {
 
   /**
    * Migrates Spark entities from one platform to another (experimental feature).
+   *
    * @param {MigrateParams} params - which entities to migrate and where
    * @throws {SparkError} when the migration fails
    *
@@ -130,6 +133,7 @@ class Export extends ApiResource {
 
   /**
    * Initiates an export job to export Spark entities such as versions, services, or folders.
+   *
    * @param {ExportParams} params - what to export
    * @returns {Promise<HttpResponse<ExportInit>>} the export job details
    */
@@ -160,6 +164,7 @@ class Export extends ApiResource {
 
   /**
    * Checks the status of an export job.
+   *
    * @param {string} jobId - the export job ID
    * @param {StatusParams} params - optional parameters
    * @returns {Promise<HttpResponse<ExportResult>>} the export job results when completed
@@ -188,11 +193,10 @@ class Export extends ApiResource {
 
   /**
    * Downloads the exported files from an export job.
+   *
    * @param {string | ExportResult} exported - the export job ID or results
    * @returns {Promise<HttpResponse[]>} a list of exported files
    */
-  async download(exported: string): Promise<HttpResponse[]>;
-  async download(exported: ExportResult): Promise<HttpResponse[]>;
   async download(exported: string | ExportResult): Promise<HttpResponse[]> {
     const downloads: HttpResponse[] = [];
 
@@ -280,14 +284,13 @@ class Import extends ApiResource {
 export class Wasm extends ApiResource {
   /**
    * Downloads a service's WebAssembly module.
+   *
    * @param {string | UriParams} uri - where the service is located
    * @returns {Promise<HttpResponse>} a buffer of the WASM module as a zip file
    *
    * NOTE: As of now, only `serviceUri` made out of versionId downloads a wasm
    * successfully. This issue is being tracked in the platform and will be fixed soon.
    */
-  download(uri: string): Promise<HttpResponse>;
-  download(params: Omit<UriParams, 'proxy' | 'version'>): Promise<HttpResponse>;
   download(uri: string | Omit<UriParams, 'proxy' | 'version'>): Promise<HttpResponse> {
     const { folder, service, public: isPublic, serviceId, versionId } = Uri.validate(uri);
     const serviceUri = Uri.encode({ folder, service, serviceId, versionId });

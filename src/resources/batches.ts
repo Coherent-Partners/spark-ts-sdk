@@ -23,12 +23,14 @@ export class Batches extends ApiResource {
 
   /**
    * Creates a batch pipeline for asynchronous execution.
+   *
    * @param {string} uri - where the service is located
    * @returns {Promise<HttpResponse<BatchCreated>>} the batch pipeline details
    */
   create(uri: string, options?: PipelineOptions): Promise<HttpResponse<BatchCreated>>;
   /**
    * Creates a batch pipeline for asynchronous execution.
+   *
    * @param {CreateParams} params - where the service is located and additional metadata
    * @returns {Promise<HttpResponse<BatchCreated>>} the batch pipeline details
    */
@@ -48,6 +50,7 @@ export class Batches extends ApiResource {
       source_system: params.sourceSystem ?? SPARK_SDK,
       correlation_id: params.correlationId,
       unique_record_key: params.inputKey,
+
       // Experimental parameters (likely to change/be deprecated in future releases)
       initial_workers: options?.minRunners,
       max_workers: options?.maxRunners,
@@ -118,7 +121,8 @@ class Pipeline extends ApiResource {
    * Gets batch information.
    * @returns {Promise<HttpResponse<BatchInfo>>} the batch info.
    *
-   * IMPORTANT: This method is experimental and may change in future releases.
+   * IMPORTANT:
+   * This method is experimental and may change in future releases.
    */
   getInfo(): Promise<HttpResponse<BatchInfo>> {
     return this.request(Uri.from(undefined, { ...this.baseUri, endpoint: `batch/${this.id}` }));
@@ -134,6 +138,7 @@ class Pipeline extends ApiResource {
 
   /**
    * Pushes data to a batch pipeline.
+   *
    * @param {PushDataParams<Inputs>} params - the data to push to the batch pipeline.
    * @param {PushDataOptions} options - the options to consider when multiple chunks are provided.
    * @returns a record submission summary.
@@ -163,6 +168,7 @@ class Pipeline extends ApiResource {
 
   /**
    * Pulls the results from a batch pipeline.
+   *
    * @param {number} max - the maximum number of chunks to pull (default: 100)
    * @returns {Promise<HttpResponse<BatchResult<Outputs>>} the batch results
    */
@@ -179,9 +185,9 @@ class Pipeline extends ApiResource {
   /**
    * Closes a batch pipeline.
    *
-   * If you no longer have any more data to add to the batch, you can close the batch.
-   * After closing a batch, batch will still process the data and user will be able
-   * to download the remaining output from get chunk results API.
+   * If you no longer have more data to add to the batch, you can close the batch.
+   * After closing a batch, it will still process the data and users will be able
+   * to download the remaining output from "Get Chunk results" API.
    * @returns {Promise<HttpResponse<BatchDisposed>>} the batch status
    */
   async close(): Promise<HttpResponse<BatchDisposed>> {
@@ -253,35 +259,31 @@ class Pipeline extends ApiResource {
     }
   }
 
-  #assessChunks<T>(chunks: BatchChunk<T>[], ifIdDuplicated: IfChunkIdDuplicated) {
+  #assessChunks<T>(chunks: BatchChunk<T>[], IdDuplicated: IfChunkIdDuplicated) {
     for (const chunk of chunks) {
       const id = StringUtils.isEmpty(chunk.id) ? getUuid() : chunk.id.trim();
 
       if (this.#chunks.has(id)) {
-        if (ifIdDuplicated === 'ignore') {
+        if (IdDuplicated === 'ignore') {
           this.logger.warn(
-            ''.concat(
-              `chunk id <${id}> appears to be duplicated for this pipeline <${this.id}> `,
+            `chunk id <${id}> appears to be duplicated for this pipeline <${this.id}> ` +
               'and may cause unexpected behavior. You should consider using a different id.',
-            ),
           );
           continue;
         }
 
-        if (ifIdDuplicated === 'throw') {
+        if (IdDuplicated === 'throw') {
           throw SparkError.sdk({
             message: `chunk id <${id}> is duplicated for batch pipeline <${this.id}>`,
             cause: chunk,
           });
         }
 
-        if (ifIdDuplicated === 'replace') {
+        if (IdDuplicated === 'replace') {
           chunk.id = Utils.getUuid();
           this.logger.log(
-            ''.concat(
-              `chunk id <${id}> is duplicated for this pipeline <${this.id}> `,
+            `chunk id <${id}> is duplicated for this pipeline <${this.id}> ` +
               `and has been replaced with <${chunk.id}>`,
-            ),
           );
         }
       }

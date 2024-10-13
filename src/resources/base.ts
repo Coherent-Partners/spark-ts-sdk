@@ -73,6 +73,7 @@ export abstract class ApiResource {
 
   /**
    * Makes an HTTP request to the Spark API.
+   *
    * @param url - The URL to make the request to.
    * @param options - The HTTP options for the request.
    *
@@ -134,7 +135,7 @@ export interface Extensible<Resource extends ApiResource> {
   /**
    * The property name used to expose a resource with additional members.
    *
-   * It is recommended to use camel case for the property name. Be sure to choose a name that
+   * It is recommended to use camel case for the property name. Be sure to choose
    * a name that is descriptive, unique and does not conflict with any existing properties
    * in the client or other resources.
    */
@@ -238,6 +239,7 @@ export class Uri {
 
   /**
    * Builds a Spark URI from a partial resource.
+   *
    * @param {string} resource - the partial resource to build a Spark URI from.
    * @param {UriOptions} - the base URL, version, and endpoint options.
    * @returns {Uri} a Spark URI locator.
@@ -259,6 +261,7 @@ export class Uri {
 
   /**
    * Transforms a Spark-friendly service locator into `UriParams`.
+   *
    * @param {string | T} uri - Spark-friendly service locator
    * @returns {UriParams} the decoded parameters if any to build a Spark URI.
    *
@@ -298,6 +301,7 @@ export class Uri {
 
   /**
    * Encodes `UriParams` into a Spark-friendly service locator.
+   *
    * @param {UriParams} uri - the parameters to encode
    * @param {boolean} long whether to use long format or not (e.g., "folders/folder/services/service[version]")
    * This long format is from older versions of the Spark APIs. It's still supported
@@ -318,12 +322,10 @@ export class Uri {
 
   /**
    * Validates and transforms a Spark-friendly service locator into `UriParams`.
+   *
    * @param {string | T} uri - Spark-friendly uri locator
    * @returns {UriParams} the decoded parameters if any to build a Spark URI.
-   *
-   * This is a convenience method to handle string-based URIs and `UriParams` objects
-   * interchangeably. This improves the user experience by allowing them to pass in
-   * URIs in different formats without worrying about the underlying implementation.
+   * @throws {SparkError} if the uri is invalid or missing required parameters.
    */
   static validate<T extends UriParams>(uri: string | T, message?: string): T {
     const uriParams = Uri.toParams(uri);
@@ -331,9 +333,11 @@ export class Uri {
       const { folder, service } = uriParams;
       if (folder && !service) message ??= 'service name is missing';
       if (service && !folder) message ??= 'folder name is missing';
+
       message ??= 'service uri locator is required';
       message += ' :: a uri needs to be of these formats: \n\t- "folder/service[?version]" \n\t-';
       message += ' "service/serviceId" \n\t- "version/versionId" \n\t- "proxy/custom-endpoint"\n';
+
       throw SparkError.sdk({ message, cause: uri });
     }
     return uriParams;

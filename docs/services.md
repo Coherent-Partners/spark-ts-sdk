@@ -934,9 +934,9 @@ You may provide the service URI as a string or an object with the folder and ser
 names.
 
 ```ts
-await spark.service.delete('my-folder/my-service');
+await spark.services.delete('my-folder/my-service');
 // or
-await spark.service.delete({ folder: 'my-folder', service: 'my-service' });
+await spark.services.delete({ folder: 'my-folder', service: 'my-service' });
 ```
 
 ### Returns
