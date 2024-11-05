@@ -556,9 +556,9 @@ but not limited to the following information:
 The method accepts a string or a `UriParams` object as an argument.
 
 ```ts
-await spark.services.getSchema('my-folder/my-service');
+await spark.services.getSchema('my-folder/my-service'); // combining folder and service names
 // or
-await spark.services.getSchema({ folder: 'my-folder', service: 'my-service' });
+await spark.services.getSchema({ versionId: 'uuid' }); // by version ID
 ```
 
 ### Returns

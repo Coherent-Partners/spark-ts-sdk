@@ -196,15 +196,16 @@ export class Services extends ApiResource {
 
   /**
    * Gets the schema for a service.
-   * @param {string | GetSchemaParams} uri - how to locate the service
+   * @param {string | GetSchemaParams} uri - how to locate the service (folder and service, or by version ID)
    * @returns {Promise<HttpResponse>} the service schema
    */
   getSchema(uri: string | GetSchemaParams): Promise<HttpResponse> {
-    const { folder, service } = Uri.validate(uri);
-    const endpoint = `product/${folder}/engines/get/${service}`;
-    const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
+    const { folder, service, versionId } = Uri.validate(uri);
+    const baseUri = StringUtils.isNotEmpty(versionId)
+      ? { base: this.config.baseUrl.full, endpoint: `GetEngineDetailByVersionId/versionid/${versionId}` }
+      : { base: this.config.baseUrl.value, version: 'api/v1', endpoint: `product/${folder}/engines/get/${service}` };
 
-    return this.request(url);
+    return this.request(Uri.from(undefined, baseUri), { method: versionId ? 'POST' : 'GET' });
   }
 
   /**

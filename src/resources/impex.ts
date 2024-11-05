@@ -192,6 +192,21 @@ class Export extends ApiResource {
   }
 
   /**
+   * Cancels an export job that is in progress.
+   * @param {string} jobId - the export job UUID
+   * @returns {Promise<HttpResponse<ExportResult>>} the status of the export job
+   */
+  async cancel(jobId: string): Promise<HttpResponse<ExportResult>> {
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint: `export/${jobId}` });
+    return this.request<ExportResult>(url, { method: 'PATCH', body: { export_status: 'cancelled' } }).then(
+      (response) => {
+        this.logger.log(`export job <${response.data.id}> has been cancelled`);
+        return response;
+      },
+    );
+  }
+
+  /**
    * Downloads the exported files from an export job.
    *
    * @param {string | ExportResult} exported - the export job ID or results
@@ -409,7 +424,7 @@ type ImportBody = {
       update_version_type: UpgradeType;
     }[];
   };
-  services_existing: 'update' | 'replace' | 'abort';
+  services_existing: 'abort' | 'replace' | 'add_version';
   source_system?: string;
   correlation_id?: string;
 };
