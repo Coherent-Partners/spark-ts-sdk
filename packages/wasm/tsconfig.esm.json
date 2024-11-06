@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "lib/esm",
+    "module": "esnext",
+    "target": "ES2015",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "name": "@cspark/wasm",
+  "version": "0.1.0-beta.0",
+  "description": "A Node.js SDK for interacting with the Hybrid Runner API",
+  "author": "Coherent <team@coherent.global>",
+  "homepage": "https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/docs/readme.md",
+  "license": "Apache-2.0",
+  "keywords": [
+    "coherent",
+    "spark",
+    "sdk",
+    "hybrid",
+    "runner",
+    "api"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Coherent-Partners/spark-ts-sdk.git",
+    "directory": "packages/wasm"
+  },
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.mjs",
+  "types": "./lib/types.d.ts",
+  "browser": "./lib/bundle.js",
+  "files": [
+    "lib"
+  ],
+  "engines": {
+    "node": "^14.15.0 || >=16.0.0"
+  },
+  "scripts": {
+    "start": "echo \">>> no start command specified\" && exit 0",
+    "format": "prettier --write \"{src,test,examples}/**/*.ts\" --config ../../.prettierrc",
+    "lint": "eslint \"{src,test}/**/*.ts\" --fix",
+    "test": "jest",
+    "prebuild": "rm -rf lib",
+    "build": "tsc && rollup -c",
+    "demo": "tsc -p tsconfig.dev.json && node lib/examples/index.js"
+  },
+  "lint-staged": {
+    "*.ts": "eslint \"{src,test}/**/*.ts\" --cache --fix",
+    "*.{md,ts,json,yml}": "prettier -u --write \"{src,test,examples,docs}/**/*\" --config ../../.prettierrc"
+  },
+  "dependencies": {
+    "@cspark/sdk": "^0.2.5"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@types/jest": "^29.5.1",
+    "@types/node": "*",
+    "@typescript-eslint/eslint-plugin": "7.1.0",
+    "@typescript-eslint/parser": "7.1.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
+    "jest": "^29.5.0",
+    "lint-staged": "^15.2.2",
+    "prettier": "^3.2.5",
+    "rollup": "^4.4.0",
+    "rollup-plugin-dts": "^6.1.1",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.7.0",
+    "typescript": "~5.3.0"
+  },
+  "jest": {
+    "rootDir": "test",
+    "testEnvironment": "node",
+    "testRegex": ".*\\.spec\\.ts$",
+    "coverageDirectory": "../coverage",
+    "clearMocks": true,
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "transform": {
+      "^.+.ts$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.dev.json"
+        }
+      ]
+    },
+    "collectCoverageFrom": [
+      "**/*.ts"
+    ]
+  }
+}
