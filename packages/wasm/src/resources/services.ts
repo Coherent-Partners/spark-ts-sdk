@@ -2,6 +2,18 @@ import { type Readable } from 'stream';
 import { ApiResource, Uri, UriParams, HttpResponse, SparkClient } from '@cspark/sdk';
 
 export class Services extends ApiResource {
+  /**
+   * upload a WASM package to a running Hybrid Runner.
+   *
+   * @param {Readable} file including wasm and other assets
+   * @param {string} fileName of the zip file
+   * @returns {Promise<HttpResponse<ServiceUploaded>>} the uploaded service details.
+   *
+   * The zip file should contain the compiled wasm file and other assets needed
+   * to run the service. This package refers to the zip file exported from the
+   * SaaS using `onpremises` mode via Export API.
+   * @see https://docs.coherent.global/spark-apis/impex-apis/export for more details.
+   */
   upload(file: Readable, fileName: string = 'package.zip'): Promise<HttpResponse<ServiceUploaded>> {
     const url = Uri.from(undefined, { base: this.config.baseUrl.value, endpoint: 'upload' });
     return this.request<ServiceUploaded>(url, {
@@ -10,6 +22,26 @@ export class Services extends ApiResource {
     });
   }
 
+  /**
+   * Executes a WASM service.
+   *
+   * @param {string | UriParams} uri - use the `{folder}/{service}[?{version}]`,
+   * `service/{serviceId}`, `version/{versionId}` format to locate the service;
+   * or use fine-grained details to locate the service. The `UriParams` object
+   * can be used to specify the service location and additional parameters like
+   * the version ID, service ID, etc.
+   * @param {ExecuteParams<Input>} [params] - the optional execution parameters (inputs, metadata, etc.)
+   * The inputs can be provided the following ways:
+   * - as `null` or `undefined` to use the default inputs
+   * - as a JSON string
+   * - as a JSON object for single inputs execution
+   * - as an array of JSON objects for synchronous batch execution
+   * @returns {Promise<HttpResponse<ServiceExecuted<Output>>>} the service execution response
+   *
+   * Obviously, the SDK ignores what those default values are. Under the hood,
+   * the SDK uses an empty object `{}` as the input data, which is an indicator for
+   * the runner to use the default inputs defined in the Excel file.
+   */
   async execute<Input, Output>(
     uri: string | UriParams,
     params: ExecuteParams<Input> = {},
@@ -19,13 +51,21 @@ export class Services extends ApiResource {
 }
 
 export class Version extends ApiResource {
-  get() {
+  /**
+   * Gets the neuron version compatibility of the runner.
+   * @returns {Promise<HttpResponse<NeuronVersion>>} version of the runner.
+   */
+  get(): Promise<HttpResponse<NeuronVersion>> {
     return this.request(`${this.config.baseUrl.value}/version`);
   }
 }
 
 export class Health extends ApiResource {
-  check() {
+  /**
+   * Checks the health of the runner.
+   * @returns {Promise<HttpResponse<HealthStatus>>} health status of the runner.
+   */
+  check(): Promise<HttpResponse<HealthStatus>> {
     return this.request(`${this.config.baseUrl.value}/healthcheck`);
   }
 }
@@ -143,4 +183,12 @@ type ServiceExecuted<Output = Record<string, any>> = {
   compiler_version: string;
   correlation_id: string;
   request_timestamp: string;
+};
+
+type HealthStatus = { msg: string };
+
+type NeuronVersion = {
+  lastPullDate: string;
+  filehash: string;
+  version: string;
 };
