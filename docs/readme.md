@@ -3,7 +3,7 @@
 This guide should serve as a comprehensive reference for the SDK. It covers all
 the verbs (or methods) and parameters available in the SDK.
 
-Additional information can be found on [Spark's User Guide](https://docs.coherent.global).
+Additional information about Spark APIs can be found on [Spark's User Guide](https://docs.coherent.global).
 
 ## Table of Contents
 
@@ -155,7 +155,7 @@ where `T` is the type of the data returned by the API.
 
 - `status`: HTTP status code
 - `data`: JSON data `T` returned by the API
-- `buffer`: Binary array buffer of response body
+- `buffer`: Binary array buffer of response body (useful for downloading files)
 - `headers`: Response headers
 
 **Example:**
@@ -170,8 +170,8 @@ where `T` is the type of the data returned by the API.
 ```
 
 > Sometimes, the SDK may return a modified version of the Spark API response for
-> better readability and ease of use. Keep an eye on the `data` property to access
-> the actual response data.
+> better readability and ease of use. Keep an eye on the `data` property when accessing
+> the response data.
 
 ## HTTP Error
 
@@ -238,9 +238,9 @@ The Spark platform offers a wide range of functionalities that can be accessed
 programmatically via RESTful APIs. There are over 60 endpoints available, and the
 SDK currently supports a subset of them.
 
-Since the SDK does not cover all the endpoints in the platform, it provides a way
-to cover additional ones. So, if there's an API resource you would like to
-consume that's not available in the SDK, you can always extend this `ApiResource`
+Since the SDK does not cover all the endpoints in the platform, it provides a
+convenient way to support additional ones. So, when there's an API resource you'd
+like to consume that's unavailable in the SDK, you can always extend this `ApiResource`
 to include it.
 
 ```ts
@@ -289,7 +289,7 @@ these errors to avoid disrupting the flow of your application.
 ```ts
 import Spark, { SparkError } from '@cspark/sdk';
 
-async function main(folderName) {
+async function createFolder(folderName) {
   try {
     const spark = new Spark(); // settings are loaded from the environment variables
     const response = await spark.folders.create(folderName);
@@ -302,7 +302,7 @@ async function main(folderName) {
 
       if (error.status === 409 || error.name === 'ConflictError') {
         console.log('folder already exists; trying again with a different name');
-        await main(`${folderName}-1`);
+        await createFolder(`${folderName}-1`);
       }
     } else {
       console.error(error); // this is thrown by something else
@@ -310,7 +310,7 @@ async function main(folderName) {
   }
 }
 
-main('my-folder');
+createFolder('my-folder');
 ```
 
 ### File Handling

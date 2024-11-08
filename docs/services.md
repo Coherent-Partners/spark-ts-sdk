@@ -153,9 +153,9 @@ and publication processes.
 
 This method allows you to execute a Spark service.
 
-Currently, Spark supports two versions of Execute API: `v3` and `v4`. The SDK will use
-the [v3 format][v3-format] for a single input and the [v4 format][v4-format] for
-multiple inputs.
+Currently, Coherent Spark supports two versions of Execute API: `v3` (or [v3 format][v3-format])
+and `v4` ([v4 format][v4-format]), which are used respectively for single inputs and
+multiple inputs data formats.
 By default, the SDK will return the output data in the [v4 format][v4-format]
 unless you prefer to work with the original format emitted by the API.
 
@@ -219,7 +219,7 @@ await spark.services.execute({ versionId: 'uuid' });
 ```
 
 - using **serviceId**:
-  `serviceId` is the UUID of the service. It will execute the latest version of the service.
+  `serviceId` is the UUID of the service and points to the latest version of the service.
 
 ```ts
 await spark.services.execute('service/uuid');
@@ -290,7 +290,7 @@ This method returns the output data of the service execution in the following fo
 - `original`: the output data as JSON in its original format (as returned by the API).
 - `alike`: the output data as JSON in the v4 format whether it's single or multiple inputs.
 
-For instance, the output data of a service execution for a single input looks like this
+For instance, the output data of a service execution for single inputs looks like this
 when the `responseFormat` is set to `alike`:
 
 ```json
@@ -310,7 +310,7 @@ when the `responseFormat` is set to `alike`:
 }
 ```
 
-You may wonder why the output data is wrapped in an array for a single input.
+You may wonder why the output data is wrapped in an array for single inputs.
 This is because the `alike` format is designed to work with both single and multiple
 inputs. This should help maintain consistency in the output data format. But if you
 prefer the original format emitted by the API, you can set the `responseFormat`
@@ -346,7 +346,8 @@ to `original`.
 > [!IMPORTANT]
 > Executing multiple inputs is a synchronous operation and may take some time to complete.
 > The default timeout for this client is 60 seconds, and for Spark servers, it is 55 seconds.
-> Another good practice is to split the batch into smaller chunks and submit separate requests.
+> Another good practice is to split the batch (of multiple inputs) into smaller chunks and
+> submit separate requests.
 
 ## Execute a Spark service using Transforms
 
@@ -556,9 +557,9 @@ but not limited to the following information:
 The method accepts a string or a `UriParams` object as an argument.
 
 ```ts
-await spark.services.getSchema('my-folder/my-service');
+await spark.services.getSchema('my-folder/my-service'); // combining folder and service names
 // or
-await spark.services.getSchema({ folder: 'my-folder', service: 'my-service' });
+await spark.services.getSchema({ versionId: 'uuid' }); // by version ID
 ```
 
 ### Returns
@@ -934,9 +935,9 @@ You may provide the service URI as a string or an object with the folder and ser
 names.
 
 ```ts
-await spark.service.delete('my-folder/my-service');
+await spark.services.delete('my-folder/my-service');
 // or
-await spark.service.delete({ folder: 'my-folder', service: 'my-service' });
+await spark.services.delete({ folder: 'my-folder', service: 'my-service' });
 ```
 
 ### Returns

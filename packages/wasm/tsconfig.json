@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "outDir": "lib/cjs",
+    "module": "commonjs",
+    "target": "es6",
+    "removeComments": false,
+    "checkJs": false,
+    "alwaysStrict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strict": true,
+    "strictFunctionTypes": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "pretty": true,
+    "types": ["node"],
+    "lib": ["es5", "es6", "dom"],
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*"]
+}

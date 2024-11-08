@@ -1,8 +1,8 @@
 # Compiled outputs
-/build
-/dist
-/lib
-/node_modules
+build
+dist
+lib
+node_modules
 yarn.lock
 package-lock.json
 
@@ -19,7 +19,7 @@ lerna-debug.log*
 .DS_Store
 
 # Tests
-/coverage
+coverage
 /.nyc_output
 
 # IDEs and editors
@@ -39,9 +39,9 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 # Environment variables
-/.env
 *.env
 !.env.example
+!.env.local
 
 # Husky
 .husky/_
@@ -49,3 +49,4 @@ lerna-debug.log*
 
 # Misc
 /temp
+/.temp

@@ -1,4 +1,4 @@
-import { SparkError } from '@cspark/sdk';
+import { SparkError } from '../src';
 import Validators from '../src/validators';
 
 describe('Validators', () => {

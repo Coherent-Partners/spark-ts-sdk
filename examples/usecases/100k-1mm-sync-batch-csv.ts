@@ -150,7 +150,7 @@ main();
 //   });
 
 //   try {
-//     const response = await spark.services.batches.execute<Inputs, Outputs>(serviceUri, { inputs });
+//     const response = await spark.services.execute<Inputs, Outputs>(serviceUri, { inputs });
 //     parentPort?.postMessage({ ok: true, chunkId, data: { inputs, ...response.data } });
 //   } catch (error) {
 //     parentPort?.postMessage({ ok: false, chunkId, data: { inputs, error } });

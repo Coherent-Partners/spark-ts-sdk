@@ -9,19 +9,8 @@ import { SparkError, SparkApiError, SparkSdkError } from './error';
 import { RETRY_RANDOMIZATION_FACTOR } from './constants';
 import Utils, { Nullable, loadModule } from './utils';
 
-export interface Multipart {
-  readonly name: string;
-  readonly data?: JsonData | Serializable;
-  readonly fileStream?: ByteStream;
-  readonly fileName?: string;
-  readonly contentType?: string;
-}
-
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-/**
- * Exposes some options when building HTTP requests.
- */
 export interface RequestOptions<T = JsonData> {
   /** Key-value pairs of headers to be sent with the request. */
   readonly headers?: Record<string, string>;
@@ -49,7 +38,7 @@ export interface HttpOptions<T> extends RequestOptions<T> {
   /** Client configuration. */
   readonly config: Config;
 
-  /** A string to set request's method (GET, POST, etc.). Defaults to GET. */
+  /** A string to set request's method (defaults to GET) */
   readonly method?: HttpMethod;
 
   /** Request body content type. */
@@ -57,7 +46,7 @@ export interface HttpOptions<T> extends RequestOptions<T> {
 }
 
 export interface HttpResponse<T = JsonData | Serializable> {
-  /** The status code of the response. (This will be 200 for a success). */
+  /** The status code of the response. */
   readonly status: number;
 
   /** Response body data. */
@@ -68,6 +57,14 @@ export interface HttpResponse<T = JsonData | Serializable> {
 
   /** Response headers. */
   readonly headers: Record<string, string>;
+}
+
+export interface Multipart {
+  readonly name: string;
+  readonly data?: JsonData | Serializable;
+  readonly fileStream?: ByteStream;
+  readonly fileName?: string;
+  readonly contentType?: string;
 }
 
 export interface Interceptor {

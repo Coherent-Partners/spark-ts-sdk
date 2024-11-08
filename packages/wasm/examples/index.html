@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+  <body>
+    <script src="../lib/bundle.js"></script>
+    <script>
+      const { HybridClient } = window['@cspark/wasm'];
+
+      (async () => {
+        const response = await HybridClient.healthCheck();
+        console.log(response.data);
+      })();
+    </script>
+  </body>
+</html>

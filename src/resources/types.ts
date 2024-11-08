@@ -12,7 +12,7 @@ export type IfEntityPresent = 'abort' | 'replace' | 'add_version';
 
 export interface GetVersionsParams extends Pick<UriParams, 'folder' | 'service'> {}
 
-export interface GetSchemaParams extends Pick<UriParams, 'folder' | 'service'> {}
+export interface GetSchemaParams extends Pick<UriParams, 'folder' | 'service' | 'versionId'> {}
 
 export interface GetMetadataParams extends Omit<UriParams, 'version'> {}
 

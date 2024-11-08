@@ -1,6 +1,6 @@
-import Utils from '../../src/utils';
 import Spark, { SparkError, SparkApiError, Uri, ApiResource } from '../../src';
 import LocalServer, { TestApiResource } from './_server';
+import Utils from '../../src/utils';
 import { AbortError } from 'node-fetch';
 
 describe('Uri', () => {
