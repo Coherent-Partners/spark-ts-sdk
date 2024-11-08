@@ -1,8 +1,7 @@
 import { SparkOptions, BaseUrl } from '@cspark/sdk';
 
-import * as API from './resources';
-import { DEFAULT_RUNNER_URL } from './constants';
 import { Config, RunnerUrl } from './config';
+import * as API from './resources';
 
 /**
  * The available settings to initialize a new Hybrid client.
@@ -11,9 +10,7 @@ import { Config, RunnerUrl } from './config';
  * the base URL for the APIs, the API key to use for authentication, and the maximum
  * amount of time to wait for a response from the server before timing out.
  */
-export interface ClientOptions extends Omit<SparkOptions, 'oauth'> {
-  tenant: string;
-}
+export interface ClientOptions extends Omit<SparkOptions, 'oauth' | 'env'> {}
 
 /**
  * The main entry point for the Coherent Hybrid Runner SDK client.
@@ -34,8 +31,8 @@ export class Client {
     if (options instanceof Config) {
       this.config = options;
     } else {
-      const { baseUrl: url = DEFAULT_RUNNER_URL, tenant, ...opts } = options;
-      const baseUrl = url instanceof BaseUrl ? url : new RunnerUrl(url, tenant);
+      const { baseUrl: url, tenant, ...opts } = options;
+      const baseUrl = url instanceof BaseUrl ? url : RunnerUrl.from({ url, tenant });
       this.config = new Config({ baseUrl, ...opts });
     }
   }
@@ -61,11 +58,8 @@ export class Client {
    * @param {string} baseUrl of the runner to check.
    * @param {ClientOptions} options to use for the client.
    */
-  static healthCheck(
-    baseUrl: string = DEFAULT_RUNNER_URL,
-    { token = 'open', ...options }: Omit<ClientOptions, 'tenant' | 'baseUrl'> = {},
-  ) {
-    const config = new Config({ ...options, token, baseUrl: new RunnerUrl(baseUrl) });
+  static healthCheck(baseUrl?: string, { token = 'open', ...options }: Omit<ClientOptions, 'tenant' | 'baseUrl'> = {}) {
+    const config = new Config({ ...options, token, baseUrl: RunnerUrl.noTenant(baseUrl) });
     return new API.Health(config).check();
   }
 
@@ -75,11 +69,8 @@ export class Client {
    * @param {string} baseUrl of the runner to check.
    * @param {ClientOptions} options to use for the client.
    */
-  static getVersion(
-    baseUrl: string = DEFAULT_RUNNER_URL,
-    { token = 'open', ...options }: Omit<ClientOptions, 'tenant' | 'baseUrl'> = {},
-  ) {
-    const config = new Config({ ...options, token, baseUrl: new RunnerUrl(baseUrl) });
+  static getVersion(baseUrl?: string, { token = 'open', ...options }: Omit<ClientOptions, 'tenant' | 'baseUrl'> = {}) {
+    const config = new Config({ ...options, token, baseUrl: RunnerUrl.noTenant(baseUrl) });
     return new API.Version(config).get();
   }
 }
