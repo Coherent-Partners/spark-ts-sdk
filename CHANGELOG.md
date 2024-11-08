@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.8 (2024-11-08)
+
+- Enable service schema fetching by ID
+- Add support for canceling a long-lasting Export job (`Spark.impex.exports.cancel(jobId)`)
+- Update SDK documentation
+
 ## 0.2.7 (2024-09-12)
 
 - Update build configuration and package exports
@@ -88,7 +94,7 @@ for commit guidelines.
 ## 0.1.0-beta.x (2024-04-18)
 
 - Add documentation comments
-- Update readme.
+- Update readme
 - Add documentation for SDK usage
 - Add a logger facade
 - Add experimental verbs (currently being tested)

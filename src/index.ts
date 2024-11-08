@@ -1,6 +1,6 @@
 // Public API
 export { version, about, Version, VERSION } from './version';
-export { Authorization } from './auth';
+export { Authorization, OAuth } from './auth';
 export { Serializable, JsonData } from './data';
 export { BaseUrl, Config, JwtConfig } from './config';
 export { HttpResponse, Multipart, Interceptor } from './http';
