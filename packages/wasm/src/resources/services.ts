@@ -30,24 +30,21 @@ export class Health extends ApiResource {
   }
 }
 
-type CompilerType = 'Neuron' | 'Type3' | 'Type2' | 'Type1' | 'Xconnector';
 type JsonInputs = Record<string, any>;
 type ArrayInputs<T = any> = T[];
 type Inputs<T> = undefined | null | string | JsonInputs | ArrayInputs<T>;
-type EncodingType = 'gzip' | 'deflate';
 
 interface ExecuteParams<I = Record<string, any>> {
   // Data for calculation
   inputs?: Inputs<I>;
   responseFormat?: 'original' | 'alike';
-  encoding?: EncodingType;
+  encoding?: 'gzip' | 'deflate';
 
   // Metadata for calculation
   activeSince?: string | number | Date;
   sourceSystem?: string;
   correlationId?: string;
   callPurpose?: string;
-  compilerType?: CompilerType;
   subservices?: undefined | string | string[];
 
   // Available only in v3 (legacy)

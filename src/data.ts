@@ -3,11 +3,11 @@ import { gzip, ungzip, deflate, inflate } from 'pako';
 import { SparkError } from './error';
 import { StringUtils } from './utils';
 
-export type JsonData = null | boolean | number | string | JsonArray | JsonValue;
+export type JsonData = null | boolean | number | string | JsonArray | JsonObject;
 
 export type JsonArray = readonly JsonData[];
 
-export type JsonValue = { readonly [key: string]: JsonData | undefined };
+export type JsonObject = { readonly [key: string]: JsonData | undefined };
 
 /**
  * Serializable JSON data

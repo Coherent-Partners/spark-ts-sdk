@@ -33,13 +33,19 @@ export class Client {
     return new API.Services(this.config);
   }
 
-  static healthCheck(baseUrl: string = DEFAULT_RUNNER_URL) {
-    const config = new Config({ baseUrl: new RunnerUrl(baseUrl), token: 'open' });
+  static healthCheck(
+    baseUrl: string = DEFAULT_RUNNER_URL,
+    { token = 'open', ...options }: Omit<ClientOptions, 'tenant' | 'baseUrl'> = {},
+  ) {
+    const config = new Config({ ...options, token, baseUrl: new RunnerUrl(baseUrl) });
     return new API.Health(config).check();
   }
 
-  static getVersion(baseUrl: string = DEFAULT_RUNNER_URL) {
-    const config = new Config({ baseUrl: new RunnerUrl(baseUrl), token: 'open' });
+  static getVersion(
+    baseUrl: string = DEFAULT_RUNNER_URL,
+    { token = 'open', ...options }: Omit<ClientOptions, 'tenant' | 'baseUrl'> = {},
+  ) {
+    const config = new Config({ ...options, token, baseUrl: new RunnerUrl(baseUrl) });
     return new API.Version(config).get();
   }
 }

@@ -3,7 +3,7 @@
   "version": "0.1.0-beta.0",
   "description": "A Node.js SDK for interacting with the Hybrid Runner API",
   "author": "Coherent <team@coherent.global>",
-  "homepage": "https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/docs/readme.md",
+  "homepage": "https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/packages/wasm/docs/readme.md",
   "license": "Apache-2.0",
   "keywords": [
     "coherent",
@@ -41,10 +41,11 @@
     "*.ts": "eslint \"{src,test}/**/*.ts\" --cache --fix",
     "*.{md,ts,json,yml}": "prettier -u --write \"{src,test,examples,docs}/**/*\" --config ../../.prettierrc"
   },
-  "dependencies": {
-    "@cspark/sdk": "^0.2.5"
+  "peerDependencies": {
+    "@cspark/sdk": "^0.2.8"
   },
   "devDependencies": {
+    "@cspark/sdk": "^0.2.8",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
