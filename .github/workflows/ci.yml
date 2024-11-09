@@ -6,7 +6,30 @@ on:
     paths-ignore: ['**.md', 'LICENSE', '.nvmrc']
 
 jobs:
-  test:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18.12'
+
+      - name: Install dependencies
+        run: yarn install --ignore-scripts
+
+      - name: Run unit tests
+        run: yarn run test
+
+      - name: Build package
+        run: yarn run build
+
+      - name: Persist build results
+        uses: actions/upload-artifact@v3
+        with:
+          name: spark-ts-sdk
+          path: lib
+
+  cspark-sdk:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
@@ -18,23 +41,48 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Install SDK dependencies
+      - name: Install @cspark/sdk dependencies
         run: npm install --ignore-scripts
 
-      - name: Run unit tests for SDK
+      - name: Analyze codebase
+        run: npm run lint
+
+      - name: Run unit tests
         run: npm test
 
-      - name: Build SDK package
-        run: npm run build
+  cspark-wasm:
+    needs: build
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        node: ['14.15.0', '16.0.0', '18.0.0']
+        exclude:
+          - os: macOS-latest
+            node: '14.15.0'
 
-      - name: Install Hybrid Runner dependencies
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Download SDK build from artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: spark-ts-sdk
+
+      - name: Install dependencies
         run: |
           cd packages/wasm
           npm install --ignore-scripts
 
-      - name: Run unit tests for Hybrid
+      - name: Analyze codebase
+        run: npm run lint
+
+      - name: Run unit tests
         run: npm test
