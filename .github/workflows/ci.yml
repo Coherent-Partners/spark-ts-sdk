@@ -56,7 +56,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        node: ['18.0.0']
+        node: ['18.12.1']
 
     runs-on: ${{ matrix.os }}
     steps:
