@@ -73,10 +73,8 @@ jobs:
         with:
           name: lib
 
-      - name: Install dependencies
+      - name: Run unit tests
         run: |
           cd packages/wasm
           npm install --ignore-scripts
-
-      - name: Run unit tests
-        run: npm test
+          npm test
