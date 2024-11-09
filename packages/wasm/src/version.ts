@@ -1,1 +1,7 @@
-export const version = '0.1.0-beta.1';
+import { version as sdk } from '@cspark/sdk';
+
+const version = '0.1.0-beta.1';
+
+const about = `Coherent Hybrid Runner SDK v${version} (@cspark/sdk v${sdk})`;
+
+export { version, about };

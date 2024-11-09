@@ -1,0 +1,37 @@
+name: Publish @cspark/sdk
+
+on:
+  workflow_dispatch: # Manually trigger a release.
+
+jobs:
+  publish:
+    name: publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build project
+        run: yarn build
+
+      - name: Publish to NPM
+        run: |
+          set -eux
+          npm config set '//registry.npmjs.org/:_authToken' "$NPM_TOKEN"
+          VERSION="$(node -p "require('./package.json').version")"
+          if [[ "$VERSION" =~ -([a-zA-Z]+) ]]; then
+            TAG="${BASH_REMATCH[1]}"
+          else
+            TAG="latest"
+          fi
+          yarn publish --access public --tag "$TAG"
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_API_TOKEN }}

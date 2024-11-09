@@ -22,8 +22,19 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Install dependencies
+      - name: Install SDK dependencies
         run: npm install --ignore-scripts
 
-      - name: Run unit tests
+      - name: Run unit tests for SDK
+        run: npm test
+
+      - name: Build SDK package
+        run: npm run build
+
+      - name: Install Hybrid Runner dependencies
+        run: |
+          cd packages/wasm
+          npm install --ignore-scripts
+
+      - name: Run unit tests for Hybrid
         run: npm test

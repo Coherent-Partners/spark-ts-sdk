@@ -50,26 +50,6 @@ export class Services extends ApiResource {
   }
 }
 
-export class Version extends ApiResource {
-  /**
-   * Gets the neuron version compatibility of the runner.
-   * @returns {Promise<HttpResponse<NeuronVersion>>} version of the runner.
-   */
-  get(): Promise<HttpResponse<NeuronVersion>> {
-    return this.request(`${this.config.baseUrl.value}/version`);
-  }
-}
-
-export class Health extends ApiResource {
-  /**
-   * Checks the health of the runner.
-   * @returns {Promise<HttpResponse<HealthStatus>>} health status of the runner.
-   */
-  check(): Promise<HttpResponse<HealthStatus>> {
-    return this.request(`${this.config.baseUrl.value}/healthcheck`);
-  }
-}
-
 type JsonInputs = Record<string, any>;
 type ArrayInputs<T = any> = T[];
 type Inputs<T> = undefined | null | string | JsonInputs | ArrayInputs<T>;
@@ -183,12 +163,4 @@ type ServiceExecuted<Output = Record<string, any>> = {
   compiler_version: string;
   correlation_id: string;
   request_timestamp: string;
-};
-
-type HealthStatus = { msg: string };
-
-type NeuronVersion = {
-  lastPullDate: string;
-  filehash: string;
-  version: string;
 };

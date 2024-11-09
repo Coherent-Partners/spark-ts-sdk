@@ -1,6 +1,6 @@
 {
   "name": "@cspark/wasm",
-  "version": "0.1.0-beta.0",
+  "version": "0.1.0-beta.1",
   "description": "A Node.js SDK for interacting with the Hybrid Runner API",
   "author": "Coherent <team@coherent.global>",
   "homepage": "https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/packages/wasm/docs/readme.md",
@@ -45,7 +45,7 @@
     "@cspark/sdk": "^0.2.8"
   },
   "devDependencies": {
-    "@cspark/sdk": "^0.2.8",
+    "@cspark/sdk": "../..",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",

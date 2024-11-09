@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Install SDK dependencies
         run: yarn install
 
       - name: Format codebase
@@ -30,12 +30,28 @@ jobs:
       - name: Run unit tests
         run: yarn test
 
-      - name: Build project
+      - name: Build SDK package
         run: yarn build
 
-      - name: Persist build results
+      - name: Persist SDK build
         uses: actions/upload-artifact@v3
         with:
           name: spark-ts-sdk
           path: lib
           retention-days: 1
+
+      - name: Install Hybrid Runner dependencies
+        run: |
+          cd packages/wasm
+          yarn install
+
+      - name: Run unit tests for Hybrid
+        run: yarn test
+
+      - name: Build Hybrid package
+        run: yarn build
+
+      - name: Persist Hybrid package
+        uses: actions/upload-artifact@v3
+        with:
+          name: spark-ts-wasm
