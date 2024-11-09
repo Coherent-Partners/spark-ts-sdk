@@ -41,16 +41,12 @@ jobs:
           path: lib
           retention-days: 1
 
-      - name: Install Hybrid Runner dependencies
+      - name: Prepare Hybrid Runner build
         run: |
           cd packages/wasm
           yarn install
-
-      - name: Run unit tests for Hybrid
-        run: yarn test
-
-      - name: Build Hybrid package
-        run: yarn build
+          yarn test
+          yarn build
 
       - name: Persist Hybrid package
         uses: actions/upload-artifact@v4
