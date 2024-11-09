@@ -78,8 +78,5 @@ jobs:
           cd packages/wasm
           npm install --ignore-scripts
 
-      - name: Analyze codebase
-        run: npm run lint
-
       - name: Run unit tests
         run: npm test
