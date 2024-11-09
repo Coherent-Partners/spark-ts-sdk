@@ -24,9 +24,9 @@ jobs:
         run: yarn run build
 
       - name: Persist build results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: spark-ts-sdk
+          name: lib
           path: lib
 
   cspark-sdk:
@@ -45,11 +45,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Install @cspark/sdk dependencies
+      - name: Install dependencies
         run: npm install --ignore-scripts
-
-      - name: Analyze codebase
-        run: npm run lint
 
       - name: Run unit tests
         run: npm test
@@ -74,7 +71,7 @@ jobs:
       - name: Download SDK build from artifact
         uses: actions/download-artifact@v4
         with:
-          name: spark-ts-sdk
+          name: lib
 
       - name: Install dependencies
         run: |

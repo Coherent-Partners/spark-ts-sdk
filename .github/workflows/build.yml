@@ -35,7 +35,7 @@ jobs:
         run: yarn build
 
       - name: Persist SDK build
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: spark-ts-sdk
           path: lib
@@ -53,7 +53,7 @@ jobs:
         run: yarn build
 
       - name: Persist Hybrid package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: spark-ts-wasm
           path: packages/wasm/lib
