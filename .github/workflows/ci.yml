@@ -6,29 +6,6 @@ on:
     paths-ignore: ['**.md', 'LICENSE', '.nvmrc']
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '18.12'
-
-      - name: Install dependencies
-        run: yarn install --ignore-scripts
-
-      - name: Run unit tests
-        run: yarn run test
-
-      - name: Build package
-        run: yarn run build
-
-      - name: Persist build results
-        uses: actions/upload-artifact@v4
-        with:
-          name: lib
-          path: lib
-
   cspark-sdk:
     strategy:
       matrix:
@@ -52,7 +29,6 @@ jobs:
         run: npm test
 
   cspark-wasm:
-    needs: build
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
@@ -64,11 +40,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-
-      - name: Download SDK build from artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: lib
 
       - name: Run unit tests
         run: |

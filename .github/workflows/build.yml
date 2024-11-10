@@ -17,10 +17,13 @@ jobs:
       - name: Set up Node environment
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '18.12.1'
 
-      - name: Install SDK dependencies
-        run: yarn install
+      - name: Install dependencies
+        run: |
+          yarn install
+          cd packages/wasm
+          yarn install
 
       - name: Format codebase
         run: yarn run format
@@ -44,7 +47,9 @@ jobs:
       - name: Prepare Hybrid Runner build
         run: |
           cd packages/wasm
-          yarn install
+          if [ ! -d "node_modules" ]; then
+            yarn install
+          fi
           yarn test
           yarn build
 
