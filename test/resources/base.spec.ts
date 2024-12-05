@@ -69,6 +69,7 @@ describe('Uri', () => {
 
   it('can concatenate url with query params', () => {
     const uri = Uri.from({ folder: 'f', service: 's' }, { base: BASE_URL, endpoint: 'execute' });
+    expect(uri.toString()).toBe('https://excel.test.coherent.global/tenant-name/api/v3/folders/f/services/s/execute');
     expect(uri.concat({ a: 'b' })).toBe(
       'https://excel.test.coherent.global/tenant-name/api/v3/folders/f/services/s/execute?a=b',
     );
@@ -81,11 +82,15 @@ describe('Uri', () => {
   it('should throw an error if uri params are incorrect', () => {
     expect(() => Uri.validate('')).toThrow(SparkError);
     expect(() => Uri.validate('f//')).toThrow(SparkError);
+    expect(() => Uri.validate('//s')).toThrow(SparkError);
+    expect(() => Uri.validate({ folder: 'f' })).toThrow(SparkError);
+    expect(() => Uri.validate({ service: 's' })).toThrow(SparkError);
     expect(() => Uri.from(undefined, { base: BASE_URL })).not.toThrow(SparkError);
     expect(() => Uri.partial('', { base: BASE_URL })).not.toThrow(SparkError);
 
     // Forcing a wrong base url to test failure to build a URL. During runtime, the base url
     // will be valid at this point.
+    expect(() => Uri.from({ versionId: '123' }, { base: 'fake base url' })).toThrow(SparkError);
     expect(() => Uri.partial('version/123', { base: 'fake base url' })).toThrow(SparkError);
   });
 

@@ -106,7 +106,7 @@ async function buildRequest<T>(options: HttpOptions<T>): Promise<RequestInit> {
           if (isBrowser) {
             formData.append(item.name, item.fileStream, { filename: item.fileName ?? 'file' });
           } else {
-            const buffer = await readStream(item.fileStream);
+            const buffer = await Streamer.readStream(item.fileStream);
             formData.append(item.name, buffer, {
               filename: item.fileName ?? 'file',
               contentType: item.contentType ?? 'application/octet-stream',
@@ -174,15 +174,6 @@ function isInternetError(errorCode: string): boolean {
     errorCode === 'EHOSTUNREACH' ||
     errorCode === 'ENETUNREACH'
   );
-}
-
-async function readStream(stream: ByteStream): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const chunks: any[] = [];
-    stream.on('data', (chunk: Buffer) => chunks.push(chunk));
-    stream.on('end', () => resolve(Buffer.concat(chunks)));
-    stream.on('error', (err: Error) => reject(err));
-  });
 }
 
 export async function _fetch<Req = JsonData, Resp = JsonData>(

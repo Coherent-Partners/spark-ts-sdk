@@ -74,7 +74,7 @@ export class Authorization {
   }
 
   get apiKey(): string | undefined {
-    if (this.#apiKey && !this.isOpen) return Utils.mask(this.#apiKey);
+    if (this.#apiKey && !this.isOpen) return StringUtils.mask(this.#apiKey);
     return this.#apiKey;
   }
 
@@ -180,7 +180,7 @@ export class OAuth {
   }
 
   get clientSecret(): string {
-    return Utils.mask(this.#clientSecret);
+    return StringUtils.mask(this.#clientSecret);
   }
 
   get version(): string {
@@ -198,8 +198,8 @@ export class OAuth {
   toString(): string {
     return JSON.stringify({
       clientId: this.clientId,
-      clientSecret: this.#clientSecret,
-      accessToken: Utils.mask(this.accessToken ?? ''),
+      clientSecret: this.clientSecret,
+      accessToken: StringUtils.mask(this.accessToken ?? ''),
     });
   }
 

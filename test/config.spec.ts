@@ -20,35 +20,42 @@ describe('Config', () => {
   });
 
   it('should create a client config from correct base URL and API key', () => {
-    const config = new Config({ baseUrl: BASE_URL, apiKey: API_KEY, tenant: TENANT });
+    const config = new Config({ baseUrl: BASE_URL, tenant: TENANT, apiKey: API_KEY });
     expect(config.baseUrl.value).toBe(BASE_URL);
     expect(config.baseUrl.tenant).toBe(TENANT);
     expect(config.auth.apiKey).toBe('********-key');
   });
 
   it('can infer tenant name from base URL', () => {
-    const config = new Config({ baseUrl: `${BASE_URL}/${TENANT}`, apiKey: API_KEY });
+    const config = new Config({ baseUrl: `${BASE_URL}/${TENANT}`, apiKey: 'open' });
     expect(config.baseUrl.value).toBe(BASE_URL);
     expect(config.baseUrl.tenant).toBe(TENANT);
-    expect(config.auth.apiKey).toBe('********-key');
+    expect(config.auth.apiKey).toBe('open');
   });
 
   it('can build base URL from other url parts', () => {
-    const config = new Config({ tenant: TENANT, env: 'test', apiKey: API_KEY });
+    const config = new Config({ tenant: TENANT, env: 'test', token: 'open' });
     expect(config.baseUrl.value).toBe(BASE_URL);
     expect(config.baseUrl.tenant).toBe(TENANT);
-    expect(config.auth.apiKey).toBe('********-key');
+    expect(config.auth.token).toBe('open');
+    expect(config.baseUrl.oauth2).toBe('https://keycloak.test.coherent.global/auth/realms/tenant-name');
+    expect(config.baseUrl.to('utility', true)).toBe('https://utility.test.coherent.global/tenant-name');
+    expect(config.baseUrl.to('entitystore')).toBe('https://entitystore.test.coherent.global');
   });
 
   it('can be created with default values if not provided', () => {
-    const config = new Config({ baseUrl: BASE_URL, apiKey: API_KEY, tenant: TENANT });
+    const config = new Config({ baseUrl: BASE_URL, tenant: TENANT, apiKey: API_KEY });
     expect(config.allowBrowser).toBe(false);
     expect(config.timeout).toBe(Constants.DEFAULT_TIMEOUT_IN_MS);
     expect(config.maxRetries).toBe(Constants.DEFAULT_MAX_RETRIES);
+    expect(config.environment).toBe('test');
+    expect(config.hasHeaders).toBe(false);
+    expect(config.hasInterceptors).toBe(false);
+    expect(config.toString()).toContain(BASE_URL);
   });
 
   it('can create a copy with new values', () => {
-    const config = new Config({ baseUrl: BASE_URL, apiKey: API_KEY, tenant: TENANT });
+    const config = new Config({ baseUrl: BASE_URL, tenant: TENANT, apiKey: API_KEY });
     const copy = config.copyWith({ apiKey: 'new-key', tenant: 'new-tenant', env: 'prod' });
     expect(config.baseUrl.value).toBe(BASE_URL);
     expect(config.baseUrl.tenant).toBe(TENANT);
@@ -91,6 +98,7 @@ describe('JwtConfig', () => {
 
   it('should throw an error if JWT token is invalid', () => {
     expect(() => JwtConfig.decode('invalid-token')).toThrow(SparkSdkError);
+    expect(() => JwtConfig.from({ token: 'invalid-token' })).toThrow(SparkSdkError);
   });
 });
 

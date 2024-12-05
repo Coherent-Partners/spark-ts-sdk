@@ -11,10 +11,12 @@ This Coherent Spark Node.js SDK provides a convenient way to interact with the
 ## Installation
 
 ```bash
-npm install @cspark/wasm
-# or
-yarn add @cspark/wasm
+npm i @cspark/wasm
 ```
+
+> **Note:** `@cspark/wasm` requires [Node.js 14.15](https://nodejs.org/en/download/current)
+> or higher. It also supports other environments such as browsers, [Bun](https://bun.sh),
+> and [Deno](https://deno.com).
 
 ## Peer Dependencies
 

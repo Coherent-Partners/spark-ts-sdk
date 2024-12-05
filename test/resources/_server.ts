@@ -1,5 +1,6 @@
 import http from 'http';
 import { once } from 'events';
+import { Buffer } from 'buffer';
 import { Config } from '../../src/config';
 import { ApiResource, Uri, BaseUrl } from '../../src';
 
@@ -136,6 +137,43 @@ export default class LocalServer {
           error: null,
         }),
       );
+    }
+
+    // Spark.services.execute('my-folder/my-service', metadata)
+    if (pathname === '/my-tenant/api/v3/public/version/version_uuid') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          status: 'Success',
+          response_data: { outputs: { single_output: 42 } },
+          response_meta: { version_id: 'version_uuid' },
+          error: null,
+        }),
+      );
+    }
+
+    // Spark.services.execute('my-folder/my-service', [inputs])
+    if (pathname === '/my-tenant/api/v4/execute') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          outputs: [{ my_output: 42 }, { my_output: 43 }],
+          process_time: [4, 2],
+          service_id: 'service_uuid',
+          // and more ...
+        }),
+      );
+    }
+
+    // Spark.services.download('my-folder/my-service')
+    if (pathname === '/api/v1/product/my-folder/engines/my-service/download/?filename=&type=withmetadata') {
+      const buffer = Buffer.from('fake excel file');
+      res.setHeader('Content-Length', buffer.length);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.statusCode = 200;
+      res.end(buffer);
     }
   }
 }

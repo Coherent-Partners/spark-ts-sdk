@@ -1,5 +1,5 @@
 import { SparkError } from '../src/error';
-import { Serializable, JsonData, Stringified, Jsonified } from '../src/data';
+import { Serializable, JsonData, Stringified, Jsonified, GzipEncoding, DeflateEncoding } from '../src/data';
 
 describe('Serializable', () => {
   const ARRAY: JsonData = [null, false, 1, 'string'];
@@ -50,6 +50,7 @@ describe('Serializable', () => {
 
   it('should be able to assess the data type of serializable data', () => {
     const stringified = new Stringified('{"a":1}');
+    expect(stringified.isEmpty).toBe(false);
     expect(stringified.isUndefined).toBe(false);
     expect(stringified.isNull).toBe(false);
     expect(stringified.isBoolean).toBe(false);
@@ -88,5 +89,19 @@ describe('Serializable', () => {
     expect(nullable.isNull).toBe(true);
     expect(nullable.serialize()).toBe('null');
     expect(nullable.deserialize()).toBeNull();
+  });
+
+  it('can serialize data using gzip compression algorithm', () => {
+    const [payload, headers] = Serializable.compress(OBJECT, 'gzip');
+    expect(payload).toBeInstanceOf(GzipEncoding);
+    expect(headers).toEqual({ 'Content-Encoding': 'gzip', 'Accept-Encoding': 'gzip' });
+    expect(Serializable.gzip(payload.serialize()).deserialize()).toEqual(OBJECT);
+  });
+
+  it('can serialize data using deflate compression algorithm', () => {
+    const [payload, headers] = Serializable.compress(OBJECT, 'deflate');
+    expect(payload).toBeInstanceOf(DeflateEncoding);
+    expect(headers).toEqual({ 'Content-Encoding': 'deflate', 'Accept-Encoding': 'deflate' });
+    expect(Serializable.deflate(payload.serialize()).deserialize()).toEqual(OBJECT);
   });
 });

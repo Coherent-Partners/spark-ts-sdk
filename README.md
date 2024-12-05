@@ -6,7 +6,6 @@ The Coherent Spark Node.js SDK is designed to elevate the developer experience a
 provide convenient access to Coherent Spark APIs.
 
 👋 **Just a heads-up:**
-
 This SDK is supported by the community. If you encounter any bumps while using it,
 please report them [here](https://github.com/Coherent-Partners/spark-ts-sdk/issues)
 by creating a new issue.
@@ -14,13 +13,12 @@ by creating a new issue.
 ## Installation
 
 ```bash
-npm install @cspark/sdk
-# or
-yarn add @cspark/sdk
+npm i @cspark/sdk
 ```
 
-> 🫣 This package requires [Node.js 14.15](https://nodejs.org/en/download/current) or higher.
-> Browser-like environments are also supported.
+> **Note:** This package requires [Node.js 14.15](https://nodejs.org/en/download/current)
+> or higher. It also supports other environments such as browsers, [Bun](https://bun.sh),
+> and [Deno](https://deno.com).
 
 ## Usage
 

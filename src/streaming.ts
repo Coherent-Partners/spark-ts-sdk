@@ -36,4 +36,13 @@ export class Streamer {
     }
     return Buffer.concat(buffers);
   }
+
+  static async readStream(stream: Readable): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const chunks: any[] = [];
+      stream.on('data', (chunk: Buffer) => chunks.push(chunk));
+      stream.on('end', () => resolve(Buffer.concat(chunks)));
+      stream.on('error', (err: Error) => reject(err));
+    });
+  }
 }

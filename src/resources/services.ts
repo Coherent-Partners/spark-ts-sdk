@@ -576,7 +576,7 @@ class ExecuteMeta {
     readonly uri: UriParams,
     readonly isBatch: boolean,
   ) {
-    this.#activeSince = DateUtils.isDate(metadata.activeSince) ? metadata.activeSince.toISOString() : undefined;
+    this.#activeSince = DateUtils.toDate(metadata.activeSince)?.toISOString();
     this.#sourceSystem = metadata.sourceSystem ?? SPARK_SDK;
     this.#correlationId = metadata.correlationId;
     this.#subservices = StringUtils.join(metadata.subservices);

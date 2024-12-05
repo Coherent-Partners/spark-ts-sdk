@@ -26,7 +26,7 @@ export function isBrowser() {
 }
 
 /**
- * This should fix the issue with the AbortController polyfill for @cspark/sdk@0.2.0
+ * This should fix the issue with the AbortController polyfill in @cspark/sdk@0.2.1[deprecated]
  * for Node 14.15>= and <14.17 environments.
  */
 export function getAbortController(): AbortController | undefined {
@@ -107,14 +107,6 @@ export function isEmptyObject(obj: object | null | undefined): boolean {
   return true;
 }
 
-/**
- * Whether the given object has the given key.
- * Inspired by: https://eslint.org/docs/latest/rules/no-prototype-builtins
- */
-export function hasOwn(obj: object, key: string): boolean {
-  return Object.prototype.hasOwnProperty.call(obj, key);
-}
-
 export function isObject(obj: unknown): obj is Record<string, unknown> {
   return obj != null && typeof obj === 'object' && !Array.isArray(obj);
 }
@@ -154,11 +146,6 @@ export function sanitizeUri(url: string, leading = false): string {
   return leading ? sanitized : sanitized.replace(/^\//, '');
 }
 
-export function mask(value: string, start = 0, end = 4, char = '*'): string {
-  if (StringUtils.isEmpty(value) || start < 0 || end < 0) return value;
-  return value.slice(0, start) + char.repeat(value.length - start - end) + value.slice(-end);
-}
-
 export abstract class StringUtils {
   static isString(text: unknown): text is string {
     return typeof text === 'string' || text instanceof String;
@@ -182,6 +169,11 @@ export abstract class StringUtils {
 
   static toCamelCase(text: string): string {
     return text.charAt(0).toLowerCase() + text.slice(1);
+  }
+
+  static mask(value: string, start = 0, end = 4, char = '*'): string {
+    if (StringUtils.isEmpty(value) || start < 0 || end < 0) return value;
+    return value.slice(0, start) + char.repeat(value.length - start - end) + value.slice(-end);
   }
 }
 
@@ -216,6 +208,10 @@ export abstract class DateUtils {
     return false;
   }
 
+  static toDate(value: unknown): Maybe<Date> {
+    return DateUtils.isDate(value) ? new Date(value) : undefined;
+  }
+
   static parse(
     start: Maybe<number | string | Date>,
     end?: Maybe<number | string | Date>,
@@ -241,7 +237,6 @@ export abstract class DateUtils {
 export default {
   readEnv,
   isEmptyObject,
-  hasOwn,
   isObject,
   isNotEmptyArray,
   sanitizeUri,
@@ -253,5 +248,4 @@ export default {
   formatUrl,
   getUuid,
   sleep,
-  mask,
 };

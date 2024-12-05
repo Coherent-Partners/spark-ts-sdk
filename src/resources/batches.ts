@@ -43,7 +43,7 @@ export class Batches extends ApiResource {
     const body = {
       service: serviceUri,
       version_id: params.versionId,
-      version_by_timestamp: DateUtils.isDate(params?.activeSince) ? params.activeSince.toISOString() : undefined,
+      version_by_timestamp: DateUtils.toDate(params?.activeSince)?.toISOString(),
       subservice: StringUtils.join(params.subservices),
       output: StringUtils.join(params.selectedOutputs),
       call_purpose: params.callPurpose ?? 'Async Batch Execution',
