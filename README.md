@@ -1,6 +1,8 @@
 # Coherent Spark Node.js SDK
 
 [![npm version][version-img]][version-url]
+[![CI build][ci-img]][ci-url]
+[![License][license-img]][license-url]
 
 The Coherent Spark Node.js SDK is designed to elevate the developer experience and
 provide convenient access to Coherent Spark APIs.
@@ -97,8 +99,7 @@ environments:
 </html>
 ```
 
-Explore the [examples](./examples/index.ts) and [documentation](./docs) folders
-to find out more about the SDK's capabilities.
+Explore the [examples] and [docs] folders to find out more about the SDK's capabilities.
 
 > **PRO TIP:**
 > A service URI locator can be combined with other parameters to locate a specific
@@ -119,7 +120,7 @@ spark.services
 //    'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
 ```
 
-See the [Uri](./src/resources/base.ts) class for more details.
+See the [Uri][uri-url] class for more details.
 
 ## Client Options
 
@@ -321,8 +322,14 @@ conduct, and the process for submitting pull requests.
 
 [version-img]: https://img.shields.io/npm/v/@cspark/sdk
 [version-url]: https://www.npmjs.com/package/@cspark/sdk
+[license-img]: https://img.shields.io/npm/l/@cspark/sdk
+[license-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/LICENSE
+[ci-img]: https://github.com/Coherent-Partners/spark-ts-sdk/workflows/Build/badge.svg
+[ci-url]: https://github.com/Coherent-Partners/spark-ts-sdk/actions/workflows/build.yml
 [api-key-docs]: https://docs.coherent.global/spark-apis/authorization-api-keys
 [bearer-token-docs]: https://docs.coherent.global/spark-apis/authorization-bearer-token
 [oauth2-docs]: https://docs.coherent.global/spark-apis/authorization-client-credentials
 [contributing-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/CONTRIBUTING.md
-[license-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/LICENSE
+[examples]: https://github.com/Coherent-Partners/spark-ts-sdk/tree/main/examples
+[docs]: https://github.com/Coherent-Partners/spark-ts-sdk/tree/main/docs
+[uri-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/src/resources/base.ts

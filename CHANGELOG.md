@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.2.9 (2024-12-10)
+
+- Apply minor improvements
+- Fix bugs in date time parsing
+- Add more test coverage
+
 ## 0.2.8 (2024-11-08)
 
 - Enable service schema fetching by ID
