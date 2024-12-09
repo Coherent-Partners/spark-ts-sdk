@@ -515,6 +515,9 @@ interface ExecuteParams<I = Record<string, any>> {
   selectedOutputs?: undefined | string | string[];
   tablesAsArray?: undefined | string | string[];
   outputsFilter?: string;
+
+  // Extra metadata if needed
+  extras?: Record<string, any>;
 }
 
 interface TransformParams extends Omit<ExecuteParams, 'inputs'> {
@@ -570,6 +573,7 @@ class ExecuteMeta {
   #tablesAsArray: string | undefined;
   #outputsFilter: string | undefined;
   #inputKey: string | undefined;
+  #extras: Record<string, any> | undefined;
 
   constructor(
     metadata: Omit<ExecuteParams, 'inputs'>,
@@ -594,6 +598,8 @@ class ExecuteMeta {
       : this.isBatch
         ? 'Sync Batch Execution'
         : 'Single Execution';
+
+    this.#extras = metadata.extras ?? {};
   }
 
   /**
@@ -618,6 +624,9 @@ class ExecuteMeta {
           source_system: this.#sourceSystem,
           correlation_id: this.#correlationId,
           unique_record_key: this.#inputKey, // async only
+
+          // extra metadata
+          ...this.#extras,
         }
       : {
           // URI locator via metadata (v3 also supports service URI in url path)
@@ -638,6 +647,9 @@ class ExecuteMeta {
           requested_output_regex: this.#outputsFilter,
           response_data_inputs: this.#echoInputs,
           service_category: this.#subservices,
+
+          // extra metadata
+          ...this.#extras,
         };
 
     // filter out undefined values.

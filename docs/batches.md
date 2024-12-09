@@ -354,6 +354,30 @@ It is also designed to facilitate data submission in different shapes and forms.
 
 The method accepts 3 mutually exclusive types of input data:
 
+- `raw`: is the chunks as a stringified JSON data. Note that the `chunks` field level
+  is optional. That is, you may provide the array of chunks directly.
+
+```ts
+const raw = `
+{
+  "chunks": [
+    {
+      "id": "0001",
+      "size": 2,
+      "data": {
+        "inputs": [
+          ["input_1", "input_2", "input_N"],
+          [1, 2, 3],
+          [4, 5, 6]
+        ],
+        "parameters": {"common_input": 0}
+      }
+    }
+  ]
+}`;
+await pipeline.push({ raw });
+```
+
 - `inputs`: a list of the records as input data. This is convenient when you have
   records that need to be processed in chunks. The method will automatically
   create chunks and partition the data evenly across them. You may also specify

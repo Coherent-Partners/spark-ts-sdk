@@ -175,5 +175,72 @@ export default class LocalServer {
       res.statusCode = 200;
       res.end(buffer);
     }
+
+    // Spark.batches.create('f/s', metadata)
+    if (pathname === '/my-tenant/api/v4/batch') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ object: 'batch', id: 'batch_uuid', data: {} }));
+    }
+
+    // Spark.batches.of('id').push({ raw: string_data })
+    if (pathname === '/my-tenant/api/v4/batch/batch_uuid/chunks') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          request_timestamp: '1970-01-23T00:00:00.000Z',
+          batch_status: 'in_progress',
+          pipeline_status: 'idle',
+          input_buffer_used_bytes: 1024,
+          input_buffer_remaining_bytes: 1024,
+          output_buffer_used_bytes: 512,
+          output_buffer_remaining_bytes: 512,
+          records_available: 0,
+          compute_time_ms: 0,
+          records_completed: 0,
+          record_submitted: 3,
+        }),
+      );
+    }
+
+    // Spark.batches.of('id').pull()
+    if (pathname === '/my-tenant/api/v4/batch/batch_uuid/chunkresults?max_chunks=2') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          data: [
+            { id: '0001', outputs: [{ result: 20 * 65 }, { result: 74 * 73 }] },
+            { id: 'random_uuid', outputs: [{ result: 20 * 65 }] },
+          ],
+          status: {
+            request_timestamp: '1970-01-23T00:00:00.000Z',
+            response_timestamp: '1970-01-23T00:00:01.000Z',
+            batch_status: 'idle',
+            pipeline_status: 'idle',
+            input_buffer_used_bytes: 0,
+            input_buffer_remaining_bytes: 2048,
+            output_buffer_used_bytes: 0,
+            output_buffer_remaining_bytes: 1024,
+            records_available: 0,
+            compute_time_ms: 142,
+            records_completed: 3,
+            record_submitted: 3,
+            chunks_completed: 2,
+            chunks_submitted: 2,
+            chunks_available: 0,
+            workers_in_use: 42,
+          },
+        }),
+      );
+    }
+
+    // Spark.batches.of('id').close()
+    if (pathname === '/my-tenant/api/v4/batch/batch_uuid') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ object: 'batch', id: 'batch_uuid', meta: {} }));
+    }
   }
 }
