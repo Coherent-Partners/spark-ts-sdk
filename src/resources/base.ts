@@ -7,7 +7,7 @@ import { SparkError } from '../error';
 import { Logger } from '../logger';
 import { about as sdkInfo, sdkUaHeader } from '../version';
 import { _fetch, _download, HttpOptions, HttpResponse } from '../http';
-import Utils, { StringUtils, Maybe, getAbortController } from '../utils';
+import Utils, { StringUtils, Maybe } from '../utils';
 
 /**
  * Base class for all API resources.
@@ -27,7 +27,7 @@ export abstract class ApiResource {
 
   constructor(protected readonly config: Config) {
     this.logger = Logger.of(config.logger);
-    this.controller = getAbortController();
+    this.controller = Utils.getAbortController();
 
     if (!this.controller) {
       this.logger.warn(
@@ -118,7 +118,7 @@ export abstract class ApiResource {
    * too long or is no longer needed. It is recommended to call this method before
    * making a new request to avoid any conflicts.
    *
-   * @see AbortController for more details.
+   * @see Utils.getAbortController for more details.
    */
   abort(): void {
     this.controller?.abort();
@@ -218,7 +218,7 @@ export class Uri {
    * parameters.
    *
    * NOTE:
-   * In this case, the order of priority: versionId > serviceId > folder and service > proxy.
+   * In this case, the order of priority: versionId > serviceId > folder & service > proxy.
    * However, if a `proxy` is provided, it will be used as the endpoint.
    */
   static from(uri: Maybe<UriParams> = {}, { base, version: path = 'api/v3', endpoint = '' }: UriOptions): Uri {
@@ -253,9 +253,8 @@ export class Uri {
       resource = `${base}/${resource}`;
 
       return new this(new URL(resource));
-    } catch (cause) {
-      if (cause instanceof SparkError) throw SparkError.sdk({ message: `invalid service URI <${resource}>`, cause });
-      throw SparkError.sdk({ message: `failed to build Spark endpoint from <${resource}>`, cause });
+    } catch {
+      throw SparkError.sdk({ message: `failed to build Spark endpoint`, cause: resource });
     }
   }
 
@@ -345,6 +344,7 @@ export class Uri {
 
   /**
    * Concatenates query parameters to the URL.
+   *
    * @param params - the query parameters to concatenate
    * @returns the final URL with query parameters
    */

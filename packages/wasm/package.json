@@ -1,6 +1,6 @@
 {
   "name": "@cspark/wasm",
-  "version": "0.1.0-beta.0",
+  "version": "0.1.0",
   "description": "A Node.js SDK for interacting with the Hybrid Runner API",
   "author": "Coherent <team@coherent.global>",
   "homepage": "https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/packages/wasm/docs/readme.md",
@@ -29,17 +29,17 @@
     "node": "^14.15.0 || >=16.0.0"
   },
   "scripts": {
-    "start": "echo \">>> no start command specified\" && exit 0",
-    "format": "prettier --write \"{src,test,examples}/**/*.ts\" --config ../../.prettierrc",
-    "lint": "eslint \"{src,test}/**/*.ts\" --fix",
+    "start": "echo '>>> no start command specified' && exit 0",
+    "format": "prettier --write '{src,test,examples}/**/*.ts' --config ../../.prettierrc",
+    "lint": "eslint '{src,test}/**/*.ts' --fix",
     "test": "jest",
     "prebuild": "rm -rf lib",
     "build": "tsc && rollup -c",
     "demo": "tsc -p tsconfig.dev.json && node lib/examples/index.js"
   },
   "lint-staged": {
-    "*.ts": "eslint \"{src,test}/**/*.ts\" --cache --fix",
-    "*.{md,ts,json,yml}": "prettier -u --write \"{src,test,examples,docs}/**/*\" --config ../../.prettierrc"
+    "*.ts": "eslint '{src,test}/**/*.ts' --cache --fix",
+    "*.{md,ts,json,yml}": "prettier -u --write '{src,test,examples,docs}/**/*' --config ../../.prettierrc"
   },
   "peerDependencies": {
     "@cspark/sdk": "^0.2.8"
@@ -47,7 +47,6 @@
   "devDependencies": {
     "@cspark/sdk": "^0.2.8",
     "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.5",
@@ -69,16 +68,10 @@
     "typescript": "~5.3.0"
   },
   "jest": {
-    "rootDir": "test",
     "testEnvironment": "node",
     "testRegex": ".*\\.spec\\.ts$",
-    "coverageDirectory": "../coverage",
+    "coverageDirectory": "coverage",
     "clearMocks": true,
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
     "transform": {
       "^.+.ts$": [
         "ts-jest",
@@ -88,7 +81,8 @@
       ]
     },
     "collectCoverageFrom": [
-      "**/*.ts"
+      "src/**/*.ts",
+      "!src/utils.ts"
     ]
   }
 }

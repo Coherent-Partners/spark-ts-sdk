@@ -6,7 +6,7 @@ on:
     paths-ignore: ['**.md', 'LICENSE', '.nvmrc']
 
 jobs:
-  test:
+  cspark-sdk:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
@@ -18,7 +18,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
 
@@ -27,3 +27,22 @@ jobs:
 
       - name: Run unit tests
         run: npm test
+
+  cspark-wasm:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        node: ['18.12.1']
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Run unit tests
+        run: |
+          cd packages/wasm
+          npm install --ignore-scripts
+          npm test

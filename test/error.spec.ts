@@ -1,5 +1,5 @@
 import { SparkError, SparkSdkError, SparkApiError } from '../src';
-import { BadRequestError, UnauthorizedError } from '../src/error';
+import * as Errors from '../src/error';
 
 describe('SparkError', () => {
   it('can be of base error', () => {
@@ -21,7 +21,7 @@ describe('SparkError', () => {
   });
 
   it('can be an API type of error', () => {
-    const error = new BadRequestError({ message: 'invalid content' });
+    const error = new Errors.BadRequestError({ message: 'invalid content' });
     expect(error).toBeInstanceOf(SparkApiError);
     expect(error.name).toEqual('BadRequestError');
     expect(error.status).toEqual(400);
@@ -39,9 +39,25 @@ describe('SparkError', () => {
       message: 'authentication required',
       cause: { request: { url: 'url', method: 'GET', headers: { 'x-request-id': 'uuidv4' }, body: 'data' } },
     });
-    expect(error).toBeInstanceOf(UnauthorizedError);
+    expect(error).toBeInstanceOf(Errors.UnauthorizedError);
     expect(error.status).toBe(401);
     expect(error.requestId).toBe('uuidv4');
     expect(error.toString()).toContain('UnauthorizedError: 401 authentication required');
+  });
+
+  it('can infer API error type from status code', () => {
+    expect(SparkError.api(0, '')).toBeInstanceOf(Errors.InternetError);
+    expect(SparkError.api(400, '')).toBeInstanceOf(Errors.BadRequestError);
+    expect(SparkError.api(401, '')).toBeInstanceOf(Errors.UnauthorizedError);
+    expect(SparkError.api(403, '')).toBeInstanceOf(Errors.ForbiddenError);
+    expect(SparkError.api(404, '')).toBeInstanceOf(Errors.NotFoundError);
+    expect(SparkError.api(409, '')).toBeInstanceOf(Errors.ConflictError);
+    expect(SparkError.api(415, '')).toBeInstanceOf(Errors.UnsupportedMediaTypeError);
+    expect(SparkError.api(422, '')).toBeInstanceOf(Errors.UnprocessableEntityError);
+    expect(SparkError.api(429, '')).toBeInstanceOf(Errors.RateLimitError);
+    expect(SparkError.api(500, '')).toBeInstanceOf(Errors.InternalServerError);
+    expect(SparkError.api(503, '')).toBeInstanceOf(Errors.ServiceUnavailableError);
+    expect(SparkError.api(504, '')).toBeInstanceOf(Errors.GatewayTimeoutError);
+    expect(SparkError.api(-1, '')).toBeInstanceOf(Errors.UnknownApiError);
   });
 });

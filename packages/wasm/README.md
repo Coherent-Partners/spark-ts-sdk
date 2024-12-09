@@ -1,6 +1,8 @@
 # @cspark/wasm
 
 [![npm version][version-img]][version-url]
+[![CI build][ci-img]][ci-url]
+[![License][license-img]][license-url]
 
 This Coherent Spark Node.js SDK provides a convenient way to interact with the
 [Hybrid Runner][hybrid-runner] API.
@@ -11,10 +13,12 @@ This Coherent Spark Node.js SDK provides a convenient way to interact with the
 ## Installation
 
 ```bash
-npm install @cspark/wasm
-# or
-yarn add @cspark/wasm
+npm i @cspark/wasm
 ```
+
+> **Note:** `@cspark/wasm` requires [Node.js 14.15](https://nodejs.org/en/download/current)
+> or higher. It also supports other environments such as browsers, [Bun](https://bun.sh),
+> and [Deno](https://deno.com).
 
 ## Peer Dependencies
 
@@ -63,10 +67,13 @@ the code of conduct, and the process for submitting pull requests.
 
 [version-img]: https://img.shields.io/npm/v/@cspark/wasm
 [version-url]: https://www.npmjs.com/package/@cspark/wasm
-[contributing-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/CONTRIBUTING.md
-[license-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/LICENSE
+[license-img]: https://img.shields.io/npm/l/@cspark/wasm
+[license-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/packages/wasm/LICENSE
+[ci-img]: https://github.com/Coherent-Partners/spark-ts-sdk/workflows/Build/badge.svg
+[ci-url]: https://github.com/Coherent-Partners/spark-ts-sdk/actions/workflows/build.yml
 [cspark-sdk]: https://www.npmjs.com/package/@cspark/sdk
 [user-guide]: https://docs.coherent.global/integrations/how-to-deploy-a-hybrid-runner
+[contributing-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/CONTRIBUTING.md
 [hybrid-runner]: https://github.com/orgs/Coherent-Partners/packages/container/package/nodegen-server
 [examples]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/packages/wasm/examples/index.ts
 [docs]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/packages/wasm/docs/readme.md

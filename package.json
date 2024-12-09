@@ -1,6 +1,6 @@
 {
   "name": "@cspark/sdk",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "A Node.js SDK for interacting with Coherent Spark APIs",
   "author": "Coherent <team@coherent.global>",
   "homepage": "https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/docs/readme.md",
@@ -24,9 +24,9 @@
     "node": "^14.15.0 || >=16.0.0"
   },
   "scripts": {
-    "start": "echo \">>> no start command specified\" && exit 0",
-    "format": "prettier --write \"{src,test,examples}/**/*.ts\"",
-    "lint": "eslint \"{src,test}/**/*.ts\" --fix",
+    "start": "echo '>>> no start command specified' && exit 0",
+    "format": "prettier --write '{src,test,examples}/**/*.ts'",
+    "lint": "eslint '{src,test}/**/*.ts' --fix",
     "test": "jest",
     "prebuild": "rm -rf lib",
     "build": "tsc && rollup -c",
@@ -34,8 +34,8 @@
     "prepare": "husky install"
   },
   "lint-staged": {
-    "*.ts": "eslint \"{src,test}/**/*.ts\" --cache --fix",
-    "*.{md,ts,json,yml}": "prettier -u --write \"{src,test,examples,docs}/**/*\""
+    "*.ts": "eslint '{src,test}/**/*.ts' --cache --fix",
+    "*.{md,ts,json,yml}": "prettier -u --write '{src,test,examples,docs}/**/*'"
   },
   "dependencies": {
     "buffer": "6.0.3",
@@ -75,16 +75,14 @@
     "typescript": "~5.3.0"
   },
   "jest": {
-    "rootDir": "test",
     "testEnvironment": "node",
     "testRegex": ".*\\.spec\\.ts$",
-    "coverageDirectory": "../coverage",
-    "clearMocks": true,
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "packages/"
     ],
+    "coverageDirectory": "coverage",
+    "clearMocks": true,
     "transform": {
       "^.+.ts$": [
         "ts-jest",
@@ -93,12 +91,11 @@
         }
       ]
     },
-    "moduleNameMapper": {
-      "^@cspark/sdk$": "<rootDir>/../src/index.ts",
-      "^@cspark/sdk/(.*)$": "<rootDir>/../src/$1"
-    },
     "collectCoverageFrom": [
-      "**/*.ts"
+      "src/**/*.ts",
+      "!src/streaming.ts",
+      "!src/logger.ts",
+      "!src/utils.ts"
     ]
   }
 }

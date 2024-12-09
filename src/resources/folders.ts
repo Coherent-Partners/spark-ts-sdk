@@ -109,8 +109,8 @@ export class Folders extends ApiResource {
 
     const body = {
       ...rest,
-      startDate: DateUtils.isDate(startDate) ? new Date(startDate).toISOString() : undefined,
-      launchDate: DateUtils.isDate(launchDate) ? new Date(launchDate).toISOString() : undefined,
+      startDate: DateUtils.toDate(startDate)?.toISOString(),
+      launchDate: DateUtils.toDate(launchDate)?.toISOString(),
       shouldTrackUserAction: true,
     };
     return this.request(url, { method: 'POST', body });

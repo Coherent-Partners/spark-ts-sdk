@@ -40,10 +40,10 @@ export class Batches extends ApiResource {
     const serviceUri = serviceId ?? params?.serviceUri ?? Uri.encode({ folder, service, version }, false);
     const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'batch' });
 
-    const body = {
+    const payload = {
       service: serviceUri,
       version_id: params.versionId,
-      version_by_timestamp: DateUtils.isDate(params?.activeSince) ? params.activeSince.toISOString() : undefined,
+      version_by_timestamp: DateUtils.toDate(params?.activeSince)?.toISOString(),
       subservice: StringUtils.join(params.subservices),
       output: StringUtils.join(params.selectedOutputs),
       call_purpose: params.callPurpose ?? 'Async Batch Execution',
@@ -61,6 +61,9 @@ export class Batches extends ApiResource {
       acceptable_error_percentage: Math.ceil((1 - Math.min(options?.accuracy ?? 1, 1.0)) * 100), // ensure 0.0 to 1.0
     };
 
+    // remove undefined values
+    const body = Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined));
+
     return this.request<BatchCreated>(url, { method: 'POST', body });
   }
 
@@ -71,6 +74,31 @@ export class Batches extends ApiResource {
   of(batchId: string): Pipeline {
     return new Pipeline(batchId, this.config);
   }
+
+  /**
+   * Creates a list of batch chunks from string-based data.
+   *
+   * @returns {BatchChunk<Inputs>[]} an array of batch chunks
+   * @throws {SparkError} if the data is not a valid JSON string
+   */
+  static toChunks<Inputs>(raw: string): BatchChunk<Inputs>[] {
+    try {
+      const data = JSON.parse(raw);
+      const chunks = data?.chunks ?? data;
+
+      return (Array.isArray(chunks) ? chunks : [chunks]).map((chunk: any) => ({
+        id: chunk.id ?? getUuid(),
+        data: {
+          inputs: chunk.data?.inputs ?? [],
+          parameters: chunk.data?.parameters ?? {},
+          summary: chunk.data?.summary,
+        },
+        size: chunk.size ?? chunk.data?.inputs?.length ?? 0,
+      }));
+    } catch {
+      throw SparkError.sdk({ message: 'failed to parse string data as JSON', cause: raw });
+    }
+  }
 }
 
 /**
@@ -79,7 +107,7 @@ export class Batches extends ApiResource {
  * This is an experimental feature and may change in future releases.
  * @see https://docs.coherent.global/spark-apis/batch-apis
  */
-class Pipeline extends ApiResource {
+export class Pipeline extends ApiResource {
   #state: PipelineState = 'open';
   #chunks: Map<string, number> = new Map();
 
@@ -104,6 +132,18 @@ class Pipeline extends ApiResource {
    */
   get state(): PipelineState {
     return this.#state;
+  }
+
+  /**
+   * Determines if the batch pipeline is no longer active.
+   *
+   * This is for the internal use of the SDK and does not validate the actual state
+   * of the batch pipeline. Use `getStatus()` to get the actual state of the batch
+   * pipeline.
+   * @returns {boolean} true if the batch pipeline is closed or canceled
+   */
+  get isDipsosed(): boolean {
+    return this.#state === 'closed' || this.#state === 'cancelled';
   }
 
   /**
@@ -148,6 +188,7 @@ class Pipeline extends ApiResource {
    * 1. array of `params.chunks`, each with a unique id and data.
    * 2. object with `params.data`, including inputs, parameters, and summary.
    * 3. array of `params.inputs` to be processed.
+   * 4. a `params.raw` stringified JSON data.
    *
    * When working with an array of `params.chunks`, you can specify how to handle
    * duplicated ids:
@@ -159,7 +200,7 @@ class Pipeline extends ApiResource {
     this.#assertState(['closed', 'cancelled']);
 
     const url = Uri.from(undefined, { ...this.baseUri, endpoint: `batch/${this.id}/chunks` });
-    const body = this.#buildPushBody(params, options);
+    const body = this.#buildPushBody(params ?? {}, options);
     return this.request<RecordSubmitted, Chunks<Inputs>>(url, { method: 'POST', body }).then((response) => {
       this.logger.log(`pushed ${response.data.record_submitted} records to batch pipeline <${this.id}>`);
       return response;
@@ -237,9 +278,10 @@ class Pipeline extends ApiResource {
     { ifChunkIdDuplicated: ifDuplicated = 'replace', chunkSize = BATCH_CHUNK_SIZE }: PushDataOptions = {},
   ): Chunks<Inputs> {
     try {
-      const { chunks, data, inputs } = params ?? {};
+      const { data, inputs, raw } = params;
 
-      if (Utils.isNotEmptyArray(chunks)) return { chunks: this.#assessChunks(chunks, ifDuplicated) };
+      if (StringUtils.isNotEmpty(raw)) params.chunks = Batches.toChunks<Inputs>(raw!);
+      if (Utils.isNotEmptyArray(params.chunks)) return { chunks: this.#assessChunks(params.chunks, ifDuplicated) };
       if (Utils.isNotEmptyArray(data?.inputs))
         return { chunks: this.#assessChunks([{ id: getUuid(), data }], ifDuplicated) };
       if (Utils.isNotEmptyArray(inputs)) {
@@ -552,6 +594,7 @@ interface PushDataParams<Inputs = any> {
   chunks?: BatchChunk<Inputs>[];
   data?: ChunkData<Inputs>;
   inputs?: Inputs[];
+  raw?: string;
 }
 
 interface ChunkData<Inputs> {
@@ -582,7 +625,7 @@ export function createChunks<T = any>(dataset: T[], chunkSize: number = BATCH_CH
     const start = i * chunkSize;
     const end = Math.min(start + chunkSize, total);
     const chunk = dataset.slice(start, end);
-    chunks.push({ id: getUuid(), data: { inputs: chunk, parameters: {} } });
+    chunks.push({ id: getUuid(), data: { inputs: chunk, parameters: {} }, size: chunk.length });
   }
 
   return chunks;

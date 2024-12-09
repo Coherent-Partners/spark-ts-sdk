@@ -162,8 +162,8 @@ class LogDownload extends ApiResource {
       return {
         request_data: {
           call_ids: callIds,
-          start_date: DateUtils.isDate(startDate) ? new Date(startDate).toISOString() : undefined,
-          end_date: DateUtils.isDate(endDate) ? new Date(endDate).toISOString() : undefined,
+          start_date: DateUtils.toDate(startDate)?.toISOString(),
+          end_date: DateUtils.toDate(endDate)?.toISOString(),
           timezone_offset: params.timezoneOffset,
         },
         request_meta: {

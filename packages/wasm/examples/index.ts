@@ -1,6 +1,6 @@
 /**
  * Instructions on how to run an example:
- * 1. set up the base URL if needed
+ * 1. set up the base URL (including tenant name) and authentication if needed
  * 2. locate the example you want to run (e.g., Service.execute() => examples/service.ts)
  * 3. edit the service URI accordingly (e.g., 'my-folder/my-service' => 'insurance/pet-rater')
  * 4. comment out the unneeded examples

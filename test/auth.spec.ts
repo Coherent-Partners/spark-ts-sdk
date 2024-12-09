@@ -40,6 +40,13 @@ describe('Authorization', () => {
     expect(auth.oauth).toBeInstanceOf(OAuth);
     expect(auth.oauth?.clientId).toBe(OAUTH.clientId);
     expect(auth.oauth?.clientSecret).toBe('*******cret');
+    expect(auth.oauth?.version).toBe('2.0');
+    expect(auth.oauth?.flow).toBe('client_credentials');
+    expect(auth.oauth?.accessToken).toBeUndefined();
+    expect(auth.oauth?.toJson()).toEqual(OAUTH);
+    expect(auth.oauth?.toString()).toContain(OAUTH.clientId);
+
+    expect(auth.asHeader).toEqual({ Authorization: 'Bearer undefined' });
     expect(auth.isEmpty).toBe(false);
     expect(auth.isOpen).toBe(false);
     expect(auth.type).toBe('oauth');
@@ -60,6 +67,10 @@ describe('Authorization', () => {
   });
 
   it('should throw an SDK error if no authentication method is provided', () => {
+    expect(() => OAuth.from({})).toThrow(SparkSdkError);
     expect(() => Authorization.from({})).toThrow(SparkSdkError);
+    expect(() => Authorization.from({ oauth: { clientId: 'id', clientSecret: '' } })).toThrow(SparkSdkError);
+    expect(() => Authorization.from({ oauth: { clientId: '', clientSecret: 'secret' } })).toThrow(SparkSdkError);
+    expect(() => Authorization.from({ oauth: './test/wrong-path.txt' })).toThrow(SparkSdkError);
   });
 });

@@ -1,5 +1,6 @@
 import http from 'http';
 import { once } from 'events';
+import { Buffer } from 'buffer';
 import { Config } from '../../src/config';
 import { ApiResource, Uri, BaseUrl } from '../../src';
 
@@ -136,6 +137,110 @@ export default class LocalServer {
           error: null,
         }),
       );
+    }
+
+    // Spark.services.execute('my-folder/my-service', metadata)
+    if (pathname === '/my-tenant/api/v3/public/version/version_uuid') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          status: 'Success',
+          response_data: { outputs: { single_output: 42 } },
+          response_meta: { version_id: 'version_uuid' },
+          error: null,
+        }),
+      );
+    }
+
+    // Spark.services.execute('my-folder/my-service', [inputs])
+    if (pathname === '/my-tenant/api/v4/execute') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          outputs: [{ my_output: 42 }, { my_output: 43 }],
+          process_time: [4, 2],
+          service_id: 'service_uuid',
+          // and more ...
+        }),
+      );
+    }
+
+    // Spark.services.download('my-folder/my-service')
+    if (pathname === '/api/v1/product/my-folder/engines/my-service/download/?filename=&type=withmetadata') {
+      const buffer = Buffer.from('fake excel file');
+      res.setHeader('Content-Length', buffer.length);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.statusCode = 200;
+      res.end(buffer);
+    }
+
+    // Spark.batches.create('f/s', metadata)
+    if (pathname === '/my-tenant/api/v4/batch') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ object: 'batch', id: 'batch_uuid', data: {} }));
+    }
+
+    // Spark.batches.of('id').push({ raw: string_data })
+    if (pathname === '/my-tenant/api/v4/batch/batch_uuid/chunks') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          request_timestamp: '1970-01-23T00:00:00.000Z',
+          batch_status: 'in_progress',
+          pipeline_status: 'idle',
+          input_buffer_used_bytes: 1024,
+          input_buffer_remaining_bytes: 1024,
+          output_buffer_used_bytes: 512,
+          output_buffer_remaining_bytes: 512,
+          records_available: 0,
+          compute_time_ms: 0,
+          records_completed: 0,
+          record_submitted: 3,
+        }),
+      );
+    }
+
+    // Spark.batches.of('id').pull()
+    if (pathname === '/my-tenant/api/v4/batch/batch_uuid/chunkresults?max_chunks=2') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          data: [
+            { id: '0001', outputs: [{ result: 20 * 65 }, { result: 74 * 73 }] },
+            { id: 'random_uuid', outputs: [{ result: 20 * 65 }] },
+          ],
+          status: {
+            request_timestamp: '1970-01-23T00:00:00.000Z',
+            response_timestamp: '1970-01-23T00:00:01.000Z',
+            batch_status: 'idle',
+            pipeline_status: 'idle',
+            input_buffer_used_bytes: 0,
+            input_buffer_remaining_bytes: 2048,
+            output_buffer_used_bytes: 0,
+            output_buffer_remaining_bytes: 1024,
+            records_available: 0,
+            compute_time_ms: 142,
+            records_completed: 3,
+            record_submitted: 3,
+            chunks_completed: 2,
+            chunks_submitted: 2,
+            chunks_available: 0,
+            workers_in_use: 42,
+          },
+        }),
+      );
+    }
+
+    // Spark.batches.of('id').close()
+    if (pathname === '/my-tenant/api/v4/batch/batch_uuid') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ object: 'batch', id: 'batch_uuid', meta: {} }));
     }
   }
 }
