@@ -1,4 +1,4 @@
-import { SparkError } from '../error';
+import { SparkError, RetryTimeoutError } from '../error';
 import { HttpResponse, getRetryTimeout } from '../http';
 import { ApiResource, ApiResponse, Uri, UriParams } from './base';
 import Utils, { DateUtils, NumberUtils } from '../utils';
@@ -208,9 +208,9 @@ class LogDownload extends ApiResource {
 
     if (response.data.response_data.progress == 100) return response;
 
-    const error = SparkError.sdk({ message: 'log download job status check timed out', cause: response });
-    this.logger.error(error.message);
-    throw error;
+    const message = `log download job status check timed out after ${retries} retries`;
+    this.logger.error(message);
+    throw new RetryTimeoutError({ message, cause: response, retries, interval: retryInterval });
   }
 }
 

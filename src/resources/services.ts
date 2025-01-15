@@ -1,5 +1,5 @@
 import { Serializable } from '../data';
-import { SparkError } from '../error';
+import { SparkError, RetryTimeoutError } from '../error';
 import { SPARK_SDK } from '../constants';
 import { HttpResponse, Multipart, getRetryTimeout } from '../http';
 import Utils, { StringUtils, DateUtils } from '../utils';
@@ -400,9 +400,9 @@ class Compilation extends ApiResource {
 
     if (response.data.response_data.status === 'Success') return response;
 
-    const error = SparkError.sdk({ message: `compilation job status check timed out`, cause: response });
-    this.logger.error(error.message);
-    throw error;
+    const message = `compilation job status check timed out after ${retries} retries`;
+    this.logger.error(message);
+    throw new RetryTimeoutError({ message, retries, interval: retryInterval, cause: response });
   }
 }
 

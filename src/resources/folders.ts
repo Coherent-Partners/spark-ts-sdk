@@ -4,13 +4,17 @@ import { type Config } from '../config';
 import { Serializable } from '../data';
 import { SparkApiError } from '../error';
 import { HttpResponse, Multipart } from '../http';
-import { DateUtils, StringUtils } from '../utils';
+import { DateUtils, StringUtils, getUuid } from '../utils';
 import { SPARK_SDK } from '../constants';
 
 import { ApiResource, Uri, UriOptions, ApiResponse } from './base';
 
 export class Folders extends ApiResource {
   readonly baseUri!: UriOptions;
+
+  get categories(): Categories {
+    return new Categories(this.config);
+  }
 
   constructor(config: Config) {
     super(config);
@@ -19,9 +23,9 @@ export class Folders extends ApiResource {
 
   /**
    * Gets the list of folder categories.
-   * @returns {Promise<HttpResponse<FolderCategories>>}
+   * @deprecated Use `folders.categories.list()` instead.
    */
-  getCategories(): Promise<HttpResponse<FolderCategories>> {
+  getCategories(): Promise<HttpResponse<FolderApiResponse<FolderCategories>>> {
     return this.request(Uri.from(undefined, { ...this.baseUri, endpoint: 'lookup/getcategories' }));
   }
 
@@ -31,8 +35,6 @@ export class Folders extends ApiResource {
    * If `params` is a string, it will be used as the folder name.
    * @returns {Promise<HttpResponse<FolderCreated>>}
    */
-  async create(params: CreateParams): Promise<HttpResponse<FolderCreated>>;
-  async create(name: string): Promise<HttpResponse<FolderCreated>>;
   async create(params: string | CreateParams): Promise<HttpResponse<FolderCreated>> {
     const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'product/create' });
     const createParams = (StringUtils.isString(params) ? { name: params } : params) as CreateParams;
@@ -78,10 +80,6 @@ export class Folders extends ApiResource {
    * Note: `SearchParams.favorite` requires additional permissions if you're using API keys
    * for authentication.
    */
-  find(params: SearchParams, paging?: Paging): Promise<HttpResponse<FolderListed>>;
-  find(params: SearchParams): Promise<HttpResponse<FolderListed>>;
-  find(name: string, paging?: Paging): Promise<HttpResponse<FolderListed>>;
-  find(name: string): Promise<HttpResponse<FolderListed>>;
   find(params: string | SearchParams, paging: Paging = {}): Promise<HttpResponse<FolderListed>> {
     const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'product/list' });
     const searchParams = (StringUtils.isString(params) ? { name: params } : params) as SearchParams;
@@ -149,19 +147,61 @@ export class Folders extends ApiResource {
   }
 }
 
-export class Files extends ApiResource {
+class Categories extends ApiResource {
+  readonly baseUri!: UriOptions;
+
+  constructor(config: Config) {
+    super(config);
+    this.baseUri = { base: this.config.baseUrl.value, version: 'api/v1' };
+  }
+
   /**
-   * Download a Spark file from a protected URL.
-   * @param {string} url - Spark URL.
-   * @returns {Promise<HttpResponse>} a binary file stream available
-   * for reading via `HttpResponse.buffer`.
+   * Gets the list of categories.
+   * @returns {Promise<HttpResponse<FolderCategories>>}
    */
-  download(url: string): Promise<HttpResponse> {
-    return this.request(url);
+  async list(): Promise<HttpResponse<FolderCategories>> {
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'lookup/getcategories' });
+
+    return this.request(url).then((res: any) => ({ ...res, data: res.data?.data ?? [] }));
+  }
+
+  /**
+   * Saves or updates a category.
+   * @param {string} name - Category name
+   * @param {string} [key] - Optional category key (fallback to UUID)
+   * @param {string} [icon] - Optional category icon (default to 'other.svg')
+   * @returns {Promise<HttpResponse<FolderCategories>>}
+   */
+  async save(name: string, key?: string, icon?: string): Promise<HttpResponse<FolderCategories>> {
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'lookup/savecategory' });
+    const body = { value: name, key: key ?? getUuid(), icon: icon ?? 'other.svg' };
+
+    return this.request(url, { method: 'POST', body }).then((res) => ({ ...res, data: this.#extractData(res.data) }));
+  }
+
+  /**
+   * Deletes a category by key.
+   * @param {string} key - Category key
+   * @returns {Promise<HttpResponse<FolderCategories>>}
+   */
+  async delete(key: string): Promise<HttpResponse<FolderCategories>> {
+    const url = Uri.from(undefined, { ...this.baseUri, endpoint: `lookup/deletecategory/${key}` });
+
+    return this.request(url, { method: 'DELETE' }).then((res) => ({ ...res, data: this.#extractData(res.data) }));
+  }
+
+  #extractData(data: any): any {
+    if (typeof data !== 'object' || data === null) return data;
+    const categories = data?.data?.['Metadata.ProductCategories'] ?? [];
+
+    return categories.map((category: any) =>
+      Object.fromEntries(Object.entries(category).map(([k, v]) => [k.toLowerCase(), v])),
+    );
   }
 }
 
 type FolderCategory =
+  | string
   | 'Medical'
   | 'Critical Illness'
   | 'Lifelong Participation'
@@ -224,7 +264,7 @@ interface FolderApiResponse<T> extends Pick<ApiResponse, 'status'> {
   message: string | null;
 }
 
-type FolderCategories = FolderApiResponse<Array<{ key: FolderCategory; value: FolderCategory; icon: string }>>;
+type FolderCategories = Array<{ key: FolderCategory; value: FolderCategory; icon: string }>;
 
 type FolderLocation = FolderApiResponse<{ folderId: string; get_product_url: string }>;
 

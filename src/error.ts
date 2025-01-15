@@ -19,6 +19,25 @@ interface ApiErrorCause<TReq = any, TResp = any> {
 
 /**
  * Base class for all SDK-related errors.
+ *
+ * Spark error hierarchy:
+ *   > SparkError
+ *       - SparkSdkError
+ *           + RetryTimeoutError
+ *       - SparkApiError
+ *           + InternetError
+ *           + BadRequestError
+ *           + UnauthorizedError
+ *           + ForbiddenError
+ *           + NotFoundError
+ *           + ConflictError
+ *           + UnsupportedMediaTypeError
+ *           + UnprocessableEntityError
+ *           + RateLimitError
+ *           + InternalServerError
+ *           + ServiceUnavailableError
+ *           + GatewayTimeoutError
+ *           + UnknownApiError
  */
 export class SparkError extends Error {
   constructor(
@@ -91,6 +110,29 @@ export class SparkSdkError extends SparkError {
     return {
       ...super.toJson(),
       timestamp: this.timestamp,
+    } as const;
+  }
+}
+
+/**
+ * Raised when the maximum number of retries is reached.
+ */
+export class RetryTimeoutError extends SparkSdkError {
+  readonly retries!: number;
+  readonly interval!: number;
+
+  constructor(error: ErrorMessage & { retries?: number; interval?: number }) {
+    super(error);
+    this.retries = error.retries || 0;
+    this.interval = error.interval || 0;
+    this.name = 'RetryTimeoutError';
+  }
+
+  toJson(): Pick<RetryTimeoutError, 'name' | 'message' | 'cause' | 'timestamp' | 'retries' | 'interval'> {
+    return {
+      ...super.toJson(),
+      retries: this.retries,
+      interval: this.interval,
     } as const;
   }
 }

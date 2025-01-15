@@ -3,8 +3,8 @@ import { type Readable } from 'stream';
 import Utils, { StringUtils } from '../utils';
 import { type Config } from '../config';
 import { Logger } from '../logger';
-import { SparkError } from '../error';
 import { SPARK_SDK } from '../constants';
+import { SparkError, RetryTimeoutError } from '../error';
 import { HttpResponse, Multipart, getRetryTimeout } from '../http';
 import { ApiResource, Uri, UriOptions, UriParams } from './base';
 import { UpgradeType, ExportFilters, IfEntityPresent, ConfigParams } from './types';
@@ -186,9 +186,9 @@ class Export extends ApiResource {
       await Utils.sleep(getRetryTimeout(retries, retryInterval));
     }
 
-    const error = SparkError.sdk(`export job status timed out after ${retries} retries`);
-    this.logger.error(error.message);
-    throw error;
+    const message = `export job status timed out after ${retries} retries`;
+    this.logger.error(message);
+    throw new RetryTimeoutError({ message, retries, interval: retryInterval });
   }
 
   /**
@@ -290,9 +290,21 @@ class Import extends ApiResource {
       await Utils.sleep(getRetryTimeout(retries, retryInterval));
     }
 
-    const error = SparkError.sdk(`import job status timed out after ${retries} retries`);
-    this.logger.error(error.message);
-    throw error;
+    const message = `import job status timed out after ${retries} retries`;
+    this.logger.error(message);
+    throw new RetryTimeoutError({ message, retries, interval: retryInterval });
+  }
+}
+
+export class Files extends ApiResource {
+  /**
+   * Download a Spark file from a protected URL.
+   * @param {string} url - Spark URL.
+   * @returns {Promise<HttpResponse>} a binary file stream available
+   * for reading via `HttpResponse.buffer`.
+   */
+  download(url: string): Promise<HttpResponse> {
+    return this.request(url);
   }
 }
 
