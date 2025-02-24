@@ -84,24 +84,27 @@ describe('Spark.Batches', () => {
 
   it('can distribute input dataset evenly into batch chunks', () => {
     const inputs = [
+      ['sale_id', 'price', 'quantity'],
       [1, 20, 65],
       [2, 74, 73],
       [3, 20, 65],
       [4, 34, 73],
       [5, 62, 62],
     ];
-    const chunks = createChunks(inputs, 3);
+    const chunks = createChunks(inputs, { chunkSize: 3 });
 
     expect(chunks.length).toBe(2);
     expect(chunks[0].size).toBe(3);
     expect(chunks[1].size).toBe(2);
 
     expect(chunks[0].data.inputs).toEqual([
+      ['sale_id', 'price', 'quantity'],
       [1, 20, 65],
       [2, 74, 73],
       [3, 20, 65],
     ]);
     expect(chunks[1].data.inputs).toEqual([
+      ['sale_id', 'price', 'quantity'],
       [4, 34, 73],
       [5, 62, 62],
     ]);

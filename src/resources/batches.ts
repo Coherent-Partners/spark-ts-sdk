@@ -285,7 +285,7 @@ export class Pipeline extends ApiResource {
       if (Utils.isNotEmptyArray(data?.inputs))
         return { chunks: this.#assessChunks([{ id: getUuid(), data }], ifDuplicated) };
       if (Utils.isNotEmptyArray(inputs)) {
-        return { chunks: this.#assessChunks(createChunks(inputs, chunkSize), ifDuplicated) };
+        return { chunks: this.#assessChunks(createChunks(inputs, { chunkSize }), ifDuplicated) };
       }
 
       throw SparkError.sdk({
@@ -609,23 +609,49 @@ type IfChunkIdDuplicated = 'ignore' | 'replace' | 'throw';
 type Chunks<T> = { chunks: BatchChunk<T>[] };
 
 /**
- * Creates an array of batch chunks from a dataset.
+ * Creates an array of batch chunks from a JSON array dataset.
  *
  * @template T - The type of elements in the dataset.
  * @param {T[]} dataset - The dataset to create chunks from.
- * @param {number} [chunkSize=200] - The size of each chunk.
- * @returns {BatchChunk<T>[]} An array of batch chunks.
+ * @param {object} options - Configuration options.
+ * @param {string[]} [options.headers] - Headers for the input dataset.
+ * @param {number} [options.chunkSize=200] - The size of each chunk.
+ * @param {Record<string, any>} [options.parameters] - Additional parameters for each inputs.
+ * @param {Record<string, any>} [options.summary] - Summary data for each chunk.
+ * @returns {BatchChunk<T>[]} array of batch chunks.
+ * @throws {SparkError} if headers are missing and cannot be extracted from dataset.
  */
-export function createChunks<T = any>(dataset: T[], chunkSize: number = BATCH_CHUNK_SIZE): BatchChunk<T>[] {
+export function createChunks<T = any>(
+  dataset: T[],
+  {
+    chunkSize = BATCH_CHUNK_SIZE,
+    parameters = {},
+    summary,
+    headers,
+  }: {
+    headers?: string[];
+    chunkSize?: number;
+    parameters?: Record<string, any>;
+    summary?: Record<string, any>;
+  } = {},
+): BatchChunk<T>[] {
+  chunkSize = Math.max(1, chunkSize);
+
   const total = dataset.length;
   const batchSize = Math.ceil(total / chunkSize);
+
+  if (!headers) headers = (total > 0 ? dataset.shift() : []) as string[];
+  if (!Array.isArray(headers) || headers.length === 0) {
+    throw SparkError.sdk({ message: 'missing headers for the input dataset', cause: dataset });
+  }
+
   const chunks: BatchChunk<T>[] = [];
 
   for (let i = 0; i < batchSize; i++) {
     const start = i * chunkSize;
     const end = Math.min(start + chunkSize, total);
-    const chunk = dataset.slice(start, end);
-    chunks.push({ id: getUuid(), data: { inputs: chunk, parameters: {} }, size: chunk.length });
+    const inputs = [headers, ...dataset.slice(start, end)] as ChunkData<T>['inputs'];
+    chunks.push({ id: getUuid(), data: { inputs, parameters, summary }, size: inputs.length - 1 });
   }
 
   return chunks;

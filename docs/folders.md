@@ -235,7 +235,7 @@ cover, or status.
 
 ### Arguments
 
-You must provide the folder iD and the updated folder information, just as in
+You must provide the folder ID and the updated folder information, just as in
 [creating a new folder](#create-a-new-folder).
 
 ```ts
