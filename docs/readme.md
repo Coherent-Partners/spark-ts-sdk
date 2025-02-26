@@ -244,16 +244,12 @@ like to consume that's unavailable in the SDK, you can always extend this `ApiRe
 to include it.
 
 ```ts
-import Spark, { ApiResource, Uri } from '@cspark/sdk';
+import Spark, { ApiResource } from '@cspark/sdk';
 
 // 1. Prepare the additional API resource you want to consume (e.g., MyResource).
 class MyResource extends ApiResource {
   fetchData() {
-    const url = Uri.from(undefined, {
-      base: this.config.baseUrl.full,
-      version: 'api/v4',
-      endpoint: 'my/resource',
-    });
+    const url = this.config.baseUrl.concat({ version: 'api/v4', endpoint: 'my/resource' });
 
     return this.request(url, { method: 'GET' });
   }

@@ -1,24 +1,18 @@
 import { type Readable } from 'stream';
 
-import { type Config } from '../config';
 import { Serializable } from '../data';
 import { SparkApiError } from '../error';
 import { HttpResponse, Multipart } from '../http';
 import { DateUtils, StringUtils, getUuid } from '../utils';
 import { SPARK_SDK } from '../constants';
 
-import { ApiResource, Uri, UriOptions, ApiResponse } from './base';
+import { ApiResource, ApiResponse } from './base';
 
 export class Folders extends ApiResource {
-  readonly baseUri!: UriOptions;
+  readonly #version: string = 'api/v1';
 
   get categories(): Categories {
     return new Categories(this.config);
-  }
-
-  constructor(config: Config) {
-    super(config);
-    this.baseUri = { base: this.config.baseUrl.value, version: 'api/v1' };
   }
 
   /**
@@ -26,7 +20,8 @@ export class Folders extends ApiResource {
    * @deprecated Use `folders.categories.list()` instead.
    */
   getCategories(): Promise<HttpResponse<FolderApiResponse<FolderCategories>>> {
-    return this.request(Uri.from(undefined, { ...this.baseUri, endpoint: 'lookup/getcategories' }));
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: 'lookup/getcategories' });
+    return this.request(url, { method: 'GET' });
   }
 
   /**
@@ -36,7 +31,7 @@ export class Folders extends ApiResource {
    * @returns {Promise<HttpResponse<FolderCreated>>}
    */
   async create(params: string | CreateParams): Promise<HttpResponse<FolderCreated>> {
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'product/create' });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: 'product/create' });
     const createParams = (StringUtils.isString(params) ? { name: params } : params) as CreateParams;
     const { name, category = 'Other', description, status, cover } = createParams;
     const [startDate, launchDate] = DateUtils.parse(createParams.startDate, createParams.launchDate);
@@ -81,7 +76,7 @@ export class Folders extends ApiResource {
    * for authentication.
    */
   find(params: string | SearchParams, paging: Paging = {}): Promise<HttpResponse<FolderListed>> {
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'product/list' });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: 'product/list' });
     const searchParams = (StringUtils.isString(params) ? { name: params } : params) as SearchParams;
     const search = Object.entries(searchParams)
       .filter(([, value]) => !!value)
@@ -101,7 +96,7 @@ export class Folders extends ApiResource {
    */
   async update(id: string, params: Omit<CreateParams, 'name' | 'status'>): Promise<HttpResponse<FolderUpdated>> {
     const endpoint = `product/update/${id?.trim()}`;
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint });
     const { cover, startDate, launchDate, ...rest } = params;
     if (cover) await this.uploadCover(id, cover);
 
@@ -125,7 +120,7 @@ export class Folders extends ApiResource {
    */
   delete(id: string): Promise<HttpResponse<FolderDeleted>> {
     const endpoint = `product/delete/${id?.trim()}`;
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint });
     this.logger.warn(`deleting folder will also delete all its services.`);
     return this.request(url, { method: 'DELETE' });
   }
@@ -137,7 +132,7 @@ export class Folders extends ApiResource {
    * @returns {Promise<HttpResponse<CoverUploaded>>}
    */
   uploadCover(id: string, cover: CoverImage): Promise<HttpResponse<CoverUploaded>> {
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'product/UploadCoverImage' });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: 'product/UploadCoverImage' });
     const multiparts: Multipart[] = [
       { name: 'id', data: id?.trim() },
       { name: 'coverImage', fileStream: cover.image, fileName: cover.fileName },
@@ -148,19 +143,14 @@ export class Folders extends ApiResource {
 }
 
 class Categories extends ApiResource {
-  readonly baseUri!: UriOptions;
-
-  constructor(config: Config) {
-    super(config);
-    this.baseUri = { base: this.config.baseUrl.value, version: 'api/v1' };
-  }
+  readonly #version: string = 'api/v1';
 
   /**
    * Gets the list of categories.
    * @returns {Promise<HttpResponse<FolderCategories>>}
    */
   async list(): Promise<HttpResponse<FolderCategories>> {
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'lookup/getcategories' });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: 'lookup/getcategories' });
 
     return this.request(url).then((res: any) => ({ ...res, data: res.data?.data ?? [] }));
   }
@@ -173,7 +163,7 @@ class Categories extends ApiResource {
    * @returns {Promise<HttpResponse<FolderCategories>>}
    */
   async save(name: string, key?: string, icon?: string): Promise<HttpResponse<FolderCategories>> {
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'lookup/savecategory' });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: 'lookup/savecategory' });
     const body = { value: name, key: key ?? getUuid(), icon: icon ?? 'other.svg' };
 
     return this.request(url, { method: 'POST', body }).then((res) => ({ ...res, data: this.#extractData(res.data) }));
@@ -185,7 +175,7 @@ class Categories extends ApiResource {
    * @returns {Promise<HttpResponse<FolderCategories>>}
    */
   async delete(key: string): Promise<HttpResponse<FolderCategories>> {
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: `lookup/deletecategory/${key}` });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `lookup/deletecategory/${key}` });
 
     return this.request(url, { method: 'DELETE' }).then((res) => ({ ...res, data: this.#extractData(res.data) }));
   }

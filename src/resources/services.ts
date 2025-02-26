@@ -59,7 +59,7 @@ export class Services extends ApiResource {
   async publish(params: PublishParams): Promise<HttpResponse<ServicePublished>> {
     const { folder, service } = params;
     const [startDate, endDate] = DateUtils.parse(params.startDate, params.endDate);
-    const url = Uri.from({ folder, service }, { base: this.config.baseUrl.full, endpoint: 'publish' });
+    const url = this.config.baseUrl.add({ folder, service }, { endpoint: 'publish' });
     const body = {
       request_data: {
         draft_service_name: params.draftName ?? service,
@@ -110,8 +110,8 @@ export class Services extends ApiResource {
     const metadata = new ExecuteMeta(meta, uri, executable.isBatch);
 
     const url = executable.isBatch
-      ? Uri.from({ public: uri.public }, { base: this.config.baseUrl.full, version: 'api/v4', endpoint: 'execute' })
-      : Uri.from(uri, { base: this.config.baseUrl.full, endpoint: uri.versionId || uri.serviceId ? '' : 'execute' });
+      ? this.config.baseUrl.add({ public: uri.public }, { version: 'api/v4', endpoint: 'execute' })
+      : this.config.baseUrl.add(uri, { endpoint: uri.versionId || uri.serviceId ? '' : 'execute' });
 
     const payload = executable.isBatch
       ? { inputs: executable.inputs, ...metadata.values }
@@ -159,7 +159,7 @@ export class Services extends ApiResource {
     const { inputs, ...meta } = params;
     const metadata = new ExecuteMeta(meta, uri, meta.apiVersion === 'v4');
     const endpoint = `transforms/${meta.using ?? uri.service}/for/${Uri.encode({ folder: uri.folder, service: uri.service })}`;
-    const url = Uri.from(undefined, { base: this.config.baseUrl.full, version: 'api/v4', endpoint });
+    const url = this.config.baseUrl.concat({ version: 'api/v4', endpoint });
     const [body, headers] = Serializable.compress(inputs, params.encoding);
 
     return this.request(url, { method: 'POST', body, headers: { ...headers, ...metadata.asHeaders } });
@@ -174,7 +174,7 @@ export class Services extends ApiResource {
    */
   validate<Output>(uri: string | UriParams, params?: ValidateParams): Promise<HttpResponse<ServiceExecuted<Output>>> {
     uri = Uri.validate(uri);
-    const url = Uri.from(uri, { base: this.config.baseUrl.full, endpoint: 'validation' });
+    const url = this.config.baseUrl.add(uri, { endpoint: 'validation' });
 
     const { inputs, ...meta } = params ?? {};
     const executable = new ExecuteInputs(inputs);
@@ -201,11 +201,11 @@ export class Services extends ApiResource {
    */
   getSchema(uri: string | GetSchemaParams): Promise<HttpResponse> {
     const { folder, service, versionId } = Uri.validate(uri);
-    const baseUri = StringUtils.isNotEmpty(versionId)
-      ? { base: this.config.baseUrl.full, endpoint: `GetEngineDetailByVersionId/versionid/${versionId}` }
-      : { base: this.config.baseUrl.value, version: 'api/v1', endpoint: `product/${folder}/engines/get/${service}` };
+    const url = StringUtils.isNotEmpty(versionId)
+      ? this.config.baseUrl.concat({ endpoint: `GetEngineDetailByVersionId/versionid/${versionId}` })
+      : this.config.baseUrl.concat({ version: 'api/v1', endpoint: `product/${folder}/engines/get/${service}` });
 
-    return this.request(Uri.from(undefined, baseUri), { method: versionId ? 'POST' : 'GET' });
+    return this.request(url, { method: versionId ? 'POST' : 'GET' });
   }
 
   /**
@@ -214,7 +214,7 @@ export class Services extends ApiResource {
    * @returns {Promise<HttpResponse<MetadataFound>>} the service metadata.
    */
   getMetadata(uri: string | GetMetadataParams): Promise<HttpResponse<MetadataFound>> {
-    return this.request(Uri.from(Uri.validate(uri), { base: this.config.baseUrl.full, endpoint: 'metadata' }));
+    return this.request(this.config.baseUrl.add(Uri.validate(uri), { endpoint: 'metadata' }));
   }
 
   /**
@@ -225,7 +225,7 @@ export class Services extends ApiResource {
   async getVersions(uri: string | GetVersionsParams): Promise<HttpResponse<VersionInfo[]>> {
     const { folder, service } = Uri.validate(uri);
     const endpoint = `product/${folder}/engines/getversions/${service}`;
-    const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
+    const url = this.config.baseUrl.concat({ version: 'api/v1', endpoint });
 
     return this.request(url).then((response: any) => ({ ...response, data: response.data.data }));
   }
@@ -239,7 +239,7 @@ export class Services extends ApiResource {
   getSwagger(uri: string | GetSwaggerParams): Promise<HttpResponse> {
     const { folder, service, versionId = '', downloadable = false, subservice = 'All' } = Uri.validate(uri);
     const endpoint = `downloadswagger/${subservice}/${downloadable}/${versionId}`;
-    const url = Uri.from({ folder, service }, { base: this.config.baseUrl.full, endpoint });
+    const url = this.config.baseUrl.add({ folder, service }, { endpoint });
 
     return this.request(url);
   }
@@ -252,7 +252,7 @@ export class Services extends ApiResource {
   download(uri: string | DownloadParams): Promise<HttpResponse> {
     const { folder, service, version = '', fileName: filename = '', type = 'original' } = Uri.validate(uri);
     const endpoint = `product/${folder}/engines/${service}/download/${version}`;
-    const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
+    const url = this.config.baseUrl.concat({ version: 'api/v1', endpoint });
     const params = { filename, type: type === 'configured' ? 'withmetadata' : '' };
 
     return this.request(url, { params });
@@ -270,7 +270,7 @@ export class Services extends ApiResource {
    */
   recompile(uri: string | RecompileParams): Promise<HttpResponse<ServiceRecompiled>> {
     const { folder, service, versionId, releaseNotes, ...params } = Uri.validate(uri);
-    const url = Uri.from({ folder, service }, { base: this.config.baseUrl.full, endpoint: 'recompileNodgen' });
+    const url = this.config.baseUrl.add({ folder, service }, { endpoint: 'recompileNodgen' });
     const [startDate, endDate] = DateUtils.parse(params.startDate, params.endDate);
     const data = {
       versionId,
@@ -294,7 +294,7 @@ export class Services extends ApiResource {
   delete(uri: string | Pick<UriParams, 'folder' | 'service'>): Promise<HttpResponse<ServiceDeleted>> {
     const { folder, service } = Uri.validate(uri);
     const endpoint = `product/${folder}/engines/delete/${service}`;
-    const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
+    const url = this.config.baseUrl.concat({ version: 'api/v1', endpoint });
 
     return this.request(url, { method: 'DELETE' });
   }
@@ -356,7 +356,7 @@ class Compilation extends ApiResource {
    * @returns {Promise<HttpResponse<ServiceCompiled>>} the upload response
    */
   async initiate(params: CompileParams): Promise<HttpResponse<ServiceCompiled>> {
-    const url = Uri.from(params, { base: this.config.baseUrl.full, endpoint: 'upload' });
+    const url = this.config.baseUrl.add(params, { endpoint: 'upload' });
     const [startDate, endDate] = DateUtils.parse(params.startDate, params.endDate);
     const metadata = {
       request_data: {
@@ -383,7 +383,7 @@ class Compilation extends ApiResource {
    */
   async getStatus(params: GetStatusParams): Promise<HttpResponse<CompilationStatus>> {
     const { jobId, maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
-    const url = Uri.from(params, { base: this.config.baseUrl.full, endpoint: `getcompilationprogess/${jobId}` });
+    const url = this.config.baseUrl.add(params, { endpoint: `getcompilationprogess/${jobId}` });
 
     let retries = 0;
     let response = await this.request<CompilationStatus>(url);

@@ -23,7 +23,7 @@ export class History extends ApiResource {
   find(uri: string | SearchParams, paging: Paging = {}): Promise<HttpResponse<LogListed>> {
     const { folder, service, ...params } = Uri.validate(uri);
     const endpoint = `product/${folder}/engines/${service}/logs`;
-    const url = Uri.from(undefined, { base: this.config.baseUrl.value, version: 'api/v1', endpoint });
+    const url = this.config.baseUrl.concat({ version: 'api/v1', endpoint });
     const body = this.#buildSearchBody(params, paging);
 
     return this.request(url, { method: 'POST', body });
@@ -57,7 +57,7 @@ export class History extends ApiResource {
       throw error;
     }
 
-    const url = Uri.from({ folder, service }, { base: this.config.baseUrl.full, endpoint: `download/${callId}` });
+    const url = this.config.baseUrl.add({ folder, service }, { endpoint: `download/${callId}` });
     const options = NumberUtils.isArrayIndex(index) ? { params: { index: index!.toFixed(0) } } : {};
     const response = await this.request<LogRehydrated>(url, options);
     const downloadUrl = response.data?.response_data?.download_url;
@@ -151,7 +151,7 @@ class LogDownload extends ApiResource {
   async initiate(uri: string | CreateJobParams, type?: DownloadFileType): Promise<HttpResponse<JobCreated>> {
     const { folder, service, ...params } = Uri.validate(uri);
     type = (type ?? params?.type ?? 'json').toLowerCase() as DownloadFileType;
-    const url = Uri.from({ folder, service }, { base: this.config.baseUrl.full, endpoint: `log/download${type}` });
+    const url = this.config.baseUrl.add({ folder, service }, { endpoint: `log/download${type}` });
 
     const body = ((params: Omit<CreateJobParams, 'folder' | 'service'>) => {
       const { sourceSystem, correlationId, startDate, endDate } = params;
@@ -191,7 +191,7 @@ class LogDownload extends ApiResource {
     const { jobId, ...params } = Uri.validate(uri);
     const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
     type = (type ?? params?.type ?? 'json').toLowerCase() as DownloadFileType;
-    const url = Uri.from(params, { base: this.config.baseUrl.full, endpoint: `log/download${type}/status/${jobId}` });
+    const url = this.config.baseUrl.add(params, { endpoint: `log/download${type}/status/${jobId}` });
 
     let retries = 0;
     let response = await this.request<LogStatus>(url);

@@ -1,10 +1,11 @@
-import Utils, { loadModule } from './utils';
+import Utils, { Maybe, loadModule } from './utils';
 import Validators from './validators';
 import { SparkError } from './error';
 import { Authorization } from './auth';
 import { Interceptor } from './http';
 import { ClientOptions } from './client';
 import { Logger, LoggerOptions } from './logger';
+import { Uri, UriOptions, UriParams } from './resources';
 import { DEFAULT_TIMEOUT_IN_MS, ENV_VARS } from './constants';
 import { DEFAULT_MAX_RETRIES, DEFAULT_RETRY_INTERVAL } from './constants';
 
@@ -230,6 +231,42 @@ export class BaseUrl {
   copyWith(options: { url?: string; tenant?: string; env?: string } = {}): BaseUrl {
     const { url, tenant = this.tenant, env = this.env } = options;
     return url ? BaseUrl.from({ url, tenant }) : BaseUrl.from({ tenant, env });
+  }
+
+  /**
+   * Augments (or adjusts) the base URL to support the given parameters.
+   *
+   * This is a convenience method to build a Uri from the base URL. This is a
+   * convenience method as sometimes the final URL has to be restructured to
+   * accommodate the tenant name or other parameters. This helps centralize the logic
+   * for building URLs in a consistent manner for each `ApiResource`.
+   *
+   * @param {UriParams} [params] - Uri parameters to reshape the URL with if any.
+   * @param {object} options - parameters to build a Uri from.
+   * @param {string} options.version - the API version to use.
+   * @param {string} options.endpoint - the API endpoint to use.
+   * @returns a Spark Uri.
+   *
+   * NOTE: By default, `UriOptions.version` is set to 'api/v3' in `Uri.from(...)`.
+   * This is because most of the APIs are built on that version. `api/v1` is also
+   * supported for backward compatibility.
+   */
+  add(params: Maybe<UriParams>, { version, endpoint }: Omit<UriOptions, 'base'>): Uri {
+    const url = version?.toLowerCase() === 'api/v1' ? this.value : this.full;
+    return Uri.from(params, { base: url, version, endpoint });
+  }
+
+  /**
+   * Concatenates the base URL with the given parameters.
+   * @param {Omit<UriOptions, 'base'>} options - parameters to build a Uri from.
+   * @param {string} options.version - the API version to use.
+   * @param {string} options.endpoint - the API endpoint to use.
+   * @returns a Spark Uri.
+   *
+   * @see {@link add} for more details on how this method works.
+   */
+  concat({ version, endpoint }: Omit<UriOptions, 'base'>): Uri {
+    return this.add(undefined, { version, endpoint });
   }
 
   toString(): string {
