@@ -5,11 +5,7 @@ const json = require('@rollup/plugin-json');
 const terser = require('@rollup/plugin-terser');
 
 // Browser-friendly UMD build.
-const bundle = {
-  format: 'umd',
-  name: '@cspark/sdk',
-  exports: 'named',
-};
+const bundle = { format: 'umd', name: '@cspark/sdk', exports: 'named' };
 
 exports.default = [
   {
@@ -21,7 +17,7 @@ exports.default = [
     plugins: [
       nodeResolve({ browser: true, preferBuiltins: false }),
       commonjs(),
-      typescript({ tsconfig: './tsconfig.esm.json' }),
+      typescript({ tsconfig: './tsconfig.esm.json', removeComments: false }),
     ],
   },
   {
@@ -32,12 +28,12 @@ exports.default = [
       nodeResolve({ preferBuiltins: false }),
       commonjs(),
       json(),
-      typescript({ tsconfig: './tsconfig.esm.json', removeComments: true }),
+      typescript({ tsconfig: './tsconfig.esm.json' }),
     ],
   },
   {
     input: 'src/index.ts',
-    output: [{ file: 'lib/types.d.ts', format: 'esm' }],
-    plugins: [nodeResolve(), require('rollup-plugin-dts').dts()],
+    output: { file: 'lib/types.d.ts', format: 'esm' },
+    plugins: [nodeResolve(), require('rollup-plugin-dts').dts({ compilerOptions: { removeComments: false } })],
   },
 ];
