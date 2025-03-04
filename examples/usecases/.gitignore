@@ -1,0 +1,7 @@
+.env
+inputs/
+outputs/
+outputs.json
+*.log
+
+pnpm-lock*
