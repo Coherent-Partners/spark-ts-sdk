@@ -1,0 +1,15 @@
+{
+  "name": "spark-bun-test",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@cspark/sdk": "../../"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
