@@ -1,6 +1,6 @@
 {
   "name": "@cspark/sdk",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "A Node.js SDK for interacting with Coherent Spark APIs",
   "author": "Coherent <team@coherent.global>",
   "homepage": "https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/docs/readme.md",
@@ -25,7 +25,7 @@
   },
   "scripts": {
     "start": "echo '>>> no start command specified' && exit 0",
-    "format": "prettier --write '{src,test,examples}/**/*.ts'",
+    "format": "prettier --write '{src,test,examples}/**/*.(t|j)s'",
     "lint": "eslint '{src,test}/**/*.ts' --fix",
     "test": "jest",
     "prebuild": "rm -rf lib",
@@ -53,7 +53,6 @@
     "@types/node": "*",
     "@types/node-fetch": "^2.6.11",
     "@types/pako": "^2.0.3",
-    "@types/papaparse": "^5.3.14",
     "@typescript-eslint/eslint-plugin": "7.1.0",
     "@typescript-eslint/parser": "7.1.0",
     "abort-controller": "^3.0.0",

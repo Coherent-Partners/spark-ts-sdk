@@ -14,7 +14,6 @@ export class Config {
 
   readonly baseUrl!: BaseUrl;
   readonly auth!: Authorization;
-  readonly environment?: string | undefined;
   readonly maxRetries!: number;
   readonly retryInterval!: number;
   readonly timeout!: number;
@@ -43,7 +42,6 @@ export class Config {
     this.retryInterval = numberValidator.isValid(retryInterval) ? retryInterval! : DEFAULT_RETRY_INTERVAL;
     this.allowBrowser = this.auth.isOpen || !!options.allowBrowser;
     this.logger = Logger.for(options.logger);
-    this.environment = this.baseUrl.env;
 
     this.#options = JSON.stringify({
       baseUrl: this.baseUrl.toString(),
@@ -169,11 +167,23 @@ export class BaseUrl {
 
   /**
    * Builds a base URL from the given parameters.
+   *
+   * A Spark base URL comprises the following parts:
+   * - the service name (e.g., excel)
+   * - the environment or region name (e.g., uat.us)
+   * - and the tenant name (e.g., my-tenant)
+   *
+   * So, a base URL should look like this: `https://{service}.{env}.coherent.global/{tenant}`.
+   * Though these parts can be provided separately, the `url` parameter is the source of truth.
+   * That is, if the `url` is provided, the service, environment, and tenant names are extracted
+   * from it. Note that if an unsupported service name is provided such as this Spark URL:
+   * `https://spark.us.coherent.global/my-tenant`, the service name will default to `excel`.
+   *
    * @param {object} options - the distinct parameters to build a base URL from.
    * @param {string} options.url - the base URL to use.
    * @param {string} options.tenant - the tenant name.
    * @param {string} options.env - the environment name to use.
-   * @returns a BaseUrl
+   * @returns a Spark BaseUrl
    * @throws {SparkError} if a base URL cannot be built from the given parameters.
    */
   static from(options: { url?: string; tenant?: string; env?: string } = {}): BaseUrl {
