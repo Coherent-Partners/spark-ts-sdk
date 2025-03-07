@@ -1,0 +1,29 @@
+name: Service Promotion
+run-name: Promoting Spark services from lower to higher environments
+
+on:
+  workflow_dispatch:
+
+jobs:
+  impex:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.12.1'
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Run ImpEx API script
+        env:
+          FROM_SETTINGS: ${{ vars.FROM_SPARK_SETTINGS }}
+          BEARER_TOKEN: ${{ secrets.FROM_BEARER_TOKEN }}
+          TO_SETTINGS: ${{ vars.TO_SPARK_SETTINGS }}
+          TO_OAUTH: ${{ secrets.TO_OAUTH_CREDS }}
+        run: node impex.js "$FROM_SETTINGS" "$BEARER_TOKEN" "$TO_SETTINGS" "$TO_OAUTH"

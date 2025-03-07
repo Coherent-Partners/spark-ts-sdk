@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [main]
-    paths-ignore: ['**.md', 'LICENSE', '.nvmrc']
+    paths-ignore: ['**.md', 'LICENSE', 'ecosystem/*', 'examples/usecases/*']
   schedule:
     - cron: '0 0 1 * *' # Run at midnight on the first of every month.
 

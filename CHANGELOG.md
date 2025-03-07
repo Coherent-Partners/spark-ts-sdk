@@ -4,10 +4,10 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
-## 0.2.10 (2025-03-04)
+## 0.2.10 (2025-03-06)
 
 - Enhance folder category management
-- Streamline URL contruction in API resources
+- Streamline URL construction in API resources
 - Add ecosystem tests
 - Add standalone use cases
 

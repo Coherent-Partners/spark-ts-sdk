@@ -15,6 +15,8 @@ including data ingestion, data processing, and data export.
 
 - [Execute records sequentially](api_v3_for_loop/readme.md)
 - [Execute batch of records synchronously](api_v4_sync_batch/readme.md)
+- [Promote services across tenants or environments](service_promotion/readme.md)
+- [Validate JWTs against Keycloak](token_validation/readme.md)
 
 ## How to Run Use Cases
 
