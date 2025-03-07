@@ -7,18 +7,15 @@ import Utils, { DateUtils, StringUtils, getUuid } from '../utils';
 import { ApiResource, Uri, UriOptions } from './base';
 
 export class Batches extends ApiResource {
-  readonly baseUri!: UriOptions;
-  constructor(config: Config) {
-    super(config);
-    this.baseUri = { base: this.config.baseUrl.full, version: 'api/v4' };
-  }
+  readonly #version: string = 'api/v4';
 
   /**
    * Describes the batch pipelines available across the tenant.
    * @returns {Promise<HttpResponse<BatchDescribed>>} the batch pipeline details
    */
   describe(): Promise<HttpResponse<BatchDescribed>> {
-    return this.request(Uri.from(undefined, { ...this.baseUri, endpoint: `batch/status` }));
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `batch/status` });
+    return this.request(url, { method: 'GET' });
   }
 
   /**
@@ -38,7 +35,7 @@ export class Batches extends ApiResource {
   create(uri: string | CreateParams, options?: PipelineOptions): Promise<HttpResponse<BatchCreated>> {
     const { folder, service, version, serviceId, ...params } = Uri.validate(uri);
     const serviceUri = serviceId ?? params?.serviceUri ?? Uri.encode({ folder, service, version }, false);
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'batch' });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: 'batch' });
 
     const payload = {
       service: serviceUri,
@@ -110,6 +107,7 @@ export class Batches extends ApiResource {
 export class Pipeline extends ApiResource {
   #state: PipelineState = 'open';
   #chunks: Map<string, number> = new Map();
+  readonly #version: string = 'api/v4';
 
   readonly id!: string;
   readonly baseUri!: UriOptions;
@@ -117,7 +115,6 @@ export class Pipeline extends ApiResource {
   constructor(batchId: string, config: Config) {
     super(config);
     this.id = batchId?.trim();
-    this.baseUri = { base: this.config.baseUrl.full, version: 'api/v4' };
 
     if (StringUtils.isEmpty(this.id)) {
       const error = SparkError.sdk('batch pipeline id is required to proceed');
@@ -165,7 +162,8 @@ export class Pipeline extends ApiResource {
    * This method is experimental and may change in future releases.
    */
   getInfo(): Promise<HttpResponse<BatchInfo>> {
-    return this.request(Uri.from(undefined, { ...this.baseUri, endpoint: `batch/${this.id}` }));
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `batch/${this.id}` });
+    return this.request(url, { method: 'GET' });
   }
 
   /**
@@ -173,7 +171,8 @@ export class Pipeline extends ApiResource {
    * @returns {Promise<HttpResponse<BatchStatus>>} the batch status
    */
   getStatus(): Promise<HttpResponse<BatchStatus>> {
-    return this.request(Uri.from(undefined, { ...this.baseUri, endpoint: `batch/${this.id}/status` }));
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `batch/${this.id}/status` });
+    return this.request(url, { method: 'GET' });
   }
 
   /**
@@ -199,7 +198,7 @@ export class Pipeline extends ApiResource {
   async push<Inputs>(params: PushDataParams<Inputs>, options?: PushDataOptions) {
     this.#assertState(['closed', 'cancelled']);
 
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: `batch/${this.id}/chunks` });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `batch/${this.id}/chunks` });
     const body = this.#buildPushBody(params ?? {}, options);
     return this.request<RecordSubmitted, Chunks<Inputs>>(url, { method: 'POST', body }).then((response) => {
       this.logger.log(`pushed ${response.data.record_submitted} records to batch pipeline <${this.id}>`);
@@ -216,8 +215,11 @@ export class Pipeline extends ApiResource {
   async pull<Outputs>(max: number = 100): Promise<HttpResponse<BatchResult<Outputs>>> {
     this.#assertState(['cancelled']);
 
-    const endpoint = `batch/${this.id}/chunkresults?max_chunks=${max}`;
-    return this.request<BatchResult<Outputs>>(Uri.from(undefined, { ...this.baseUri, endpoint })).then((response) => {
+    const url = this.config.baseUrl.concat({
+      version: this.#version,
+      endpoint: `batch/${this.id}/chunkresults?max_chunks=${max}`,
+    });
+    return this.request<BatchResult<Outputs>>(url).then((response) => {
       this.logger.log(`${response.data.status.records_available} available records from batch pipeline <${this.id}>`);
       return response;
     });
@@ -234,7 +236,7 @@ export class Pipeline extends ApiResource {
   async close(): Promise<HttpResponse<BatchDisposed>> {
     this.#assertState(['closed', 'cancelled']);
 
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: `batch/${this.id}` });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `batch/${this.id}` });
     return this.request<BatchDisposed>(url, { method: 'PATCH', body: { batch_status: 'closed' } }).then((response) => {
       this.#state = 'closed';
       this.logger.log(`batch pipeline <${this.id}> has been closed`);
@@ -253,7 +255,7 @@ export class Pipeline extends ApiResource {
   async cancel(): Promise<HttpResponse<BatchDisposed>> {
     this.#assertState(['cancelled', 'closed']);
 
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: `batch/${this.id}` });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `batch/${this.id}` });
     return this.request<BatchDisposed>(url, { method: 'PATCH', body: { batch_status: 'cancelled' } }).then(
       (response) => {
         this.#state = 'cancelled';
@@ -285,7 +287,7 @@ export class Pipeline extends ApiResource {
       if (Utils.isNotEmptyArray(data?.inputs))
         return { chunks: this.#assessChunks([{ id: getUuid(), data }], ifDuplicated) };
       if (Utils.isNotEmptyArray(inputs)) {
-        return { chunks: this.#assessChunks(createChunks(inputs, chunkSize), ifDuplicated) };
+        return { chunks: this.#assessChunks(createChunks(inputs, { chunkSize }), ifDuplicated) };
       }
 
       throw SparkError.sdk({
@@ -609,23 +611,49 @@ type IfChunkIdDuplicated = 'ignore' | 'replace' | 'throw';
 type Chunks<T> = { chunks: BatchChunk<T>[] };
 
 /**
- * Creates an array of batch chunks from a dataset.
+ * Creates an array of batch chunks from a JSON array dataset.
  *
  * @template T - The type of elements in the dataset.
  * @param {T[]} dataset - The dataset to create chunks from.
- * @param {number} [chunkSize=200] - The size of each chunk.
- * @returns {BatchChunk<T>[]} An array of batch chunks.
+ * @param {object} options - Configuration options.
+ * @param {string[]} [options.headers] - Headers for the input dataset.
+ * @param {number} [options.chunkSize=200] - The size of each chunk.
+ * @param {Record<string, any>} [options.parameters] - Additional parameters for each inputs.
+ * @param {Record<string, any>} [options.summary] - Summary data for each chunk.
+ * @returns {BatchChunk<T>[]} array of batch chunks.
+ * @throws {SparkError} if headers are missing and cannot be extracted from dataset.
  */
-export function createChunks<T = any>(dataset: T[], chunkSize: number = BATCH_CHUNK_SIZE): BatchChunk<T>[] {
+export function createChunks<T = any>(
+  dataset: T[],
+  {
+    chunkSize = BATCH_CHUNK_SIZE,
+    parameters = {},
+    summary,
+    headers,
+  }: {
+    headers?: string[];
+    chunkSize?: number;
+    parameters?: Record<string, any>;
+    summary?: Record<string, any>;
+  } = {},
+): BatchChunk<T>[] {
+  chunkSize = Math.max(1, chunkSize);
+
   const total = dataset.length;
   const batchSize = Math.ceil(total / chunkSize);
+
+  if (!headers) headers = (total > 0 ? dataset.shift() : []) as string[];
+  if (!Array.isArray(headers) || headers.length === 0) {
+    throw SparkError.sdk({ message: 'missing headers for the input dataset', cause: dataset });
+  }
+
   const chunks: BatchChunk<T>[] = [];
 
   for (let i = 0; i < batchSize; i++) {
     const start = i * chunkSize;
     const end = Math.min(start + chunkSize, total);
-    const chunk = dataset.slice(start, end);
-    chunks.push({ id: getUuid(), data: { inputs: chunk, parameters: {} }, size: chunk.length });
+    const inputs = [headers, ...dataset.slice(start, end)] as ChunkData<T>['inputs'];
+    chunks.push({ id: getUuid(), data: { inputs, parameters, summary }, size: inputs.length - 1 });
   }
 
   return chunks;

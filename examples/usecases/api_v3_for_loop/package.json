@@ -1,0 +1,14 @@
+{
+  "name": "api_v3_for_loop",
+  "version": "0.1.0",
+  "description": "Execute records sequentially using Execute APIv3",
+  "author": "Coherent <team@coherent.global>",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@cspark/sdk": "^0.2.8"
+  }
+}

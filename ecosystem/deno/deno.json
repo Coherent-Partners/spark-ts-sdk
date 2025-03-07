@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "start": "deno run --allow-read main.ts"
+  },
+  "imports": {
+    "@cspark/sdk": "../../lib/esm/index.mjs",
+    "@std/assert": "jsr:@std/assert@1",
+    "node-fetch": "npm:node-fetch@^2.7.0"
+  }
+}

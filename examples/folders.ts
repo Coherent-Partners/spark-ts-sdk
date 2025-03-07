@@ -2,8 +2,8 @@ import { createWriteStream, createReadStream } from 'fs';
 import Spark, { type SparkClient } from '../src';
 
 function getCategories(spark: SparkClient) {
-  spark.folders
-    .getCategories()
+  spark.folders.categories
+    .list()
     .then((response) => console.log(response.data))
     .catch(console.error);
 }

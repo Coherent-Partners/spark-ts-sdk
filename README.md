@@ -1,11 +1,11 @@
-# Coherent Spark Node.js SDK
+# Coherent Spark SDK
 
 [![npm version][version-img]][version-url]
 [![CI build][ci-img]][ci-url]
 [![License][license-img]][license-url]
 
-The Coherent Spark Node.js SDK is designed to elevate the developer experience and
-provide convenient access to Coherent Spark APIs.
+The Coherent Spark SDK is designed to elevate the developer experience and
+provide convenient access to Coherent Spark APIs using JavaScript and TypeScript.
 
 👋 **Just a heads-up:**
 This SDK is supported by the community. If you encounter any bumps while using it,
@@ -19,8 +19,9 @@ npm i @cspark/sdk
 ```
 
 > **Note:** This package requires [Node.js 14.15](https://nodejs.org/en/download/current)
-> or higher. It also supports other environments such as browsers, [Bun](https://bun.sh),
-> and [Deno](https://deno.com).
+> or higher. It is also supported in other JS runtime environments such as browsers,
+> [Bun](https://bun.sh), and [Deno](https://deno.com). Chekout the [ecosystem] folder
+> for more details.
 
 ## Usage
 
@@ -53,16 +54,11 @@ Here's an example of how to execute a Spark service:
 import Spark from '@cspark/sdk';
 
 function main() {
-  const spark = new Spark({
-    env: 'my-env',
-    tenant: 'my-tenant',
-    apiKey: 'my-api-key',
-  });
+  const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'my-api-key' });
 
   spark.services
     .execute('my-folder/my-service', { inputs: { value: 42 } })
-    .then((response) => console.log(response.data))
-    .catch(console.error);
+    .then((response) => console.log(response.data));
 }
 
 main();
@@ -80,12 +76,7 @@ environments:
       const { SparkClient: Spark } = window['@cspark/sdk'];
 
       function main(apiKey) {
-        const spark = new Spark({
-          apiKey,
-          env: 'my-env',
-          tenant: 'my-tenant',
-          allowBrowser: true,
-        });
+        const spark = new Spark({ apiKey, env: 'my-env', tenant: 'my-tenant', allowBrowser: true });
 
         spark.services
           .execute('my-folder/my-service', { inputs: { value: 42 } })
@@ -108,14 +99,12 @@ Explore the [examples] and [docs] folders to find out more about the SDK's capab
 > properties.
 
 ```ts
+import Spark from '@cspark/sdk';
+
 const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'open' });
 const uri = { folder: 'my-folder', service: 'my-service', public: true };
-const inputs = { value: 42 };
 
-spark.services
-  .execute(uri, { inputs })
-  .then((response) => console.log(response.data))
-  .catch(console.error);
+spark.services.execute(uri, { inputs: { value: 42 } }).then((response) => console.log(response.data));
 // The final URI in this case is:
 //    'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
 ```
@@ -129,7 +118,7 @@ It is quite flexible and can be configured with the following options:
 
 ### Base URL
 
-`baseUrl` (default: `process.env['CSPARK_BASE_URL']`): indicates the base URL of
+`baseUrl` (default: `process.env['CSPARK_BASE_URL']`) indicates the base URL of
 Coherent Spark APIs. It should include the tenant and environment information.
 
 ```ts
@@ -147,7 +136,7 @@ const spark = new Spark({ env: 'my-env', tenant: 'my-tenant' });
 
 The SDK supports three types of authentication mechanisms:
 
-- `apiKey` (default: `process.env['CSPARK_API_KEY']`): indicates the API key
+- `apiKey` (default: `process.env['CSPARK_API_KEY']`) indicates the API key
   (also known as synthetic key), which is sensitive and should be kept secure.
 
 ```ts
@@ -159,7 +148,7 @@ const spark = new Spark({ apiKey: 'my-api-key' });
 > of authentication. In that case, you need to set `apiKey` to `open` in order to
 > create a `Spark` client.
 
-- `token` (default: `process.env['CSPARK_BEARER_TOKEN']`): indicates the bearer token.
+- `token` (default: `process.env['CSPARK_BEARER_TOKEN']`) indicates the bearer token.
   It can be prefixed with 'Bearer' or not. A bearer token is usually valid for a
   limited time and should be refreshed periodically.
 
@@ -170,7 +159,7 @@ const spark = new Spark({ token: 'my-access-token' }); // without prefix
 ```
 
 - `oauth` (default: `process.env['CSPARK_CLIENT_ID']` and `process.env['CSPARK_CLIENT_SECRET']` or
-  `process.env['CSPARK_OAUTH_PATH']`): indicates the OAuth2.0 client credentials.
+  `process.env['CSPARK_OAUTH_PATH']`) indicates the OAuth2.0 client credentials.
   You can either provide the client ID and secret directly or provide the file path
   to the JSON file containing the credentials.
 
@@ -182,32 +171,32 @@ const spark = new Spark({ oauth: 'path/to/oauth/credentials.json' });
 
 ### Additional Settings
 
-- `timeout` (default: `60000` ms): indicates the maximum amount of time that the
+- `timeout` (default: `60000` ms) indicates the maximum amount of time that the
   client should wait for a response from Spark servers before timing out a request.
 
-- `maxRetries` (default: `2`): indicates the maximum number of times that the client
+- `maxRetries` (default: `2`) indicates the maximum number of times that the client
   will retry a request in case of a temporary failure, such as a unauthorized
   response or a status code greater than 400.
 
-- `retryInterval` (default: `1` second): indicates the delay between each retry.
+- `retryInterval` (default: `1` second) indicates the delay between each retry.
 
-- `allowBrowser` (default: `false`): indicates whether the SDK should be used in
+- `allowBrowser` (default: `false`) indicates whether the SDK should be used in
   browser-like environments -- unless you intend to access public APIs.
   By default, client-side use of this library is not recommended as it risks
   exposing your secret API credentials to attackers.
   Only set this option to `true` if you understand the risks and have appropriate
   mitigations in place.
 
-- `logger` (default: `LoggerOptions`): enables or disables the logger for the SDK.
+- `logger` (default: `LoggerOptions`) enables or disables the logger for the SDK.
   - If `boolean`, determines whether or not the SDK should print logs.
   - If `LogLevel | LogLevel[]`, the SDK will only print logs that match the specified level or higher.
   - If `LoggerOptions`, the SDK will print messages with the specified options:
-    - `context` (default: `CSPARK v{version}`): defines the context of the logs (e.g., `CSPARK v1.2.3`);
-    - `colorful` (default: `true`): determines whether the logs should be colorful;
-    - `timestamp` (default: `true`): determines whether the logs should include timestamps;
-    - `logLevels` (default: `['verbose', 'debug', 'log', 'warn', 'error', 'fatal']`):
+    - `context` (default: `CSPARK v{version}`) defines the context of the logs (e.g., `CSPARK v1.2.3`);
+    - `colorful` (default: `true`) determines whether the logs should be colorful;
+    - `timestamp` (default: `true`) determines whether the logs should include timestamps;
+    - `logLevels` (default: `['verbose', 'debug', 'log', 'warn', 'error', 'fatal']`)
       determines the log levels to print;
-    - `logger`: a custom logger that implements the `LoggerService` interface.
+    - `logger` is a custom logger that implements the `LoggerService` interface.
 
 ```ts
 const spark = new Spark({ logger: false });
@@ -331,5 +320,6 @@ conduct, and the process for submitting pull requests.
 [oauth2-docs]: https://docs.coherent.global/spark-apis/authorization-client-credentials
 [contributing-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/CONTRIBUTING.md
 [examples]: https://github.com/Coherent-Partners/spark-ts-sdk/tree/main/examples
+[ecosystem]: https://github.com/Coherent-Partners/spark-ts-sdk/tree/main/ecosystem
 [docs]: https://github.com/Coherent-Partners/spark-ts-sdk/tree/main/docs
 [uri-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/src/resources/base.ts

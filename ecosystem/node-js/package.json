@@ -1,0 +1,11 @@
+{
+  "name": "spark-node-js",
+  "private": true,
+  "scripts": {
+    "start": "node index.js && node index.mjs",
+    "test": "node test.js"
+  },
+  "devDependencies": {
+    "@cspark/sdk": "file:../../build/cspark-sdk-0.2.10.tgz"
+  }
+}

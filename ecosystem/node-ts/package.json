@@ -1,0 +1,31 @@
+{
+  "name": "spark-node-ts",
+  "type": "commonjs",
+  "private": true,
+  "scripts": {
+    "start": "npm run build && node build/cjs/index.js && node build/esm/index.js",
+    "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json",
+    "postbuild": "echo '{\"type\": \"module\"}' > build/esm/package.json",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@cspark/sdk": "file:../../build/cspark-sdk-0.2.10.tgz",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.9",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.6",
+    "typescript": "^5.8.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+.ts$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.cjs.json"
+        }
+      ]
+    }
+  }
+}

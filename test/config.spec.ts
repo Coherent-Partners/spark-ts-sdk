@@ -48,7 +48,7 @@ describe('Config', () => {
     expect(config.allowBrowser).toBe(false);
     expect(config.timeout).toBe(Constants.DEFAULT_TIMEOUT_IN_MS);
     expect(config.maxRetries).toBe(Constants.DEFAULT_MAX_RETRIES);
-    expect(config.environment).toBe('test');
+    expect(config.baseUrl.env).toBe('test');
     expect(config.hasHeaders).toBe(false);
     expect(config.hasInterceptors).toBe(false);
     expect(config.toString()).toContain(BASE_URL);

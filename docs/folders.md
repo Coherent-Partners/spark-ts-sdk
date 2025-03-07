@@ -2,67 +2,44 @@
 
 # Folders API
 
-| Verb                             | Description                                                                       |
-| -------------------------------- | --------------------------------------------------------------------------------- |
-| `Spark.folders.getCategories()`  | [Get the list of folder categories](#get-the-folder-categories).                  |
-| `Spark.folders.create(data)`     | [Create a new folder with additional info](#create-a-new-folder).                 |
-| `Spark.folders.find(name)`       | [Find folders by name, status, category, or favorite](#find-folders-by-criteria). |
-| `Spark.folders.update(id, data)` | [Update a folder's information by ID](#update-a-folders-information).             |
-| `Spark.folders.delete(id)`       | [Delete a folder by ID](#delete-a-folder-by-id).                                  |
+| Verb                              | Description                                                                       |
+| --------------------------------- | --------------------------------------------------------------------------------- |
+| `Spark.folders.categories.list()` | [Get the list of folder categories](#get-the-folder-categories).                  |
+| `Spark.folders.create(data)`      | [Create a new folder with additional info](#create-a-new-folder).                 |
+| `Spark.folders.find(name)`        | [Find folders by name, status, category, or favorite](#find-folders-by-criteria). |
+| `Spark.folders.update(id, data)`  | [Update a folder's information by ID](#update-a-folders-information).             |
+| `Spark.folders.delete(id)`        | [Delete a folder by ID](#delete-a-folder-by-id).                                  |
 
 ## Get the folder categories
 
-Presently, the platform supports the following folder categories:
+Presently, the platform supports a preset of folder categories. However, you can
+add more categories if needed for your tenant.
 
-```ts
-type FolderCategory =
-  | 'Medical'
-  | 'Critical Illness'
-  | 'Lifelong Participation'
-  | 'Universal Life'
-  | 'Investment Linked'
-  | 'Annuity'
-  | 'Term'
-  | 'VHIS'
-  | 'VHIS + Medical'
-  | 'Property & Casualty'
-  | 'Other';
-```
-
-However, there's a chance that the platform will add more categories in the future.
 To get the list of these categories, you can use the following method:
 
 ```ts
-await spark.folders.getCategories();
+await spark.folders.categories.list();
 ```
 
 ### Returns
 
 ```json
-{
-  "status": "Success",
-  "message": null,
-  "errorCode": null,
-  "data": [
-    {
-      "key": "Medical",
-      "value": "Medical",
-      "icon": "medical.svg"
-    },
-    {
-      "key": "Critical Illness",
-      "value": "Critical Illness",
-      "icon": "criticalillness.svg"
-    },
-    // ...
-    {
-      "key": "Other",
-      "value": "Other",
-      "icon": "other.svg"
-    }
-  ]
-}
+[
+  { "key": "Medical", "value": "Medical", "icon": "medical.svg" },
+  { "key": "Critical Illness", "value": "Critical Illness", "icon": "criticalillness.svg" },
+  { "key": "Lifelong Participation", "value": "Lifelong Participation", "icon": "lifelongparticipation.svg" },
+  { "key": "Universal Life", "value": "Universal Life", "icon": "universallife.svg" },
+  { "key": "Investment Linked", "value": "Investment Linked", "icon": "investmentlinked.svg" },
+  { "key": "Annuity", "value": "Annuity", "icon": "annuity.svg" },
+  { "key": "Term", "value": "Term", "icon": "term.svg" },
+  { "key": "VHIS", "value": "VHIS", "icon": "vhis.svg" },
+  { "key": "VHIS + Medical", "value": "VHIS + Medical", "icon": "vhismedical.svg" },
+  { "key": "Property & Casualty", "value": "Property & Casualty", "icon": "Property-and-casualty-icon.svg" },
+  { "key": "Other", "value": "Other", "icon": "other.svg" }
+]
 ```
+
+> Use `spark.folders.categories.*` methods to manage the folder categories.
 
 ## Create a new folder
 
@@ -258,7 +235,7 @@ cover, or status.
 
 ### Arguments
 
-You must provide the folder iD and the updated folder information, just as in
+You must provide the folder ID and the updated folder information, just as in
 [creating a new folder](#create-a-new-folder).
 
 ```ts

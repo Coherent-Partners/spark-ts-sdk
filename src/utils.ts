@@ -3,7 +3,8 @@ export type Nullable<T> = Maybe<T> | null;
 
 const LoadedModules: Record<string, any> = {};
 
-async function bootstrapModules(names: string[]) {
+// FIXME: loading available modules at startup; use shims instead.
+(async (...names: string[]) => {
   if (isBrowser()) return;
   for (const name of names) {
     try {
@@ -17,9 +18,7 @@ async function bootstrapModules(names: string[]) {
       // when attempting to use a feature that requires the missing module.
     }
   }
-}
-
-bootstrapModules(['fs', 'stream', 'crypto', 'form-data', 'buffer', 'abort-controller', 'jwt-decode']); // FIXME: use shims instead.
+})('fs', 'stream', 'crypto', 'form-data', 'buffer', 'abort-controller', 'jwt-decode');
 
 export function isBrowser() {
   return typeof window === 'object' && typeof document === 'object' && typeof navigator !== 'undefined';
@@ -67,22 +66,20 @@ export function getBrowserInfo(): string | undefined {
   return undefined;
 }
 
-export function loadModule<T = any>(path: string): T | undefined {
-  if (!LoadedModules[path]) {
-    bootstrapModules([path]);
-    return undefined;
-  }
-  return LoadedModules[path] as T;
+export function loadModule<T = any>(name: string): T | undefined {
+  if (!LoadedModules[name]) return undefined;
+  return LoadedModules[name] as T;
 }
 
 /**
- * Reads an environment variable (in Node environment only).
+ * Reads an environment variable - ideally in Node environment, otherwise provide
+ * the how-to.
  */
-export function readEnv(env: string): string | undefined {
-  if (typeof process !== 'undefined') {
-    return process.env?.[env]?.trim() ?? undefined;
-  }
-  return undefined;
+export function readEnv(env: string | (() => string | undefined)): string | undefined {
+  let value: string | undefined;
+  if (typeof env === 'function') value = env()?.trim();
+  if (typeof env === 'string' && typeof process !== 'undefined') value = process.env?.[env]?.trim();
+  return value ?? undefined;
 }
 
 /**

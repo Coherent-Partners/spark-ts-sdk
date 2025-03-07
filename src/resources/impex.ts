@@ -3,10 +3,10 @@ import { type Readable } from 'stream';
 import Utils, { StringUtils } from '../utils';
 import { type Config } from '../config';
 import { Logger } from '../logger';
-import { SparkError } from '../error';
 import { SPARK_SDK } from '../constants';
+import { SparkError, RetryTimeoutError } from '../error';
 import { HttpResponse, Multipart, getRetryTimeout } from '../http';
-import { ApiResource, Uri, UriOptions, UriParams } from './base';
+import { ApiResource, Uri, UriParams } from './base';
 import { UpgradeType, ExportFilters, IfEntityPresent, ConfigParams } from './types';
 
 export class ImpEx {
@@ -122,13 +122,12 @@ export class Migration {
 }
 
 class Export extends ApiResource {
-  readonly baseUri!: UriOptions;
+  readonly #version: string = 'api/v4';
   declare readonly logger: Logger;
 
   constructor(config: Config) {
     super(config);
     this.logger = Logger.of(config.logger);
-    this.baseUri = { base: this.config.baseUrl.full, version: 'api/v4' };
   }
 
   /**
@@ -138,7 +137,7 @@ class Export extends ApiResource {
    * @returns {Promise<HttpResponse<ExportInit>>} the export job details
    */
   async initiate(params: ExportParams = {}): Promise<HttpResponse<ExportInit>> {
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'export' });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: 'export' });
     const metadata = {
       file_filter: params?.filters?.file ?? 'migrate',
       version_filter: params?.filters?.version ?? 'latest',
@@ -171,7 +170,7 @@ class Export extends ApiResource {
    */
   async getStatus(jobId: string, params: StatusParams = {}): Promise<HttpResponse<ExportResult>> {
     const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: `export/${jobId}/status` });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `export/${jobId}/status` });
 
     let retries = 0;
     while (retries < maxRetries) {
@@ -186,9 +185,9 @@ class Export extends ApiResource {
       await Utils.sleep(getRetryTimeout(retries, retryInterval));
     }
 
-    const error = SparkError.sdk(`export job status timed out after ${retries} retries`);
-    this.logger.error(error.message);
-    throw error;
+    const message = `export job status timed out after ${retries} retries`;
+    this.logger.error(message);
+    throw new RetryTimeoutError({ message, retries, interval: retryInterval });
   }
 
   /**
@@ -197,7 +196,7 @@ class Export extends ApiResource {
    * @returns {Promise<HttpResponse<ExportResult>>} the status of the export job
    */
   async cancel(jobId: string): Promise<HttpResponse<ExportResult>> {
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: `export/${jobId}` });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `export/${jobId}` });
     return this.request<ExportResult>(url, { method: 'PATCH', body: { export_status: 'cancelled' } }).then(
       (response) => {
         this.logger.log(`export job <${response.data.id}> has been cancelled`);
@@ -234,13 +233,12 @@ class Export extends ApiResource {
 }
 
 class Import extends ApiResource {
-  readonly baseUri!: UriOptions;
+  readonly #version: string = 'api/v4';
   declare readonly logger: Logger;
 
   constructor(config: Config) {
     super(config);
     this.logger = Logger.of(config.logger);
-    this.baseUri = { base: this.config.baseUrl.full, version: 'api/v4' };
   }
 
   /**
@@ -249,7 +247,7 @@ class Import extends ApiResource {
    * @returns {Promise<HttpResponse<ImportInit>>} the import job details
    */
   async initiate(params: ImportParams): Promise<HttpResponse<ImportInit>> {
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: 'import' });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: 'import' });
     const metadata = {
       inputs: { services_modify: buildServiceMappings(params.destination) },
       services_existing: params.ifPresent ?? 'add_version',
@@ -275,7 +273,7 @@ class Import extends ApiResource {
    */
   async getStatus(jobId: string, params: StatusParams = {}): Promise<HttpResponse<ImportResult>> {
     const { maxRetries = this.config.maxRetries, retryInterval = this.config.retryInterval } = params;
-    const url = Uri.from(undefined, { ...this.baseUri, endpoint: `import/${jobId}/status` });
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `import/${jobId}/status` });
 
     let retries = 0;
     while (retries < maxRetries) {
@@ -290,9 +288,21 @@ class Import extends ApiResource {
       await Utils.sleep(getRetryTimeout(retries, retryInterval));
     }
 
-    const error = SparkError.sdk(`import job status timed out after ${retries} retries`);
-    this.logger.error(error.message);
-    throw error;
+    const message = `import job status timed out after ${retries} retries`;
+    this.logger.error(message);
+    throw new RetryTimeoutError({ message, retries, interval: retryInterval });
+  }
+}
+
+export class Files extends ApiResource {
+  /**
+   * Download a Spark file from a protected URL.
+   * @param {string} url - Spark URL.
+   * @returns {Promise<HttpResponse>} a binary file stream available
+   * for reading via `HttpResponse.buffer`.
+   */
+  download(url: string): Promise<HttpResponse> {
+    return this.request(url);
   }
 }
 
