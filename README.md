@@ -20,7 +20,7 @@ npm i @cspark/sdk
 
 > **Note:** This package requires [Node.js 14.15](https://nodejs.org/en/download/current)
 > or higher. It is also supported in other JS runtime environments such as browsers,
-> [Bun](https://bun.sh), and [Deno](https://deno.com). Chekout the [ecosystem] folder
+> [Bun](https://bun.sh), and [Deno](https://deno.com). Chek out the [ecosystem] folder
 > for more details.
 
 ## Usage
@@ -80,8 +80,7 @@ environments:
 
         spark.services
           .execute('my-folder/my-service', { inputs: { value: 42 } })
-          .then((response) => console.log(response.data))
-          .catch(console.error);
+          .then((response) => console.log(response.data));
       }
 
       main(prompt('Provide your API key'));

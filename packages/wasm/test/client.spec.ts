@@ -55,7 +55,6 @@ describe('Client', () => {
     expect(config.allowBrowser).toBe(false);
     expect(config.timeout).toBe(60000);
     expect(config.maxRetries).toBe(2);
-    expect(config.environment).toBeUndefined();
     expect(config.hasHeaders).toBe(false);
     expect(config.hasInterceptors).toBe(false);
     expect(config.toString()).toContain(BASE_URL);

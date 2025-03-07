@@ -16,7 +16,7 @@ else
   exit 1
 fi
 
-projects=("deno:deno" "bun:bun"  "npm:node-js" "npm:node-ts" "npm:browser")
+projects=("deno:deno" "bun:bun" "npm:node-js" "npm:node-ts" "npm:browser")
 
 for project in "${projects[@]}"; do
   folder=$(echo $project | cut -d':' -f2)
