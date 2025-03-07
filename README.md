@@ -1,11 +1,11 @@
-# Coherent Spark Node.js SDK
+# Coherent Spark SDK
 
 [![npm version][version-img]][version-url]
 [![CI build][ci-img]][ci-url]
 [![License][license-img]][license-url]
 
-The Coherent Spark Node.js SDK is designed to elevate the developer experience and
-provide convenient access to Coherent Spark APIs.
+The Coherent Spark SDK is designed to elevate the developer experience and
+provide convenient access to Coherent Spark APIs using JavaScript and TypeScript.
 
 👋 **Just a heads-up:**
 This SDK is supported by the community. If you encounter any bumps while using it,
@@ -20,7 +20,8 @@ npm i @cspark/sdk
 
 > **Note:** This package requires [Node.js 14.15](https://nodejs.org/en/download/current)
 > or higher. It is also supported in other JS runtime environments such as browsers,
-> [Bun](https://bun.sh), and [Deno](https://deno.com).
+> [Bun](https://bun.sh), and [Deno](https://deno.com). Chekout the [ecosystem] folder
+> for more details.
 
 ## Usage
 
@@ -319,5 +320,6 @@ conduct, and the process for submitting pull requests.
 [oauth2-docs]: https://docs.coherent.global/spark-apis/authorization-client-credentials
 [contributing-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/CONTRIBUTING.md
 [examples]: https://github.com/Coherent-Partners/spark-ts-sdk/tree/main/examples
+[ecosystem]: https://github.com/Coherent-Partners/spark-ts-sdk/tree/main/ecosystem
 [docs]: https://github.com/Coherent-Partners/spark-ts-sdk/tree/main/docs
 [uri-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/src/resources/base.ts
