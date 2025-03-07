@@ -1,0 +1,36 @@
+name: Ecosystem tests
+
+on:
+  workflow_dispatch: # trigger this on demand.
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.12.1'
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          version: '1.2.4'
+
+      - name: Install Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Prepare test environment
+        run: |
+          npm install --ignore-scripts
+          npm run build
+
+      - name: Run ecoystem tests
+        run: |
+          cd ecosystem
+          source test.sh
