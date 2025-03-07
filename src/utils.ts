@@ -72,13 +72,14 @@ export function loadModule<T = any>(name: string): T | undefined {
 }
 
 /**
- * Reads an environment variable (in Node environment only).
+ * Reads an environment variable - ideally in Node environment, otherwise provide
+ * the how-to.
  */
-export function readEnv(env: string): string | undefined {
-  if (typeof process !== 'undefined') {
-    return process.env?.[env]?.trim() ?? undefined;
-  }
-  return undefined;
+export function readEnv(env: string | (() => string | undefined)): string | undefined {
+  let value: string | undefined;
+  if (typeof env === 'function') value = env()?.trim();
+  if (typeof env === 'string' && typeof process !== 'undefined') value = process.env?.[env]?.trim();
+  return value ?? undefined;
 }
 
 /**
