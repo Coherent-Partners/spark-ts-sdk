@@ -1,3 +1,4 @@
+import { type Readable } from 'stream';
 import { Maybe, StringUtils } from './utils';
 import { Config, type BaseUrl } from './config';
 import { LogLevel, LoggerOptions } from './logger';
@@ -168,7 +169,10 @@ export class Client {
    * spark.test.foo();
    * ```
    */
-  static extend<R extends API.ApiResource>(resource: API.Extensible<R>, options: ClientOptions | Config) {
+  static extend<R extends API.ApiResource>(
+    resource: API.Extensible<R>,
+    options: ClientOptions | Config,
+  ): Client & { [k: string]: R } {
     const { prop, type, args = [] } = resource;
     const client = new Client(options);
     return Object.assign(client, { [prop]: new type(client.config, ...args) });
@@ -187,7 +191,7 @@ export class Client {
    * extended client will have a new property with the same name as the resource to
    * access its class members.
    */
-  extend<R extends API.ApiResource>(resource: R | API.Extensible<R>) {
+  extend<R extends API.ApiResource>(resource: R | API.Extensible<R>): this & { [k: string]: R } {
     if (resource instanceof API.ApiResource) {
       const prop = StringUtils.toCamelCase(resource.constructor.name);
       return Object.assign(this, { [prop]: resource });
@@ -202,7 +206,7 @@ export class Client {
    * @param url - valid URL
    * @param {Authorization} [auth] - optional Spark authorization
    */
-  static download(url: string, auth?: Authorization) {
+  static download(url: string, auth?: Authorization): Promise<Readable> {
     return API.download(url, auth);
   }
 
@@ -212,7 +216,7 @@ export class Client {
    * @param {ClientOptions | Config} to - target tenant options or configuration.
    * @throws {SparkError} if invalid options are provided.
    */
-  static migration(from: Config | ClientOptions, to: Config | ClientOptions) {
+  static migration(from: Config | ClientOptions, to: Config | ClientOptions): API.Migration {
     return API.ImpEx.migration({
       exports: from instanceof Config ? from : new Config(from),
       imports: to instanceof Config ? to : new Config(to),
@@ -225,7 +229,7 @@ export class Client {
    * @param {Config | ClientOptions} [from] - optional source tenant configuration; if not provided,
    * the current tenant configuration will be used as the source.
    */
-  migration(to: Config | ClientOptions, from: Config | ClientOptions = this.config) {
+  migration(to: Config | ClientOptions, from: Config | ClientOptions = this.config): API.Migration {
     return API.ImpEx.migration({
       exports: from instanceof Config ? from : new Config(from),
       imports: to instanceof Config ? to : new Config(to),

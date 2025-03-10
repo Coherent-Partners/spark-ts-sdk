@@ -1,4 +1,5 @@
 import { AbortSignal } from 'node-fetch/externals';
+import { type Readable } from 'stream';
 
 import { Authorization } from '../auth';
 import { Config } from '../config';
@@ -372,7 +373,7 @@ export type UriOptions = { base: string; version?: string; endpoint?: string };
  * This is made available to the user in case they need to download a resource after
  * performing an action (e.g., rehydrate, import, export, etc.).
  */
-export async function download(url: string, auth?: Authorization) {
+export async function download(url: string, auth?: Authorization): Promise<Readable> {
   return _download(url, { headers: { ...auth?.asHeader } }).then((response) => response.buffer);
 }
 

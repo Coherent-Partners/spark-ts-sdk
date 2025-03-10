@@ -11,7 +11,7 @@ import { CreateParams, CompileParams, PublishParams, GetStatusParams, DownloadPa
 import { ExportParams, ImportParams, MigrateParams } from './types';
 
 export class Services extends ApiResource {
-  get compilation() {
+  get compilation(): Compilation {
     return new Compilation(this.config);
   }
 
@@ -24,7 +24,9 @@ export class Services extends ApiResource {
    * @transactional
    * See {@link Services.compile} and {@link Services.publish} for individual steps.
    */
-  async create(params: CreateParams) {
+  async create(
+    params: CreateParams,
+  ): Promise<{ upload: ServiceCompiled; compilation: CompilationStatus; publication: ServicePublished }> {
     const { upload, compilation } = await this.compile(params);
     const { engine_file_documentid: engineId, original_file_documentid: fileId } = upload.response_data;
 
@@ -42,7 +44,7 @@ export class Services extends ApiResource {
    * See {@link Compilation.initiate} and {@link Compilation.getStatus} for individual
    * steps.
    */
-  async compile(params: CompileParams) {
+  async compile(params: CompileParams): Promise<{ upload: ServiceCompiled; compilation: CompilationStatus }> {
     const compilation = this.compilation;
     const upload = await compilation.initiate(params);
     const { nodegen_compilation_jobid: jobId } = upload.data.response_data;
@@ -337,7 +339,9 @@ export class Services extends ApiResource {
    * @transactional
    * Currently in Beta, please use experimentally.
    */
-  async migrate(params: MigrateParams) {
+  async migrate(
+    params: MigrateParams,
+  ): Promise<{ exports: HttpResponse[]; imports: HttpResponse<ImportResult> | null }> {
     const exported = await this.export(params);
     if (exported.length === 0) {
       this.logger.warn('no service entities to migrate');

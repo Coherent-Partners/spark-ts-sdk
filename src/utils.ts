@@ -66,6 +66,16 @@ export function getBrowserInfo(): string | undefined {
   return undefined;
 }
 
+export function getPlatformInfo(): string {
+  const browser = getBrowserInfo();
+  if (browser) return browser;
+
+  if (typeof process === 'undefined') return 'Unknown/0.0.0';
+  if (process.versions?.deno) return `Deno/${process.versions.deno} - Node/${process.versions.node}`;
+  if (process.versions?.bun) return `Bun/${process.versions.bun} - Node/${process.versions.node}`;
+  return `Node/${process.versions.node}`;
+}
+
 export function loadModule<T = any>(name: string): T | undefined {
   if (!LoadedModules[name]) return undefined;
   return LoadedModules[name] as T;

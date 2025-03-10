@@ -92,7 +92,7 @@ export abstract class Serializable<From = any, To = string> {
     return new DeflateEncoding(data);
   }
 
-  static compress(payload: any, encoding?: 'gzip' | 'deflate') {
+  static compress(payload: any, encoding?: 'gzip' | 'deflate'): [any, any] {
     const headers = encoding ? { 'Content-Encoding': encoding, 'Accept-Encoding': encoding } : {};
     switch (encoding) {
       case 'gzip':
