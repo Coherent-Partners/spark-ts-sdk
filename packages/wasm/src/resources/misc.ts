@@ -20,9 +20,9 @@ export class Health extends ApiResource {
   }
 }
 
-type HealthStatus = { msg: string };
+export type HealthStatus = { msg: string };
 
-type NeuronVersion = {
+export type NeuronVersion = {
   lastPullDate: string;
   filehash: string;
   version: string;
