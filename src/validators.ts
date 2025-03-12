@@ -101,7 +101,7 @@ export class PositiveIntegerValidator extends Validator<number | unknown> {
 }
 
 export class BaseUrlValidator extends Validator<Maybe<string>> {
-  readonly #wildcard = /^https?:\/\/(?:[^./]+\.)+coherent\.global(?:\/[^/?#]+)*(?:[?#].*)?$/i;
+  readonly #wildcard = /^https:\/\/([\w-]+)\.([\w-]+(?:\.[\w-]+)?)\.coherent\.global(?:\/([\w-]+)\/?)?$/i;
   static #validator: BaseUrlValidator;
 
   static getInstance(): BaseUrlValidator {

@@ -20,7 +20,7 @@ npm i @cspark/sdk
 
 > **Note:** This package requires [Node.js 14.15](https://nodejs.org/en/download/current)
 > or higher. It is also supported in other JS runtime environments such as browsers,
-> [Bun](https://bun.sh), and [Deno](https://deno.com). Chek out the [ecosystem] folder
+> [Bun](https://bun.sh), and [Deno](https://jsr.io/@cspark/sdk). Chek out the [ecosystem] folder
 > for more details.
 
 ## Usage
@@ -55,7 +55,6 @@ import Spark from '@cspark/sdk';
 
 function main() {
   const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'my-api-key' });
-
   spark.services
     .execute('my-folder/my-service', { inputs: { value: 42 } })
     .then((response) => console.log(response.data));
@@ -77,7 +76,6 @@ environments:
 
       function main(apiKey) {
         const spark = new Spark({ apiKey, env: 'my-env', tenant: 'my-tenant', allowBrowser: true });
-
         spark.services
           .execute('my-folder/my-service', { inputs: { value: 42 } })
           .then((response) => console.log(response.data));

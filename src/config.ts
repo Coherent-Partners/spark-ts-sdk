@@ -112,7 +112,7 @@ export class JwtConfig extends Config {
     try {
       const decoded: JwtPayload = jwtDecode(token?.replace(/bearer/i, '')?.trim());
       return {
-        baseUrl: BaseUrl.from({ url: new URL(decoded?.iss || '').toString() }).to('excel'),
+        baseUrl: BaseUrl.from({ url: new URL(decoded?.iss || '').origin, tenant: decoded?.realm }).to('excel'),
         tenant: decoded?.realm,
         token,
       };
