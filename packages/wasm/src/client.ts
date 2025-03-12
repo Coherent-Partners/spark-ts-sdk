@@ -1,4 +1,4 @@
-import { SparkOptions, BaseUrl } from '@cspark/sdk';
+import { SparkOptions, BaseUrl, HttpResponse } from '@cspark/sdk';
 
 import { Config, RunnerUrl } from './config';
 import * as API from './resources';
@@ -58,7 +58,10 @@ export class Client {
    * @param {string} baseUrl of the runner to check.
    * @param {ClientOptions} options to use for the client.
    */
-  static healthCheck(baseUrl?: string, { token = 'open', ...options }: Omit<ClientOptions, 'tenant' | 'baseUrl'> = {}) {
+  static healthCheck(
+    baseUrl?: string,
+    { token = 'open', ...options }: Omit<ClientOptions, 'tenant' | 'baseUrl'> = {},
+  ): Promise<HttpResponse<API.HealthStatus>> {
     const config = new Config({ ...options, token, baseUrl: RunnerUrl.noTenant(baseUrl) });
     return new API.Health(config).check();
   }
@@ -69,7 +72,10 @@ export class Client {
    * @param {string} baseUrl of the runner to check.
    * @param {ClientOptions} options to use for the client.
    */
-  static getVersion(baseUrl?: string, { token = 'open', ...options }: Omit<ClientOptions, 'tenant' | 'baseUrl'> = {}) {
+  static getVersion(
+    baseUrl?: string,
+    { token = 'open', ...options }: Omit<ClientOptions, 'tenant' | 'baseUrl'> = {},
+  ): Promise<HttpResponse<API.NeuronVersion>> {
     const config = new Config({ ...options, token, baseUrl: RunnerUrl.noTenant(baseUrl) });
     return new API.Version(config).get();
   }

@@ -1,12 +1,12 @@
-import { getBrowserInfo } from './utils';
+import { getPlatformInfo } from './utils';
 
 const version = '0.2.10';
 
 const sdkLogger = `CSPARK v${version}`;
 
-const platformInfo = getBrowserInfo() ?? `Node/${process?.version?.replace('v', '')}`;
+const platformInfo: string = getPlatformInfo();
 
-const about = `Coherent Spark SDK v${version} (${platformInfo})`;
+const about: string = `Coherent Spark SDK v${version} (${platformInfo})`;
 
 const sdkUaHeader = `agent=spark-ts-sdk/${version}; env=${platformInfo}`;
 
@@ -28,4 +28,4 @@ export class Version {
   }
 }
 
-export const VERSION = new Version(version);
+export const VERSION: Version = new Version(version);

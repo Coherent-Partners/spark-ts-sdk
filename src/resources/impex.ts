@@ -20,11 +20,11 @@ export class ImpEx {
     return new Migration(configs);
   }
 
-  get exports() {
+  get exports(): Export {
     return new Export(this.config);
   }
 
-  get imports() {
+  get imports(): Import {
     return new Import(this.config);
   }
 
@@ -90,11 +90,11 @@ export class ImpEx {
 export class Migration {
   constructor(protected readonly configs: { readonly exports: Config; readonly imports: Config }) {}
 
-  get exports() {
+  get exports(): Export {
     return new Export(this.configs.exports);
   }
 
-  get imports() {
+  get imports(): Import {
     return new Import(this.configs.imports);
   }
 
@@ -108,7 +108,7 @@ export class Migration {
    * @see {@link ImpEx.export} and {@link ImpEx.import} for more control over the
    * migration process
    */
-  async migrate(params: MigrateParams) {
+  async migrate(params: MigrateParams): Promise<{ exports: HttpResponse; imports: HttpResponse<ImportResult> }[]> {
     const importables = await ImpEx.only(this.configs.exports).export(params);
     const importer = ImpEx.only(this.configs.imports);
 

@@ -250,7 +250,6 @@ import Spark, { ApiResource } from '@cspark/sdk';
 class MyResource extends ApiResource {
   fetchData() {
     const url = this.config.baseUrl.concat({ version: 'api/v4', endpoint: 'my/resource' });
-
     return this.request(url, { method: 'GET' });
   }
 }
