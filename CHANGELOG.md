@@ -4,12 +4,23 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.3.0-rc.1 (2025-04-23)
+
+- Add support for Transform documents API (including Transform validator)
+- Remove polynomial regex used on uncontrolled data (security issue #12)
+- Update rehydration of service execution to support new (and legacy) format
+- WASM download is now available using different Uri locators
+- Update SDK documentation to reflect changes
+- Add support for [jsr.io](https://jsr.io/@cspark/sdk)
+- Apply effective typescript for `jsr.io`
+
 ## 0.2.10 (2025-03-06)
 
 - Enhance folder category management
 - Streamline URL construction in API resources
 - Add ecosystem tests
 - Add standalone use cases
+- Add support for [jsr.io](https://jsr.io/@cspark/sdk)
 
 ## 0.2.9 (2024-12-10)
 

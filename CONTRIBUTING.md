@@ -67,7 +67,7 @@ yarn build
 ```
 
 To run an example, you will need to follow the instructions in the
-[examples/index.ts](./examples/index.ts) file, then run the following command:
+[examples/README.md](./examples/README.md) file, then run the following command:
 
 ```bash
 yarn demo

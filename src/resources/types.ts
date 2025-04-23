@@ -6,6 +6,18 @@ import { ImportDestination } from './impex';
 
 export type UpgradeType = 'major' | 'minor' | 'patch';
 
+export type EncodingType = 'gzip' | 'deflate';
+
+export type CompilerType = 'Neuron' | 'Type3' | 'Type2' | 'Type1' | 'Xconnector';
+
+export type ValidationType = 'static' | 'dynamic';
+
+export type JsonInputs = Record<string, any>;
+
+export type ArrayInputs<T = any> = T[];
+
+export type Inputs<T> = undefined | null | string | JsonInputs | ArrayInputs<T>;
+
 export type ExportFilters = { file?: 'migrate' | 'onpremises'; version?: 'latest' | 'all' };
 
 export type IfEntityPresent = 'abort' | 'replace' | 'add_version';
@@ -74,6 +86,43 @@ export interface PublishParams extends Pick<UriParams, 'folder' | 'service'> {
   startDate?: string | number | Date;
   endDate?: string | number | Date;
   trackUser?: boolean;
+}
+
+export interface ExecuteParams<I = Record<string, any>> {
+  // Data for calculation
+  inputs?: Inputs<I>;
+  responseFormat?: 'original' | 'alike';
+  encoding?: EncodingType;
+
+  // Metadata for calculation
+  activeSince?: string | number | Date;
+  sourceSystem?: string;
+  correlationId?: string;
+  callPurpose?: string;
+  compilerType?: CompilerType;
+  subservices?: undefined | string | string[];
+
+  // Available only in v3 (legacy)
+  debugSolve?: boolean;
+  downloadable?: boolean;
+  echoInputs?: boolean;
+  selectedOutputs?: undefined | string | string[];
+  tablesAsArray?: undefined | string | string[];
+  outputsFilter?: string;
+
+  // Extra metadata if needed
+  extras?: Record<string, any>;
+}
+
+export interface ValidateParams extends ExecuteParams {
+  validationType?: ValidationType;
+}
+
+export interface TransformParams extends Omit<ExecuteParams, 'inputs'> {
+  inputs: any; // override the inputs type
+  apiVersion?: 'v3' | 'v4';
+  encoding?: EncodingType;
+  using?: string | { name: string; folder: string };
 }
 
 export interface ExportParams extends Pick<UriParams, 'folder' | 'service' | 'version' | 'versionId'>, ConfigParams {
