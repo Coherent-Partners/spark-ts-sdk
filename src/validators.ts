@@ -125,9 +125,38 @@ export class BaseUrlValidator extends Validator<Maybe<string>> {
   }
 }
 
+export class TransformValidator extends Validator<string> {
+  static #validator: TransformValidator;
+
+  static getInstance(): TransformValidator {
+    const validator = this.#validator || (this.#validator = new this());
+    validator.reset();
+    return validator;
+  }
+
+  validate(value: string): void {
+    if (!value) throw SparkError.sdk({ message: 'must be properly defined JSON object', cause: value });
+
+    try {
+      JSON.parse(value);
+    } catch (cause) {
+      throw SparkError.sdk({ message: `<${value}> must be a valid JSON object`, cause });
+    }
+
+    const json = JSON.parse(value);
+    if (!json.transform_type) {
+      throw SparkError.sdk({ message: `JSON object must have a 'transform_type' property`, cause: value });
+    }
+    if (!json.target_api_version || !['v3', 'v4'].includes(json.target_api_version)) {
+      throw SparkError.sdk({ message: `'target_api_version' must be either 'v3' or 'v4'`, cause: value });
+    }
+  }
+}
+
 export default {
   baseUrl: BaseUrlValidator,
   emptyString: EmptyStringValidator,
   arrayString: ArrayStringValidator,
   positiveInteger: PositiveIntegerValidator,
+  transform: TransformValidator,
 };

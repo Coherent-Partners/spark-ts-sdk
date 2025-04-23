@@ -129,6 +129,11 @@ export class Client {
     return new API.Services(this.config);
   }
 
+  /** The resource to manage Transforms API. */
+  get transforms(): API.Transforms {
+    return new API.Transforms(this.config);
+  }
+
   /** The resource to manage asynchronous batch processing. */
   get batches(): API.Batches {
     return new API.Batches(this.config);

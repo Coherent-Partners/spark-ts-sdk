@@ -312,9 +312,6 @@ export class Wasm extends ApiResource {
    *
    * @param {string | UriParams} uri - where the service is located
    * @returns {Promise<HttpResponse>} a buffer of the WASM module as a zip file
-   *
-   * NOTE: As of now, only `serviceUri` made out of versionId downloads a wasm
-   * successfully. This issue is being tracked in the platform and will be fixed soon.
    */
   download(uri: string | Omit<UriParams, 'proxy' | 'version'>): Promise<HttpResponse> {
     const { folder, service, public: isPublic, serviceId, versionId } = Uri.validate(uri);

@@ -220,7 +220,7 @@ export class OAuth {
 
     try {
       const manager = new OAuthManager(config);
-      this.#accessToken = await manager.requestAccessToken();
+      this.#accessToken = await manager.getAccessToken();
       if (!this.accessToken) throw new SparkError('no access token found');
       return this.#accessToken!;
     } catch (reason) {

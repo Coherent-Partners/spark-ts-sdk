@@ -2,7 +2,7 @@ import { type Config } from '../config';
 import { HttpResponse } from '../http';
 import { SPARK_SDK, BATCH_CHUNK_SIZE } from '../constants';
 import { SparkError } from '../error';
-import Utils, { DateUtils, StringUtils, getUuid } from '../utils';
+import Utils, { DateUtils, StringUtils, getUuid, isNotEmptyArray } from '../utils';
 
 import { ApiResource, Uri, UriOptions } from './base';
 
@@ -203,10 +203,10 @@ export class Pipeline extends ApiResource {
 
     const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `batch/${this.id}/chunks` });
     const body = this.#buildPushBody(params ?? {}, options);
-    return this.request<RecordSubmitted, Chunks<Inputs>>(url, { method: 'POST', body }).then((response) => {
-      this.logger.log(`pushed ${response.data.record_submitted} records to batch pipeline <${this.id}>`);
-      return response;
-    });
+    const response = await this.request<RecordSubmitted, Chunks<Inputs>>(url, { method: 'POST', body });
+    this.logger.log(`pushed ${response.data.record_submitted} records to batch pipeline <${this.id}>`);
+
+    return response;
   }
 
   /**
@@ -218,14 +218,29 @@ export class Pipeline extends ApiResource {
   async pull<Outputs>(max: number = 100): Promise<HttpResponse<BatchResult<Outputs>>> {
     this.#assertState(['cancelled']);
 
-    const url = this.config.baseUrl.concat({
-      version: this.#version,
-      endpoint: `batch/${this.id}/chunkresults?max_chunks=${max}`,
-    });
-    return this.request<BatchResult<Outputs>>(url).then((response) => {
-      this.logger.log(`${response.data.status.records_available} available records from batch pipeline <${this.id}>`);
-      return response;
-    });
+    const endpoint = `batch/${this.id}/chunkresults?max_chunks=${Math.max(1, max)}`;
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint });
+    const response = await this.request<BatchResult<Outputs>>(url);
+    this.logger.log(`${response.data.status.records_available} available records from batch pipeline <${this.id}>`);
+
+    return response;
+  }
+
+  /**
+   * Disposes a batch pipeline.
+   *
+   * @param {'closed' | 'cancelled'} state - the state to dispose the batch pipeline
+   * @returns {Promise<HttpResponse<BatchDisposed>>} the batch status
+   */
+  async dispose(state: 'closed' | 'cancelled'): Promise<HttpResponse<BatchDisposed>> {
+    this.#assertState(['closed', 'cancelled']);
+
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `batch/${this.id}` });
+    const response = await this.request<BatchDisposed>(url, { method: 'PATCH', body: { batch_status: state } });
+    this.logger.log(`batch pipeline <${this.id}> has been ${state}`);
+    this.#state = state;
+
+    return response;
   }
 
   /**
@@ -236,15 +251,8 @@ export class Pipeline extends ApiResource {
    * to download the remaining output from "Get Chunk results" API.
    * @returns {Promise<HttpResponse<BatchDisposed>>} the batch status
    */
-  async close(): Promise<HttpResponse<BatchDisposed>> {
-    this.#assertState(['closed', 'cancelled']);
-
-    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `batch/${this.id}` });
-    return this.request<BatchDisposed>(url, { method: 'PATCH', body: { batch_status: 'closed' } }).then((response) => {
-      this.#state = 'closed';
-      this.logger.log(`batch pipeline <${this.id}> has been closed`);
-      return response;
-    });
+  close(): Promise<HttpResponse<BatchDisposed>> {
+    return this.dispose('closed');
   }
 
   /**
@@ -255,17 +263,8 @@ export class Pipeline extends ApiResource {
    * to download anymore data after canceling a batch.
    * @returns {Promise<HttpResponse<BatchDisposed>>} the batch status
    */
-  async cancel(): Promise<HttpResponse<BatchDisposed>> {
-    this.#assertState(['cancelled', 'closed']);
-
-    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `batch/${this.id}` });
-    return this.request<BatchDisposed>(url, { method: 'PATCH', body: { batch_status: 'cancelled' } }).then(
-      (response) => {
-        this.#state = 'cancelled';
-        this.logger.log(`batch pipeline <${this.id}> has been cancelled`);
-        return response;
-      },
-    );
+  cancel(): Promise<HttpResponse<BatchDisposed>> {
+    return this.dispose('cancelled');
   }
 
   #assertState(states: PipelineState[], throwable = true): boolean {
@@ -286,11 +285,11 @@ export class Pipeline extends ApiResource {
       const { data, inputs, raw } = params;
 
       if (StringUtils.isNotEmpty(raw)) params.chunks = Batches.toChunks<Inputs>(raw!);
-      if (Utils.isNotEmptyArray(params.chunks)) return { chunks: this.#assessChunks(params.chunks, ifDuplicated) };
-      if (Utils.isNotEmptyArray(data?.inputs))
-        return { chunks: this.#assessChunks([{ id: getUuid(), data }], ifDuplicated) };
-      if (Utils.isNotEmptyArray(inputs)) {
-        return { chunks: this.#assessChunks(createChunks(inputs, { chunkSize }), ifDuplicated) };
+      if (isNotEmptyArray(params.chunks)) return { chunks: this.#assessChunks(params.chunks, ifDuplicated) };
+      if (isNotEmptyArray(data?.inputs)) return { chunks: this.#assessChunks([{ id: getUuid(), data }], ifDuplicated) };
+      if (isNotEmptyArray(inputs)) {
+        const chunks = createChunks(inputs, { chunkSize });
+        return { chunks: this.#assessChunks(chunks, ifDuplicated) };
       }
 
       throw SparkError.sdk({
