@@ -1,8 +1,9 @@
 import { type Readable } from 'stream';
 import { Maybe, StringUtils } from './utils';
-import { Config, type BaseUrl } from './config';
+import { Config, type BaseUrl, HealthUrl } from './config';
 import { LogLevel, LoggerOptions } from './logger';
 import { Authorization, AuthMethod } from './auth';
+import { HttpResponse } from './http';
 import * as API from './resources';
 
 /**
@@ -119,6 +120,11 @@ export class Client {
     this.config = options instanceof Config ? options : new Config(options);
   }
 
+  /** The resource to check health status. */
+  get health(): API.Health {
+    return new API.Health(this.config);
+  }
+
   /** The resource to manage Folders API. */
   get folders(): API.Folders {
     return new API.Folders(this.config);
@@ -157,6 +163,23 @@ export class Client {
   /** The resource to manage a service's WebAssembly module. */
   get wasm(): API.Wasm {
     return new API.Wasm(this.config);
+  }
+
+  /**
+   * Convenience method to check Spark environment's health status.
+   *
+   * @param {string | BaseUrl | URL} url of the Spark environment to check.
+   * @param {ClientOptions} options to use for the client.
+   *
+   * Note that url can be treated as an environment name, in which case the url will be
+   * constructed as `https://excel.${environment}.coherent.global`.
+   */
+  static healthCheck(
+    url: string | BaseUrl | URL,
+    { token = 'open', ...options }: Omit<ClientOptions, 'tenant' | 'baseUrl'> = {},
+  ): Promise<HttpResponse<API.HealthStatus>> {
+    const config = new Config({ ...options, token, baseUrl: HealthUrl.when(url) });
+    return new API.Health(config).check();
   }
 
   /**

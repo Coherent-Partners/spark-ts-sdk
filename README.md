@@ -244,7 +244,7 @@ OAuth2.0 Client Credentials flow:
 
 [Folders API](./docs/folders.md) - manages folders:
 
-- `Spark.folders.getCategories()` gets the list of folder categories.
+- `Spark.folders.categories.list()` gets the list of folder categories.
 - `Spark.folders.create(data)` creates a new folder with additional info.
 - `Spark.folders.find(name)` finds folders by name, status, category, or favorite.
 - `Spark.folders.update(id, data)` updates a folder's information by id.
@@ -282,6 +282,7 @@ OAuth2.0 Client Credentials flow:
 
 - `Spark.logs.rehydrate(uri, callId)` rehydrates the executed model into the original Excel file.
 - `Spark.logs.download(uri, [type])` downloads service execution logs as `csv` or `json` file.
+- `Spark.logs.find(uri, [params])` finds logs by date range, call id, username, call purpose, etc.
 
 [ImpEx API](./docs/impex.md) - imports and exports Spark services:
 
@@ -290,6 +291,7 @@ OAuth2.0 Client Credentials flow:
 
 [Other APIs](./docs/misc.md) - for other functionalities:
 
+- `Spark.health.check(env)` checks the health of a Spark environment.
 - `Spark.wasm.download(uri)` downloads a service's WebAssembly module.
 - `Spark.files.download(url)` downloads temporary files issued by the Spark platform.
 

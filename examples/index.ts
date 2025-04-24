@@ -23,6 +23,7 @@ Config.build(config.auth.token!);
 Config.printLogs();
 Config.retrieveToken(spark);
 Config.extendResource(spark);
+Config.checkHealth(spark);
 
 Folder.getCategories(spark);
 Folder.create(spark);

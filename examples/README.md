@@ -26,6 +26,16 @@ Assuming that you have cloned this repository, you can run any example:
    yarn run demo # Run the examples
    ```
 
+4. Optionally, if you want to test the `index.html` file, you will need to run the following command:
+
+   ```bash
+   yarn build # Build the browser bundle lib/bundle.js
+   npx http-server -p 8080 . # Serve the root folder on port 8080
+   ```
+
+   Then, open your browser and navigate to `http://localhost:8080/examples/index.html` to see the
+   example in action.
+
 > Note that this project was built using [Yarn](https://yarnpkg.com/getting-started) as the
 > package manager. If you're using a different package manager, or you're in a
 > different JavaScript runtime environment, you will need to use the appropriate

@@ -13,11 +13,10 @@ describe('Spark.folders', () => {
   afterAll(async () => localSever.stop());
 
   it('should retrieve a list of folder categories', async () => {
-    const res = await spark.folders.getCategories();
+    const res = await spark.folders.categories.list();
     expect(res.status).toBe(200);
     expect(res.data).toBeDefined();
-    expect(res.data.status).toBe('Success');
-    expect(res.data.data).toHaveLength(1); // Spark API returns more categories.
-    expect(res.data.data[0].key).toBe('Other');
+    expect(res.data).toHaveLength(1); // Spark API returns more categories.
+    expect(res.data[0].key).toBe('Other');
   });
 });

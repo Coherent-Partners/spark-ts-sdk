@@ -284,6 +284,21 @@ export class BaseUrl {
   }
 }
 
+export class HealthUrl extends BaseUrl {
+  protected constructor(baseUrl: string) {
+    super(baseUrl, '');
+  }
+
+  static when(url: string | BaseUrl | URL): HealthUrl {
+    try {
+      url = new URL(url instanceof BaseUrl ? url.to('excel') : url.toString());
+      return new HealthUrl(url.origin);
+    } catch {
+      return new HealthUrl(`https://excel.${url}.coherent.global`); // otherwise, treat as environment name.
+    }
+  }
+}
+
 interface JwtPayload {
   exp?: number;
   iat?: number;
