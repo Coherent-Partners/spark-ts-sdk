@@ -9,7 +9,7 @@ import { ApiResource, ApiResponse, Uri, UriParams } from './base';
 import { GetSwaggerParams, GetVersionsParams, GetSchemaParams, GetMetadataParams, CompilerType } from './types';
 import { CreateParams, CompileParams, PublishParams, GetStatusParams, DownloadParams, RecompileParams } from './types';
 import { ExportParams, ImportParams, MigrateParams, ExecuteParams, TransformParams, ValidateParams } from './types';
-import { JsonInputs, ArrayInputs, Inputs } from './types';
+import { JsonInputs, ArrayInputs, Inputs, SearchParams } from './types';
 
 export class Services extends ApiResource {
   get compilation(): Compilation {
@@ -252,13 +252,26 @@ export class Services extends ApiResource {
   }
 
   /**
+   * Searches for services with pagination and filtering options.
+   * @param {SearchParams} params - including pagination, sorting and filtering
+   */
+  search(params: SearchParams = {}): Promise<HttpResponse<ServiceListed>> {
+    const { page = 1, limit = -1, sort = 'name1_co', query = [] } = params;
+    const { fields = ['id', 'foldername', 'filename', 'version', 'modifiedDate'] } = params;
+    const url = this.config.baseUrl.concat({ endpoint: 'services/search' });
+    const body = { request_data: { page, page_size: limit, sort, search: query, fields } };
+
+    return this.request(url, { method: 'POST', body });
+  }
+
+  /**
    * Downloads the original (Excel) or configured file.
    * @param {string | DownloadParams} uri - how to locate the service
    * @returns {Promise<HttpResponse>} the file as binary data via the `HttpResponse.buffer` property.
    */
   download(uri: string | DownloadParams): Promise<HttpResponse> {
-    const { folder, service, version = '', fileName: filename = '', type = 'original' } = Uri.validate(uri);
-    const endpoint = `product/${folder}/engines/${service}/download/${version}`;
+    const { folder, service, versionId = '', fileName: filename = '', type = 'original' } = Uri.validate(uri);
+    const endpoint = `product/${folder}/engines/${service}/download/${versionId}`;
     const url = this.config.baseUrl.concat({ version: 'api/v1', endpoint });
     const params = { filename, type: type === 'configured' ? 'withmetadata' : '' };
 
@@ -598,6 +611,27 @@ type ServiceDeleted = {
   message: string | null;
   status: string;
 };
+
+type ServiceListed = ServiceApiResponse<
+  Array<{
+    id?: string;
+    folderName?: string;
+    fileName?: string;
+    version?: string;
+    modifiedDate?: string;
+  }>,
+  {
+    count: number;
+    next: null;
+    page: number;
+    page_size: number;
+    page_total: number;
+    previous: null;
+    request_timestamp: string;
+    system: string;
+    [key: string]: any;
+  }
+>;
 
 type MetadataFound = ServiceApiResponse<ServiceExecuted>;
 

@@ -35,18 +35,24 @@ To use the SDK, you need a Coherent Spark account that lets you access the follo
   - `service` - the service name
   - `version` - the semantic version a.k.a revision number (e.g., 0.4.2)
 
-A `folder` contains one or more `service`s, and a `service` can have
-multiple `version`s. Technically speaking, when you're operating with a service,
-you're actually interacting with a specific version of that service (the latest
-version by default - unless specified otherwise).
+In Spark, a `folder` acts as a container that holds one or more `service`s.
+Think of folders as a way to organize and group related services together.
+Each `service` represents an Excel model that has been converted into a Spark
+service. Services can exist in multiple `version`s, representing different
+iterations or updates of that service over time.
 
-Hence, there are various ways to indicate a Spark service URI:
+When interacting with a Spark service, you are always working with a specific
+version - the latest version by default. You can explicitly specify an older
+version if you need to work with a previous iteration of the service.
 
-- `{folder}/{service}[?{version}]` - _version_ is optional.
+Hence, there are various ways to indicate a Spark service URI in the SDK:
+
+- `{folder}/{service}[{version}]` - _version_ is optional.
 - `service/{serviceId}`
 - `version/{versionId}`
 
-> **IMPORTANT:** Avoid using URL-encoded characters in the service URI.
+> It is **important** to avoid using URL-encoded characters in the service URI as
+> the SDK will take care of URL encoding for you.
 
 Here's an example of how to execute a Spark service:
 
@@ -128,6 +134,9 @@ the base URL.
 ```ts
 const spark = new Spark({ env: 'my-env', tenant: 'my-tenant' });
 ```
+
+> For more advanced customizations, you can extend the `BaseUrl` class and make
+> the appropriate changes to the `baseUrl` property.
 
 ### Authentication
 
@@ -259,6 +268,7 @@ OAuth2.0 Client Credentials flow:
 - `Spark.services.getSwagger(uri)` gets the Swagger documentation of a service.
 - `Spark.services.getSchema(uri)` gets the schema of a service.
 - `Spark.services.getMetadata(uri)` gets the metadata of a service.
+- `Spark.services.search(params)` searches for services with pagination and filtering options.
 - `Spark.services.download(uri)` downloads the excel file of a service.
 - `Spark.services.recompile(uri)` recompiles a service using specific compiler versions.
 - `Spark.services.validate(uri, data)` validates input data using static or dynamic validations.

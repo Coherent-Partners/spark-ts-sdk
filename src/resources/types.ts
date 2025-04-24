@@ -33,9 +33,17 @@ export interface GetSwaggerParams extends Pick<UriParams, 'folder' | 'service' |
   downloadable?: boolean;
 }
 
-export interface DownloadParams extends Pick<UriParams, 'folder' | 'service' | 'version'> {
+export interface DownloadParams extends Pick<UriParams, 'folder' | 'service' | 'versionId'> {
   fileName?: string;
   type?: 'original' | 'configured';
+}
+
+export interface SearchParams {
+  page?: number;
+  limit?: number;
+  sort?: string;
+  query?: any[];
+  fields?: string[];
 }
 
 export interface RecompileParams extends Pick<UriParams, 'folder' | 'service' | 'versionId'> {

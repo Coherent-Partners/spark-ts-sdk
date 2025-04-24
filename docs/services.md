@@ -620,9 +620,9 @@ file of a service.
 The method accepts a string or a `UriParams` object as an argument.
 
 ```ts
-await spark.services.download('my-folder/my-service[0.4.2]');
+await spark.services.download('my-folder/my-service');
 // or
-await spark.services.download({ folder: 'my-folder', service: 'my-service', version: '0.4.2' });
+await spark.services.download({ folder: 'my-folder', service: 'my-service', versionId: 'uuid' });
 ```
 
 > Note that the version piece is optional. If not provided, the latest version
@@ -640,7 +640,7 @@ original Excel file or the configured version of it.
 await spark.services.download({
   folder: 'my-folder',
   service: 'my-service',
-  version: '0.4.2',
+  versionId: 'version-uuid',
   type: 'configured',
 });
 ```

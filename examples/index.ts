@@ -42,6 +42,7 @@ Service.executeMany(spark);
 Service.recompile(spark);
 Service.export(spark);
 Service.validate(spark);
+Service.search(spark);
 
 Transforms.list(spark);
 Transforms.validate(spark);
