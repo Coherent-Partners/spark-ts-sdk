@@ -1,6 +1,6 @@
 import { getPlatformInfo } from './utils';
 
-const version = '0.3.0-rc.1';
+const version = '0.3.0';
 
 const sdkLogger = `CSPARK v${version}`;
 

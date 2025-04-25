@@ -5,7 +5,7 @@
 [![License][license-img]][license-url]
 
 The Coherent Spark SDK is designed to elevate the developer experience and
-provide convenient access to Coherent Spark APIs using JavaScript and TypeScript.
+provide convenient access to Coherent Spark APIs using JavaScript or TypeScript.
 
 👋 **Just a heads-up:**
 This SDK is supported by the community. If you encounter any bumps while using it,
@@ -20,8 +20,8 @@ npm i @cspark/sdk
 
 > **Note:** This package requires [Node.js 14.15](https://nodejs.org/en/download/current)
 > or higher. It is also supported in other JS runtime environments such as browsers,
-> [Bun](https://bun.sh), and [Deno](https://jsr.io/@cspark/sdk). Chek out the [ecosystem] folder
-> for more details.
+> [Bun](https://bun.sh), and [Deno](https://jsr.io/@cspark/sdk). Check out the [ecosystem]
+> folder for more details.
 
 ## Usage
 
@@ -59,14 +59,10 @@ Here's an example of how to execute a Spark service:
 ```ts
 import Spark from '@cspark/sdk';
 
-function main() {
-  const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'my-api-key' });
-  spark.services
-    .execute('my-folder/my-service', { inputs: { value: 42 } })
-    .then((response) => console.log(response.data));
-}
-
-main();
+const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'my-api-key' });
+spark.services
+  .execute('my-folder/my-service', { inputs: { value: 42 } })
+  .then((response) => console.log(response.data));
 ```
 
 Though the package is designed for Node.js, it can also be used in browser-like
@@ -298,10 +294,11 @@ OAuth2.0 Client Credentials flow:
 
 - `Spark.impex.export(data)` exports Spark entities (versions, services, or folders).
 - `Spark.impex.import(data)` imports previously exported Spark entities into the Spark platform.
+- `Spark.impex.exports.cancel(jobId)` cancels an in-progress export job.
 
 [Other APIs](./docs/misc.md) - for other functionalities:
 
-- `Spark.health.check(env)` checks the health of a Spark environment.
+- `Spark.health.check()` checks the health status of a Spark environment.
 - `Spark.wasm.download(uri)` downloads a service's WebAssembly module.
 - `Spark.files.download(url)` downloads temporary files issued by the Spark platform.
 

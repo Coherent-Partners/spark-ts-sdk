@@ -221,7 +221,8 @@ export class Services extends ApiResource {
    * @returns {Promise<HttpResponse<MetadataFound>>} the service metadata.
    */
   getMetadata(uri: string | GetMetadataParams): Promise<HttpResponse<MetadataFound>> {
-    return this.request(this.config.baseUrl.add(Uri.validate(uri), { endpoint: 'metadata' }));
+    const url = this.config.baseUrl.add(Uri.validate(uri), { endpoint: 'metadata' });
+    return this.request(url, { method: 'GET' });
   }
 
   /**

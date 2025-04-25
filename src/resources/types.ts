@@ -26,7 +26,7 @@ export interface GetVersionsParams extends Pick<UriParams, 'folder' | 'service'>
 
 export interface GetSchemaParams extends Pick<UriParams, 'folder' | 'service' | 'versionId'> {}
 
-export interface GetMetadataParams extends Omit<UriParams, 'version'> {}
+export interface GetMetadataParams extends Omit<UriParams, 'version' | 'proxy'> {}
 
 export interface GetSwaggerParams extends Pick<UriParams, 'folder' | 'service' | 'versionId'> {
   subservice?: string;
