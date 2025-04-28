@@ -7,7 +7,7 @@
     "test": "start-server-and-test start http://localhost:65432 test:ci"
   },
   "devDependencies": {
-    "@cspark/sdk": "file:../../build/cspark-sdk-0.2.10.tgz",
+    "@cspark/sdk": "file:../../build/cspark-sdk-0.3.0.tgz",
     "html-webpack-plugin": "^5.6.3",
     "puppeteer": "^24.4.0",
     "start-server-and-test": "^2.0.10",

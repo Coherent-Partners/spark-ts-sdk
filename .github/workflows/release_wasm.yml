@@ -7,6 +7,9 @@ jobs:
   publish:
     name: publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -42,3 +45,6 @@ jobs:
           yarn publish --access public --tag "$TAG"
         env:
           NPM_TOKEN: ${{ secrets.NPM_API_TOKEN }}
+
+      - name: Publish to JSR
+        run: npx jsr publish

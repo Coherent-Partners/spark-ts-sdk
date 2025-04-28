@@ -4,12 +4,26 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.3.0 (2025-04-25)
+
+- Add support for Transform documents API (including Transform validator)
+- Add health check functionality (for Spark environment only)
+- Search for services with pagination and filtering options
+- Remove polynomial regex used on uncontrolled data (security issue #12)
+- Update rehydration of service execution to support new (and legacy) format
+- WASM download is now available using different Uri locators
+- Deprecate `Spark.folders.getCategories()` in favor of `Spark.folders.categories.list()`
+- Update SDK documentation to reflect changes
+- Add support for [jsr.io](https://jsr.io/@cspark/sdk)
+- Apply effective typescript for `jsr.io`
+
 ## 0.2.10 (2025-03-06)
 
 - Enhance folder category management
 - Streamline URL construction in API resources
 - Add ecosystem tests
 - Add standalone use cases
+- Add support for [jsr.io](https://jsr.io/@cspark/sdk)
 
 ## 0.2.9 (2024-12-10)
 

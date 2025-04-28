@@ -6,9 +6,10 @@ import Utils, { StringUtils, DateUtils } from '../utils';
 
 import { ImpEx, ImportResult } from './impex';
 import { ApiResource, ApiResponse, Uri, UriParams } from './base';
-import { GetSwaggerParams, GetVersionsParams, GetSchemaParams, GetMetadataParams } from './types';
+import { GetSwaggerParams, GetVersionsParams, GetSchemaParams, GetMetadataParams, CompilerType } from './types';
 import { CreateParams, CompileParams, PublishParams, GetStatusParams, DownloadParams, RecompileParams } from './types';
-import { ExportParams, ImportParams, MigrateParams } from './types';
+import { ExportParams, ImportParams, MigrateParams, ExecuteParams, TransformParams, ValidateParams } from './types';
+import { JsonInputs, ArrayInputs, Inputs, SearchParams } from './types';
 
 export class Services extends ApiResource {
   get compilation(): Compilation {
@@ -157,10 +158,14 @@ export class Services extends ApiResource {
    */
   transform<Output>(uri: string | UriParams, params: TransformParams): Promise<HttpResponse<Output>> {
     uri = Uri.validate(uri);
+    params.using ??= uri.service;
 
     const { inputs, ...meta } = params;
     const metadata = new ExecuteMeta(meta, uri, meta.apiVersion === 'v4');
-    const endpoint = `transforms/${meta.using ?? uri.service}/for/${Uri.encode({ folder: uri.folder, service: uri.service })}`;
+
+    const endpoint = StringUtils.isString(meta.using)
+      ? `transforms/${meta.using}/for/folders/${uri.folder}/services/${uri.service}`
+      : `transforms/${meta.using?.folder}/${meta.using?.name}/for/${uri.folder}/${uri.service}`;
     const url = this.config.baseUrl.concat({ version: 'api/v4', endpoint });
     const [body, headers] = Serializable.compress(inputs, params.encoding);
 
@@ -216,7 +221,8 @@ export class Services extends ApiResource {
    * @returns {Promise<HttpResponse<MetadataFound>>} the service metadata.
    */
   getMetadata(uri: string | GetMetadataParams): Promise<HttpResponse<MetadataFound>> {
-    return this.request(this.config.baseUrl.add(Uri.validate(uri), { endpoint: 'metadata' }));
+    const url = this.config.baseUrl.add(Uri.validate(uri), { endpoint: 'metadata' });
+    return this.request(url, { method: 'GET' });
   }
 
   /**
@@ -247,13 +253,26 @@ export class Services extends ApiResource {
   }
 
   /**
+   * Searches for services with pagination and filtering options.
+   * @param {SearchParams} params - including pagination, sorting and filtering
+   */
+  search(params: SearchParams = {}): Promise<HttpResponse<ServiceListed>> {
+    const { page = 1, limit = -1, sort = 'name1_co', query = [] } = params;
+    const { fields = ['id', 'foldername', 'filename', 'version', 'modifiedDate'] } = params;
+    const url = this.config.baseUrl.concat({ endpoint: 'services/search' });
+    const body = { request_data: { page, page_size: limit, sort, search: query, fields } };
+
+    return this.request(url, { method: 'POST', body });
+  }
+
+  /**
    * Downloads the original (Excel) or configured file.
    * @param {string | DownloadParams} uri - how to locate the service
    * @returns {Promise<HttpResponse>} the file as binary data via the `HttpResponse.buffer` property.
    */
   download(uri: string | DownloadParams): Promise<HttpResponse> {
-    const { folder, service, version = '', fileName: filename = '', type = 'original' } = Uri.validate(uri);
-    const endpoint = `product/${folder}/engines/${service}/download/${version}`;
+    const { folder, service, versionId = '', fileName: filename = '', type = 'original' } = Uri.validate(uri);
+    const endpoint = `product/${folder}/engines/${service}/download/${versionId}`;
     const url = this.config.baseUrl.concat({ version: 'api/v1', endpoint });
     const params = { filename, type: type === 'configured' ? 'withmetadata' : '' };
 
@@ -410,131 +429,6 @@ class Compilation extends ApiResource {
   }
 }
 
-type CompilerType = 'Neuron' | 'Type3' | 'Type2' | 'Type1' | 'Xconnector';
-
-type ValidationType = 'static' | 'dynamic';
-
-type ServiceApiResponse<TData, TMeta = Record<string, any>> = Pick<ApiResponse, 'status' | 'error'> & {
-  response_data: TData;
-  response_meta: TMeta;
-};
-
-type ServiceCompiled = ServiceApiResponse<{
-  lines_of_code: number;
-  hours_saved: number;
-  nodegen_compilation_jobid: string;
-  original_file_documentid: string;
-  engine_file_documentid: string;
-  warnings: any[] | null;
-  current_statistics: any | null;
-  no_of_sheets: number;
-  no_of_inputs: number;
-  no_of_outputs: number;
-  no_of_formulas: number;
-  no_of_cellswithdata: number;
-}>;
-
-type ServiceExecuted<Output = Record<string, any>> = {
-  outputs: Output[];
-  process_time: number[];
-  warnings: Partial<{ source_path: string; message: string }>[];
-  errors: Partial<{
-    error_category: string;
-    error_type: string;
-    additional_details: string;
-    source_path: string;
-    message: string;
-  }>[];
-  service_chain?: Partial<{
-    service_name: string;
-    run_if: string;
-    requested_report: string;
-    requested_report_filename: string;
-  }>[];
-  service_id: string;
-  version_id: string;
-  version: string;
-  call_id: string;
-  compiler_version: string;
-  correlation_id: string;
-  request_timestamp: string;
-};
-
-type ServiceDeleted = {
-  data: null;
-  errorCode: string | null;
-  message: string | null;
-  status: string;
-};
-
-type MetadataFound = ServiceApiResponse<ServiceExecuted>;
-
-type CompilationStatus = ServiceApiResponse<{ status: string; last_error_message: string; progress: number }>;
-
-type ServicePublished = ServiceApiResponse<{ version_id: string }>;
-
-type ServiceRecompiled = ServiceApiResponse<{ versionId: string; revision: string; jobId: string }>;
-
-type VersionInfo = {
-  id: string;
-  createdAt: string;
-  engine: string;
-  revision: string;
-  effectiveStartDate: string;
-  effectiveEndDate: string;
-  isActive: boolean;
-  releaseNote: string;
-  childEngines: any[] | null;
-  versionLabel: string;
-  defaultEngineType: string;
-  tags: null;
-  product: string;
-  author: string;
-  originalFileName: string;
-};
-
-type JsonInputs = Record<string, any>;
-type ArrayInputs<T = any> = T[];
-type Inputs<T> = undefined | null | string | JsonInputs | ArrayInputs<T>;
-type EncodingType = 'gzip' | 'deflate';
-
-interface ExecuteParams<I = Record<string, any>> {
-  // Data for calculation
-  inputs?: Inputs<I>;
-  responseFormat?: 'original' | 'alike';
-  encoding?: EncodingType;
-
-  // Metadata for calculation
-  activeSince?: string | number | Date;
-  sourceSystem?: string;
-  correlationId?: string;
-  callPurpose?: string;
-  compilerType?: CompilerType;
-  subservices?: undefined | string | string[];
-
-  // Available only in v3 (legacy)
-  debugSolve?: boolean;
-  downloadable?: boolean;
-  echoInputs?: boolean;
-  selectedOutputs?: undefined | string | string[];
-  tablesAsArray?: undefined | string | string[];
-  outputsFilter?: string;
-
-  // Extra metadata if needed
-  extras?: Record<string, any>;
-}
-
-interface TransformParams extends Omit<ExecuteParams, 'inputs'> {
-  inputs: any; // override the inputs type
-  apiVersion?: 'v3' | 'v4';
-  encoding?: EncodingType;
-  using?: string;
-}
-
-interface ValidateParams extends ExecuteParams {
-  validationType?: ValidationType;
-}
-
 class ExecuteInputs<T> {
   readonly inputs!: JsonInputs | ArrayInputs<T>;
   readonly unitLength!: number;
@@ -665,3 +559,103 @@ class ExecuteMeta {
     return { [this.isBatch ? 'x-meta' : 'x-request-meta']: `'${JSON.stringify(this.values)}'` };
   }
 }
+
+type ServiceApiResponse<TData, TMeta = Record<string, any>> = Pick<ApiResponse, 'status' | 'error'> & {
+  response_data: TData;
+  response_meta: TMeta;
+};
+
+type ServiceCompiled = ServiceApiResponse<{
+  lines_of_code: number;
+  hours_saved: number;
+  nodegen_compilation_jobid: string;
+  original_file_documentid: string;
+  engine_file_documentid: string;
+  warnings: any[] | null;
+  current_statistics: any | null;
+  no_of_sheets: number;
+  no_of_inputs: number;
+  no_of_outputs: number;
+  no_of_formulas: number;
+  no_of_cellswithdata: number;
+}>;
+
+type ServiceExecuted<Output = Record<string, any>> = {
+  outputs: Output[];
+  process_time: number[];
+  warnings: Partial<{ source_path: string; message: string }>[];
+  errors: Partial<{
+    error_category: string;
+    error_type: string;
+    additional_details: string;
+    source_path: string;
+    message: string;
+  }>[];
+  service_chain?: Partial<{
+    service_name: string;
+    run_if: string;
+    requested_report: string;
+    requested_report_filename: string;
+  }>[];
+  service_id: string;
+  version_id: string;
+  version: string;
+  call_id: string;
+  compiler_version: string;
+  correlation_id: string;
+  request_timestamp: string;
+};
+
+type ServiceDeleted = {
+  data: null;
+  errorCode: string | null;
+  message: string | null;
+  status: string;
+};
+
+type ServiceListed = ServiceApiResponse<
+  Array<{
+    id?: string;
+    folderName?: string;
+    fileName?: string;
+    version?: string;
+    modifiedDate?: string;
+  }>,
+  {
+    count: number;
+    next: null;
+    page: number;
+    page_size: number;
+    page_total: number;
+    previous: null;
+    request_timestamp: string;
+    system: string;
+    [key: string]: any;
+  }
+>;
+
+type MetadataFound = ServiceApiResponse<ServiceExecuted>;
+
+type CompilationStatus = ServiceApiResponse<{ status: string; last_error_message: string; progress: number }>;
+
+type ServicePublished = ServiceApiResponse<{ version_id: string }>;
+
+type ServiceRecompiled = ServiceApiResponse<{ versionId: string; revision: string; jobId: string }>;
+
+type VersionInfo = {
+  id: string;
+  createdAt: string;
+  engine: string;
+  revision: string;
+  effectiveStartDate: string;
+  effectiveEndDate: string;
+  isActive: boolean;
+  releaseNote: string;
+  childEngines: any[] | null;
+  versionLabel: string;
+  defaultEngineType: string;
+  tags: null;
+  product: string;
+  author: string;
+  originalFileName: string;
+};

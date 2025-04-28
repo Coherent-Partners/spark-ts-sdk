@@ -39,6 +39,18 @@ To maintain consistency across the examples used in the SDK documentation, the E
 format will be used in all the code snippets. For brevity, the import statement
 may be omitted in some cases.
 
+### Health Check
+
+The best (perhaps fastest) way to get started is to check the health status of a
+given Spark environment (e.g., `uat.us`, `us`, etc.). This will ensure that your
+SDK is properly configured and that you can communicate with the Spark platform.
+
+```ts
+import Spark from '@cspark/sdk';
+
+Spark.healthCheck('uat.us').then((response) => console.log(response.data));
+```
+
 ### Spark URI Locator
 
 You may notice by now that `folder` and `service` names when combined form a

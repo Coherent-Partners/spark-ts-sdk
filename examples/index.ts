@@ -6,7 +6,7 @@
  * 4. comment out the unneeded examples
  * 5. run the example using `yarn run demo`
  */
-import Spark from '../src';
+import Spark, { JwtConfig } from '../src';
 
 import Config from './config';
 import Folder from './folders';
@@ -14,14 +14,16 @@ import Service from './services';
 import History from './history';
 import ImpEx from './impex';
 import Batch from './batches';
+import Transforms from './transforms';
 
-const token = 'insert-my-access-token';
-const spark = new Spark({ token, env: 'my-env', tenant: 'my-tenant' });
+const config = JwtConfig.from({ token: 'insert-my-access-token' });
+const spark = new Spark(config);
 
-Config.build(token);
+Config.build(config.auth.token!);
 Config.printLogs();
 Config.retrieveToken(spark);
 Config.extendResource(spark);
+Config.checkHealth(spark);
 
 Folder.getCategories(spark);
 Folder.create(spark);
@@ -40,6 +42,13 @@ Service.executeMany(spark);
 Service.recompile(spark);
 Service.export(spark);
 Service.validate(spark);
+Service.search(spark);
+
+Transforms.list(spark);
+Transforms.validate(spark);
+Transforms.save(spark);
+Transforms.get(spark);
+Transforms.delete(spark);
 
 History.find(spark);
 History.rehydrate(spark);

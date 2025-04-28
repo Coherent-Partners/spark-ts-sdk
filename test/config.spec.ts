@@ -1,5 +1,5 @@
 import { JwtConfig, BaseUrl, SparkSdkError } from '../src';
-import { Config } from '../src/config';
+import { Config, HealthUrl } from '../src/config';
 import { Version } from '../src/version';
 import * as Constants from '../src/constants';
 
@@ -146,5 +146,27 @@ describe('BaseUrl', () => {
     expect(() => BaseUrl.from({ url: 'https://excel.test.coherent.global.net/tenant' })).toThrow(SparkSdkError);
     expect(() => BaseUrl.from({ url: 'file://excel.test.coherent.global/tenant' })).toThrow(SparkSdkError);
     expect(() => BaseUrl.from({ url: 'https://excel.spark.global/tenant' })).toThrow(SparkSdkError);
+  });
+});
+
+describe('HealthUrl', () => {
+  const VALID_URL = 'https://excel.my.env.coherent.global';
+
+  it('can build health URL from different parts', () => {
+    // from environment name
+    expect(HealthUrl.when('my.env').value).toBe(VALID_URL);
+    expect(HealthUrl.when('test').value).toBe('https://excel.test.coherent.global');
+
+    // from URL object
+    expect(HealthUrl.when(new URL(VALID_URL)).value).toBe(VALID_URL);
+    expect(HealthUrl.when(new URL('https://spark.test.coherent.global')).value).toBe(
+      'https://excel.test.coherent.global',
+    );
+
+    // from BaseUrl object
+    expect(HealthUrl.when(BaseUrl.from({ url: VALID_URL, tenant: 'tenant' })).value).toBe(VALID_URL);
+    expect(HealthUrl.when(BaseUrl.from({ url: 'https://spark.test.coherent.global/tenant' })).value).toBe(
+      'https://excel.test.coherent.global',
+    );
   });
 });

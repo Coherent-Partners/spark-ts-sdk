@@ -16,15 +16,6 @@ export class Folders extends ApiResource {
   }
 
   /**
-   * Gets the list of folder categories.
-   * @deprecated Use `folders.categories.list()` instead.
-   */
-  getCategories(): Promise<HttpResponse<FolderApiResponse<FolderCategories>>> {
-    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: 'lookup/getcategories' });
-    return this.request(url, { method: 'GET' });
-  }
-
-  /**
    * Creates a new folder.
    * @param {string | CreateParams} params - Folder name (and additional information)
    * If `params` is a string, it will be used as the folder name.

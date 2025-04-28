@@ -57,7 +57,8 @@ export class History extends ApiResource {
       throw error;
     }
 
-    const url = this.config.baseUrl.add({ folder, service }, { endpoint: `download/${callId}` });
+    const endpoint = params?.legacy ? `download/${callId}` : `download/xml/${callId}`;
+    const url = this.config.baseUrl.add({ folder, service }, { endpoint });
     const options = NumberUtils.isArrayIndex(index) ? { params: { index: index!.toFixed(0) } } : {};
     const response = await this.request<LogRehydrated>(url, options);
     const downloadUrl = response.data?.response_data?.download_url;
@@ -219,6 +220,7 @@ interface RehydrateParams extends Pick<UriParams, 'folder' | 'service'> {
   service: string;
   callId: string;
   index?: number;
+  legacy?: boolean;
 }
 
 /** Download file types: 'csv' or 'json'. Defaults to 'json'. */

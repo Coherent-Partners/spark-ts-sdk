@@ -5,7 +5,7 @@
 [![License][license-img]][license-url]
 
 The Coherent Spark SDK is designed to elevate the developer experience and
-provide convenient access to Coherent Spark APIs using JavaScript and TypeScript.
+provide convenient access to Coherent Spark APIs using JavaScript or TypeScript.
 
 👋 **Just a heads-up:**
 This SDK is supported by the community. If you encounter any bumps while using it,
@@ -20,8 +20,8 @@ npm i @cspark/sdk
 
 > **Note:** This package requires [Node.js 14.15](https://nodejs.org/en/download/current)
 > or higher. It is also supported in other JS runtime environments such as browsers,
-> [Bun](https://bun.sh), and [Deno](https://jsr.io/@cspark/sdk). Chek out the [ecosystem] folder
-> for more details.
+> [Bun](https://bun.sh), and [Deno](https://jsr.io/@cspark/sdk). Check out the [ecosystem]
+> folder for more details.
 
 ## Usage
 
@@ -35,32 +35,34 @@ To use the SDK, you need a Coherent Spark account that lets you access the follo
   - `service` - the service name
   - `version` - the semantic version a.k.a revision number (e.g., 0.4.2)
 
-A `folder` contains one or more `service`s, and a `service` can have
-multiple `version`s. Technically speaking, when you're operating with a service,
-you're actually interacting with a specific version of that service (the latest
-version by default - unless specified otherwise).
+In Spark, a `folder` acts as a container that holds one or more `service`s.
+Think of folders as a way to organize and group related services together.
+Each `service` represents an Excel model that has been converted into a Spark
+service. Services can exist in multiple `version`s, representing different
+iterations or updates of that service over time.
 
-Hence, there are various ways to indicate a Spark service URI:
+When interacting with a Spark service, you are always working with a specific
+version - the latest version by default. You can explicitly specify an older
+version if you need to work with a previous iteration of the service.
 
-- `{folder}/{service}[?{version}]` - _version_ is optional.
+Hence, there are various ways to indicate a Spark service URI in the SDK:
+
+- `{folder}/{service}[{version}]` - _version_ is optional.
 - `service/{serviceId}`
 - `version/{versionId}`
 
-> **IMPORTANT:** Avoid using URL-encoded characters in the service URI.
+> It is **important** to avoid using URL-encoded characters in the service URI as
+> the SDK will take care of URL encoding for you.
 
 Here's an example of how to execute a Spark service:
 
 ```ts
 import Spark from '@cspark/sdk';
 
-function main() {
-  const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'my-api-key' });
-  spark.services
-    .execute('my-folder/my-service', { inputs: { value: 42 } })
-    .then((response) => console.log(response.data));
-}
-
-main();
+const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'my-api-key' });
+spark.services
+  .execute('my-folder/my-service', { inputs: { value: 42 } })
+  .then((response) => console.log(response.data));
 ```
 
 Though the package is designed for Node.js, it can also be used in browser-like
@@ -128,6 +130,9 @@ the base URL.
 ```ts
 const spark = new Spark({ env: 'my-env', tenant: 'my-tenant' });
 ```
+
+> For more advanced customizations, you can extend the `BaseUrl` class and make
+> the appropriate changes to the `baseUrl` property.
 
 ### Authentication
 
@@ -244,7 +249,7 @@ OAuth2.0 Client Credentials flow:
 
 [Folders API](./docs/folders.md) - manages folders:
 
-- `Spark.folders.getCategories()` gets the list of folder categories.
+- `Spark.folders.categories.list()` gets the list of folder categories.
 - `Spark.folders.create(data)` creates a new folder with additional info.
 - `Spark.folders.find(name)` finds folders by name, status, category, or favorite.
 - `Spark.folders.update(id, data)` updates a folder's information by id.
@@ -259,6 +264,7 @@ OAuth2.0 Client Credentials flow:
 - `Spark.services.getSwagger(uri)` gets the Swagger documentation of a service.
 - `Spark.services.getSchema(uri)` gets the schema of a service.
 - `Spark.services.getMetadata(uri)` gets the metadata of a service.
+- `Spark.services.search(params)` searches for services with pagination and filtering options.
 - `Spark.services.download(uri)` downloads the excel file of a service.
 - `Spark.services.recompile(uri)` recompiles a service using specific compiler versions.
 - `Spark.services.validate(uri, data)` validates input data using static or dynamic validations.
@@ -282,14 +288,17 @@ OAuth2.0 Client Credentials flow:
 
 - `Spark.logs.rehydrate(uri, callId)` rehydrates the executed model into the original Excel file.
 - `Spark.logs.download(uri, [type])` downloads service execution logs as `csv` or `json` file.
+- `Spark.logs.find(uri, [params])` finds logs by date range, call id, username, call purpose, etc.
 
 [ImpEx API](./docs/impex.md) - imports and exports Spark services:
 
 - `Spark.impex.export(data)` exports Spark entities (versions, services, or folders).
 - `Spark.impex.import(data)` imports previously exported Spark entities into the Spark platform.
+- `Spark.impex.exports.cancel(jobId)` cancels an in-progress export job.
 
 [Other APIs](./docs/misc.md) - for other functionalities:
 
+- `Spark.health.check()` checks the health status of a Spark environment.
 - `Spark.wasm.download(uri)` downloads a service's WebAssembly module.
 - `Spark.files.download(url)` downloads temporary files issued by the Spark platform.
 

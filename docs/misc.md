@@ -48,10 +48,6 @@ Alternatively, you can pass in the following parameters as an `object`.
 | _versionId_ | `string` | The UUID of a particular version of the service. |
 | _serviceId_ | `string` | The service UUID.                                |
 
-> [!NOTE]
-> As of now, only the `versionId` can be used to download the WebAssembly module.
-> The other properties are currently being tested. Otherwise, they'll throw an `UnknownApiError`.
-
 ```ts
 await spark.wasm.download({ versionId: 'uuid' });
 ```

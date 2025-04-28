@@ -12,6 +12,10 @@ function retrieveToken(spark: SparkClient) {
     .catch(console.error);
 }
 
+function checkHealth(spark: SparkClient) {
+  spark.health.check().then((resp) => console.log(JSON.stringify(resp.data, null, 2)));
+}
+
 function printLogs() {
   Logger.setOptions({ context: 'Demo' });
   Logger.verbose('verbose message');
@@ -47,4 +51,5 @@ export default {
   retrieveToken,
   printLogs,
   extendResource,
+  checkHealth,
 };

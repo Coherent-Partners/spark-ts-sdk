@@ -82,9 +82,16 @@ function download(spark: SparkClient) {
   spark.services
     .download({ folder: 'my-folder', service: 'my-service', type: 'configured' })
     .then((response) => {
-      const file = createWriteStream('my-configured-subservices.xlsx');
+      const file = createWriteStream('my-configured-excel.xlsx');
       response.buffer.pipe(file);
     })
+    .catch(console.error);
+}
+
+function search(spark: SparkClient) {
+  spark.services
+    .search({ limit: 5 })
+    .then((response) => console.log(JSON.stringify(response.data, null, 2)))
     .catch(console.error);
 }
 
@@ -144,6 +151,7 @@ export default {
   getSwagger,
   validate,
   download,
+  search,
   recompile,
   delete: del,
   export: exportAsZip,
