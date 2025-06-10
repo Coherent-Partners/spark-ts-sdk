@@ -102,6 +102,7 @@ export class PositiveIntegerValidator extends Validator<number | unknown> {
 
 export class BaseUrlValidator extends Validator<Maybe<string>> {
   readonly #wildcard = /^https:\/\/([\w-]+)\.([\w-]+(?:\.[\w-]+)?)\.coherent\.global(?:\/([\w-]+)\/?)?$/i;
+  readonly #stringValidator = EmptyStringValidator.getInstance();
   static #validator: BaseUrlValidator;
 
   static getInstance(): BaseUrlValidator {
@@ -111,11 +112,10 @@ export class BaseUrlValidator extends Validator<Maybe<string>> {
   }
 
   validate(value: Maybe<string>): void {
-    if (!value) throw SparkError.sdk({ message: 'base URL is required', cause: value });
+    this.#stringValidator.validate(value, 'base URL is required');
 
-    if (!this.#wildcard.test(value!)) {
+    if (!this.#wildcard.test(value!))
       throw SparkError.sdk({ message: 'must be a Spark base URL <*.coherent.global>', cause: value });
-    }
 
     try {
       new URL(value!);
@@ -126,6 +126,7 @@ export class BaseUrlValidator extends Validator<Maybe<string>> {
 }
 
 export class TransformValidator extends Validator<string> {
+  readonly #stringValidator = EmptyStringValidator.getInstance();
   static #validator: TransformValidator;
 
   static getInstance(): TransformValidator {
@@ -135,21 +136,21 @@ export class TransformValidator extends Validator<string> {
   }
 
   validate(value: string): void {
-    if (!value) throw SparkError.sdk({ message: 'must be properly defined JSON object', cause: value });
+    this.#stringValidator.validate(value, 'Transform must be properly defined JSON object');
 
-    try {
-      JSON.parse(value);
-    } catch (cause) {
-      throw SparkError.sdk({ message: `<${value}> must be a valid JSON object`, cause });
-    }
+    const json = (() => {
+      try {
+        return JSON.parse(value);
+      } catch (cause) {
+        throw SparkError.sdk({ message: `<${value}> must be a valid JSON object`, cause });
+      }
+    })();
 
-    const json = JSON.parse(value);
-    if (!json.transform_type) {
+    if (!json.transform_type)
       throw SparkError.sdk({ message: `JSON object must have a 'transform_type' property`, cause: value });
-    }
-    if (!json.target_api_version || !['v3', 'v4'].includes(json.target_api_version)) {
+
+    if (!json.target_api_version || !['v3', 'v4'].includes(json.target_api_version))
       throw SparkError.sdk({ message: `'target_api_version' must be either 'v3' or 'v4'`, cause: value });
-    }
   }
 }
 

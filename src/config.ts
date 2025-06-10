@@ -9,6 +9,16 @@ import { Uri, UriOptions, UriParams } from './resources';
 import { DEFAULT_TIMEOUT_IN_MS, ENV_VARS } from './constants';
 import { DEFAULT_MAX_RETRIES, DEFAULT_RETRY_INTERVAL } from './constants';
 
+/**
+ * Configuration for the Spark client.
+ *
+ * This is a curated version of the client options that is used to initialize the
+ * Spark client. It is used to set the base URL, authentication, and other
+ * configuration options.
+ *
+ * The configuration is immutable and is made available to all API resources.
+ * @see {@link ClientOptions} to learn more about the expected options.
+ */
 export class Config {
   readonly #options!: string;
 
@@ -138,6 +148,23 @@ export class JwtConfig extends Config {
   }
 }
 
+/**
+ * A base URL for the Spark client.
+ *
+ * Spark base URLs are comprised of the following parts:
+ * - the service name (e.g., excel)
+ * - the environment or region name (e.g., uat.us)
+ * - and the tenant name (e.g., my-tenant)
+ *
+ * So, a base URL should look like this: `https://{service}.{env}.coherent.global/{tenant}`.
+ *
+ * Note that there are occasions where some of these parts are not needed. For instance,
+ * when developing locally, the base URL does not have an environment or service name.
+ * Also, the tenant is not needed for health checks.
+ *
+ * Additionally, this class provides a few convenience methods to help build Spark
+ * {@link Uri} instances, which are important for locating Spark API resources.
+ */
 export class BaseUrl {
   readonly url!: URL;
   readonly env: string | undefined;
@@ -149,6 +176,7 @@ export class BaseUrl {
   ) {
     const url = new URL(baseUrl + '/' + tenant);
 
+    // eslint-disable-next-line no-useless-escape
     const matches = url.origin.match(/https:\/\/([^\.]+)\.((?:[^\.]+\.)?[^\.]+)\.coherent\.global/);
     if (matches && matches.length >= 3) {
       const [, service, env] = matches;
@@ -203,6 +231,7 @@ export class BaseUrl {
       return new this(`https://excel.${env}.coherent.global`, tenant);
     } else {
       // capture errors for missing parameters
+      // eslint-disable-next-line
       stringValidator.isValid(options?.env, 'environment name is missing') &&
         stringValidator.isValid(options?.tenant, 'tenant name is missing');
     }
@@ -238,6 +267,12 @@ export class BaseUrl {
     return (withTenant ? this.full : this.value).replace(this.service ?? /excel/, service);
   }
 
+  /**
+   * Makes a copy of the current base URL (with new parameters if any).
+   *
+   * As a base URL is immutable, this method allows for a new instance to be created
+   * with the base parameters (tenant and environment) or a new base URL.
+   */
   copyWith(options: { url?: string; tenant?: string; env?: string } = {}): BaseUrl {
     const { url, tenant = this.tenant, env = this.env } = options;
     return url ? BaseUrl.from({ url, tenant }) : BaseUrl.from({ tenant, env });

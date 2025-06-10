@@ -18,9 +18,9 @@ import Utils, { StringUtils, Maybe } from '../utils';
  * specific API resources, such as folders, services, logs, imports, exports, etc.
  *
  * @param {Config} config - the configuration options for the API resource.
- * @param {AbortController} controller - an optional controller to abort requests.
+ * @param {AbortController} [controller] - an optional controller to abort requests.
  *
- * @see Config for more details.
+ * @see {@link Config} for more details.
  */
 export abstract class ApiResource {
   protected readonly logger!: Logger;
@@ -54,7 +54,7 @@ export abstract class ApiResource {
    * The `x-request-id` header is used to track requests across the Spark platform
    * and is useful for debugging and monitoring purposes. It's also part of the
    * `SparkApiError.requestId` field.
-   * @see SparkError
+   * @see {@link SparkError} for more details.
    *
    * Older versions of the Spark APIs require the `x-tenant-name` header to be set.
    *
@@ -96,14 +96,12 @@ export abstract class ApiResource {
    * provides a consistent and reliable way to interact with the Spark API.
    */
   protected request<Result = JsonData, Body = JsonData>(
-    url: string | Uri,
+    url: string | Uri | URL,
     { method = 'GET', headers = {}, ...opts }: Omit<HttpOptions<Body>, 'config'> = {},
   ): Promise<HttpResponse<Result>> {
-    url = StringUtils.isString(url) ? url : url.value;
-
     this.logger.debug(`${method} ${url}`);
 
-    return _fetch<Body, Result>(url, {
+    return _fetch<Body, Result>(url.toString(), {
       ...opts,
       method,
       headers: { ...headers, ...this.defaultHeaders },
@@ -289,6 +287,7 @@ export class Uri {
    */
   static decode(uri: string): UriParams {
     uri = Utils.sanitizeUri(uri).replace('folders/', '').replace('services/', '');
+    // eslint-disable-next-line
     const match = uri.match(/^([^\/]+)\/([^[]+)(?:\[(.*?)\])?$/); // matching folder/service[version?]
     if (!match) return {};
 
