@@ -73,9 +73,11 @@ export function getPlatformInfo(): string {
   if (browser) return browser;
 
   if (typeof process === 'undefined') return 'Unknown/0.0.0';
-  if (process.versions?.deno) return `Deno/${process.versions.deno} - Node/${process.versions.node}`;
-  if (process.versions?.bun) return `Bun/${process.versions.bun} - Node/${process.versions.node}`;
-  return `Node/${process.versions.node}`;
+
+  const node = `Node/${process.versions.node}`;
+  if (process.versions?.deno) return `Deno/${process.versions.deno} - ${node}`;
+  if (process.versions?.bun) return `Bun/${process.versions.bun} - ${node}`;
+  return node;
 }
 
 export function loadModule<T = any>(name: string): T | undefined {
