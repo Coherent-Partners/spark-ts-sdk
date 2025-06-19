@@ -1,8 +1,8 @@
 {
   "name": "@cspark/sdk",
-  "version": "0.3.1-rc.2",
+  "version": "0.3.1-rc.1",
   "description": "A JavaScript SDK for interacting with Coherent Spark APIs",
-  "author": "Coherent <team@coherent.global> (https://coherent.global)",
+  "author": "Coherent (https://coherent.global)",
   "homepage": "https://docs.coherent.global",
   "license": "Apache-2.0",
   "keywords": [
@@ -25,11 +25,14 @@
   },
   "scripts": {
     "start": "echo '>>> no start command specified' && exit 0",
-    "format": "prettier --write '{src,test,examples}/**/*.(t|j)s'",
+    "format": "prettier --write '{src,test,scripts,examples}/**/*.(t|j)s'",
     "lint": "eslint '{src,test}/**/*.ts' --fix",
     "test": "jest",
     "prebuild": "shx rm -rf lib",
     "build": "tsc && rollup -c",
+    "postbuild": "shx mkdir -p build && npm pack --pack-destination build && node scripts/postbuild.mjs",
+    "clean": "shx rm -rf build coverage lib",
+    "ecosystem": "node scripts/ecosystem.mjs",
     "demo": "tsx examples/index.ts",
     "prepare": "husky"
   },

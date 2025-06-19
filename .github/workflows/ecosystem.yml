@@ -32,7 +32,5 @@ jobs:
           npm install --ignore-scripts
           npm run build
 
-      - name: Run ecoystem tests
-        run: |
-          cd ecosystem
-          source test.sh
+      - name: Run ecosystem tests
+        run: npm run ecosystem

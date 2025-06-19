@@ -35,10 +35,9 @@ jobs:
           else
             TAG="latest"
           fi
-          yarn publish --access public --tag "$TAG"
+          npm publish --provenance --access public --tag "$TAG"
         env:
           NPM_TOKEN: ${{ secrets.NPM_API_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
 
       - name: Publish to JSR
         run: npx jsr publish

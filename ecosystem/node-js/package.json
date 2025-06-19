@@ -6,6 +6,6 @@
     "test": "node test.js"
   },
   "devDependencies": {
-    "@cspark/sdk": "file:../../build/cspark-sdk-0.3.1-rc.1.tgz"
+    "@cspark/sdk": "file:../../build/cspark-sdk-latest.tgz"
   }
 }
