@@ -6,6 +6,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -13,7 +15,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18.12.1'
+          node-version: '18.18'
 
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
@@ -30,7 +32,5 @@ jobs:
           npm install --ignore-scripts
           npm run build
 
-      - name: Run ecoystem tests
-        run: |
-          cd ecosystem
-          source test.sh
+      - name: Run ecosystem tests
+        run: npm run ecosystem

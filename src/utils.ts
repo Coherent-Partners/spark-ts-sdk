@@ -9,6 +9,7 @@ const LoadedModules: Record<string, any> = {};
   for (const name of names) {
     try {
       if (typeof module === 'object' && typeof module.exports === 'object') {
+        // eslint-disable-next-line
         LoadedModules[name] = require(name);
       } else {
         LoadedModules[name] = await import(name);
@@ -49,6 +50,7 @@ export function getBrowserInfo(): string | undefined {
   const browserPatterns = [
     { key: 'Edge' as const, pattern: /Edge(?:\W+(\d+)\.(\d+)(?:\.(\d+))?)?/ },
     { key: 'IE' as const, pattern: /MSIE(?:\W+(\d+)\.(\d+)(?:\.(\d+))?)?/ },
+    // eslint-disable-next-line
     { key: 'IE' as const, pattern: /Trident(?:.*rv\:(\d+)\.(\d+)(?:\.(\d+))?)?/ },
     { key: 'Chrome' as const, pattern: /Chrome(?:\W+(\d+)\.(\d+)(?:\.(\d+))?)?/ },
     { key: 'Firefox' as const, pattern: /Firefox(?:\W+(\d+)\.(\d+)(?:\.(\d+))?)?/ },
@@ -71,9 +73,11 @@ export function getPlatformInfo(): string {
   if (browser) return browser;
 
   if (typeof process === 'undefined') return 'Unknown/0.0.0';
-  if (process.versions?.deno) return `Deno/${process.versions.deno} - Node/${process.versions.node}`;
-  if (process.versions?.bun) return `Bun/${process.versions.bun} - Node/${process.versions.node}`;
-  return `Node/${process.versions.node}`;
+
+  const node = `Node/${process.versions.node}`;
+  if (process.versions?.deno) return `Deno/${process.versions.deno} - ${node}`;
+  if (process.versions?.bun) return `Bun/${process.versions.bun} - ${node}`;
+  return node;
 }
 
 export function loadModule<T = any>(name: string): T | undefined {

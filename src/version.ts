@@ -1,6 +1,6 @@
 import { getPlatformInfo } from './utils';
 
-const version = '0.3.0';
+const version = '0.3.1';
 
 const sdkLogger = `CSPARK v${version}`;
 
@@ -21,9 +21,9 @@ export class Version {
   constructor(readonly full: string = '0.0.0-PLACEHOLDER') {
     const [main, preRelease] = full.split('-');
     const parts = main.split('.');
-    this.major = parts[0] ?? '0';
-    this.minor = parts[1] ?? '0';
-    this.patch = parts[2] ?? '0';
+    this.major = parts?.[0] ?? '0';
+    this.minor = parts?.[1] ?? '0';
+    this.patch = parts?.[2] ?? '0';
     this.preRelease = preRelease ?? null;
   }
 }

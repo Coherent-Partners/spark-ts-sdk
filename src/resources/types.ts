@@ -22,10 +22,13 @@ export type ExportFilters = { file?: 'migrate' | 'onpremises'; version?: 'latest
 
 export type IfEntityPresent = 'abort' | 'replace' | 'add_version';
 
+// eslint-disable-next-line
 export interface GetVersionsParams extends Pick<UriParams, 'folder' | 'service'> {}
 
+// eslint-disable-next-line
 export interface GetSchemaParams extends Pick<UriParams, 'folder' | 'service' | 'versionId'> {}
 
+// eslint-disable-next-line
 export interface GetMetadataParams extends Omit<UriParams, 'version' | 'proxy'> {}
 
 export interface GetSwaggerParams extends Pick<UriParams, 'folder' | 'service' | 'versionId'> {

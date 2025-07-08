@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.3.1 (2025-07-08)
+
+- Update node engine for system builds to `>=18.18`
+- Compile TypeScript to ESM output using JS target `ES2022`
+- Migrate Rollup and ESLint config to ESM format
+- Support Node.js 22 Transform schema
+- Apply minor improvements to ecosystem tests
+- Add permissions to CI workflows
+
 ## 0.3.0 (2025-04-25)
 
 - Add support for Transform documents API (including Transform validator)

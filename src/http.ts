@@ -98,6 +98,7 @@ async function buildRequest<T>(options: HttpOptions<T>): Promise<RequestInit> {
   }> => {
     if (options.multiparts) {
       const isBrowser = Utils.isBrowser();
+      // eslint-disable-next-line
       const FormData = isBrowser ? window.FormData : loadModule('form-data');
       const formData = new FormData();
 
