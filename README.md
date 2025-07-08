@@ -1,6 +1,7 @@
 # Coherent Spark SDK
 
 [![npm version][version-img]][version-url]
+[![JSR Version][jsr-version]][jsr-url]
 [![CI build][ci-img]][ci-url]
 [![License][license-img]][license-url]
 
@@ -9,8 +10,7 @@ provide convenient access to Coherent Spark APIs using JavaScript or TypeScript.
 
 👋 **Just a heads-up:**
 This SDK is supported by the community. If you encounter any bumps while using it,
-please report them [here](https://github.com/Coherent-Partners/spark-ts-sdk/issues)
-by creating a new issue.
+please report them [by creating a new issue](https://github.com/Coherent-Partners/spark-ts-sdk/issues).
 
 ## Installation
 
@@ -27,9 +27,9 @@ npm i @cspark/sdk
 
 To use the SDK, you need a Coherent Spark account that lets you access the following:
 
+- Base URL (including the environment and tenant name)
 - User authentication ([API key][api-key-docs], [bearer token][bearer-token-docs]
   or [OAuth2.0 client credentials][oauth2-docs] details)
-- Base URL (including the environment and tenant name)
 - Spark service URI (to locate a specific resource):
   - `folder` - the folder name (where the service is located)
   - `service` - the service name
@@ -317,6 +317,8 @@ conduct, and the process for submitting pull requests.
 
 [version-img]: https://img.shields.io/npm/v/@cspark/sdk
 [version-url]: https://www.npmjs.com/package/@cspark/sdk
+[jsr-version]: https://jsr.io/badges/@cspark/sdk
+[jsr-url]: https://jsr.io/@cspark/sdk
 [license-img]: https://img.shields.io/npm/l/@cspark/sdk
 [license-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/LICENSE
 [ci-img]: https://github.com/Coherent-Partners/spark-ts-sdk/workflows/Build/badge.svg

@@ -84,6 +84,10 @@ export class Transforms extends ApiResource {
   #build(value: string | Transform): string {
     value = (StringUtils.isString(value) ? JSON.parse(value) : value) as Transform;
 
+    if (value?.schema?.toLowerCase()?.includes('nodejs22')) {
+      return JSON.stringify({ transform_type: value.schema, transform_code: value.inputs });
+    }
+
     const transform = JSON.stringify({
       transform_type: value?.schema ?? 'JSONtransforms_v1.0.1',
       target_api_version: value?.apiVersion ?? 'v3',
