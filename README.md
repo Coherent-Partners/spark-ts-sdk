@@ -90,6 +90,8 @@ environments:
 ```
 
 Explore the [examples] and [docs] folders to find out more about the SDK's capabilities.
+For more AI-powered guidance and code documentation, check out the [DeepWiki][wiki]
+(powered by [Devin.ai](https://devin.ai)).
 
 > **PRO TIP:**
 > A service URI locator can be combined with other parameters to locate a specific
@@ -173,14 +175,14 @@ const spark = new Spark({ oauth: 'path/to/oauth/credentials.json' });
 
 ### Additional Settings
 
-- `timeout` (default: `60000` ms) indicates the maximum amount of time that the
+- `timeout` (default: `60_000` ms) indicates the maximum amount of time that the
   client should wait for a response from Spark servers before timing out a request.
 
 - `maxRetries` (default: `2`) indicates the maximum number of times that the client
   will retry a request in case of a temporary failure, such as a unauthorized
   response or a status code greater than 400.
 
-- `retryInterval` (default: `1` second) indicates the delay between each retry.
+- `retryInterval` (default: `1.0` second) indicates the delay between each retry.
 
 - `allowBrowser` (default: `false`) indicates whether the SDK should be used in
   browser-like environments -- unless you intend to access public APIs.
@@ -330,4 +332,5 @@ conduct, and the process for submitting pull requests.
 [examples]: https://github.com/Coherent-Partners/spark-ts-sdk/tree/main/examples
 [ecosystem]: https://github.com/Coherent-Partners/spark-ts-sdk/tree/main/ecosystem
 [docs]: https://github.com/Coherent-Partners/spark-ts-sdk/tree/main/docs
+[wiki]: https://deepwiki.com/Coherent-Partners/spark-ts-sdk
 [uri-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/src/resources/base.ts
