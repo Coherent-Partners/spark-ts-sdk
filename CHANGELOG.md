@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.3.2 (2025-09-03)
+
+- Fix issue in rehydration of service execution logs
+- Upgrade `form-data` dependency to `4.0.4` to fix security issue
+- Apply minor improvements to the SDK
+
 ## 0.3.1 (2025-07-08)
 
 - Update node engine for system builds to `>=18.18`
