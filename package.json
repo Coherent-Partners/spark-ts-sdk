@@ -1,6 +1,6 @@
 {
   "name": "@cspark/sdk",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A JavaScript SDK for interacting with Coherent Spark APIs",
   "author": "Coherent (https://coherent.global)",
   "homepage": "https://docs.coherent.global",
@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "buffer": "6.0.3",
-    "form-data": "4.0.0",
+    "form-data": "4.0.4",
     "node-fetch": "2.7.0",
     "pako": "~2.1.0"
   },

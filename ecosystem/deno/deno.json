@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "start": "deno run --allow-all main.ts"
+    "start": "deno run --allow-env main.ts"
   },
   "imports": {
     "@cspark/sdk": "../../lib/esm/index.mjs",

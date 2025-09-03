@@ -60,7 +60,7 @@ export class History extends ApiResource {
     const endpoint = params?.legacy ? `download/${callId}` : `download/xml/${callId}`;
     const url = this.config.baseUrl.add({ folder, service }, { endpoint });
     const options = NumberUtils.isArrayIndex(index) ? { params: { index: index!.toFixed(0) } } : {};
-    const response = await this.request<LogRehydrated>(url, options);
+    const response = await this.request<LogRehydrated>(url, { ...options, method: 'POST' });
     const downloadUrl = response.data?.response_data?.download_url;
 
     if (!downloadUrl) {
