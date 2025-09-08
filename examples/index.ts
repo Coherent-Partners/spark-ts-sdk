@@ -24,6 +24,7 @@ Config.printLogs();
 Config.retrieveToken(spark);
 Config.extendResource(spark);
 Config.checkHealth(spark);
+Config.fetchConfig(spark);
 
 Folder.getCategories(spark);
 Folder.create(spark);
@@ -51,6 +52,7 @@ Transforms.get(spark);
 Transforms.delete(spark);
 
 History.find(spark);
+History.get(spark);
 History.rehydrate(spark);
 History.download(spark);
 

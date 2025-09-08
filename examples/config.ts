@@ -16,6 +16,10 @@ function checkHealth(spark: SparkClient) {
   spark.health.check().then((resp) => console.log(JSON.stringify(resp.data, null, 2)));
 }
 
+function fetchConfig(spark: SparkClient) {
+  spark.config.get().then((resp) => console.log(JSON.stringify(resp.data, null, 2)));
+}
+
 function printLogs() {
   Logger.setOptions({ context: 'Demo' });
   Logger.verbose('verbose message');
@@ -52,4 +56,5 @@ export default {
   printLogs,
   extendResource,
   checkHealth,
+  fetchConfig,
 };

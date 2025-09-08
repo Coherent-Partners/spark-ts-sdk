@@ -2,10 +2,10 @@ import Utils, { Maybe, loadModule } from './utils';
 import Validators from './validators';
 import { SparkError } from './error';
 import { Authorization } from './auth';
-import { Interceptor } from './http';
+import { Interceptor, HttpResponse } from './http';
 import { ClientOptions } from './client';
 import { Logger, LoggerOptions } from './logger';
-import { Uri, UriOptions, UriParams } from './resources';
+import { Uri, UriOptions, UriParams, Platform, PlatformConfig } from './resources';
 import { DEFAULT_TIMEOUT_IN_MS, ENV_VARS } from './constants';
 import { DEFAULT_MAX_RETRIES, DEFAULT_RETRY_INTERVAL } from './constants';
 
@@ -84,6 +84,12 @@ export class Config {
     return !Utils.isEmptyObject(this.extraHeaders);
   }
 
+  /**
+   * Makes it easy to work with copies of an existing Config.
+   *
+   * @param {ClientOptions} options - to copy the current Config with.
+   * @returns a brand new Config object with the updated values.
+   */
   copyWith(options: ClientOptions = {}): Config {
     const { baseUrl: url, tenant, env } = options;
     return new Config({
@@ -102,12 +108,23 @@ export class Config {
   toString(): string {
     return this.#options;
   }
+
+  /**
+   * Fetches the SaaS configuration for the current user (via API).
+   *
+   * This uses the settings of the current Config object to fetch the configuration.
+   * It requires user credentials to work properly. If open authentication is used,
+   * this method will throw an error.
+   */
+  get(): Promise<HttpResponse<PlatformConfig>> {
+    return new Platform(this).getConfig();
+  }
 }
 
 export class JwtConfig extends Config {
   /**
    * Decodes a Spark-issued JWT and extracts the base URL and tenant name.
-   * @param token {string} - the JWT to decode.
+   * @param {string} token - the JWT to decode.
    * @returns {ClientOptions} the token itself, and decoded base URL and tenant name.
    *
    * This method is not supported in browser environments and is not intended for general
