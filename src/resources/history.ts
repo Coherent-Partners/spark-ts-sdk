@@ -2,11 +2,25 @@ import { SparkError, RetryTimeoutError } from '../error';
 import { HttpResponse, getRetryTimeout } from '../http';
 import { ApiResource, ApiResponse, Uri, UriParams } from './base';
 import Utils, { DateUtils, NumberUtils } from '../utils';
+import { Serializable } from '../data';
 import { ConfigParams } from './types';
 
 export class History extends ApiResource {
   get downloads(): LogDownload {
     return new LogDownload(this.config);
+  }
+
+  /**
+   * Retrieves detailed logs of a service execution
+   * @param {string} callId - the call id to get the detailed log for
+   * @returns {Promise<HttpResponse<DetailedLog>>} the detailed log if any.
+   * Returns `null` if no log is found.
+   */
+  async get(callId: string): Promise<HttpResponse<DetailedLog>> {
+    const url = this.config.baseUrl.concat({ endpoint: `log/getexecutionhistorybycallid/${callId}` });
+    return this.request<HistoryApiResponse<string>>(url, { method: 'GET' }).then((response) => {
+      return { ...response, data: Serializable.deserialize<DetailedLog>(response.data.response_data, () => null) };
+    });
   }
 
   /**
@@ -307,3 +321,35 @@ type JobCreated = HistoryApiResponse<{ job_id: string }>;
 type LogStatus = HistoryApiResponse<{ progress: number; download_url: string }>;
 
 type LogListed = LogApiResponse<LogInfo[]> & { count: number; next: number; previous: number };
+
+type DetailedLog = null | {
+  EngineCallId: string;
+  LogTime: string;
+  TransactionDate: string;
+  SourceSystem: string;
+  Purpose: string;
+  UserName: string;
+  HostName: string;
+  Tenant: string;
+  Service: string;
+  Product: string;
+  EngineDetails: {
+    response_data: {
+      outputs: Record<string, any>;
+      warnings: null | any[];
+      errors: null | any[];
+      service_chain: null | any[];
+    };
+    response_meta: Record<string, any>;
+    request_data: {
+      inputs: Record<string, any>;
+    };
+    request_meta: Record<string, any>;
+  };
+  CalcTime: number;
+  SparkTotalTime: number;
+  ServiceRevision: string;
+  APIVersion: string;
+  ControlLogReference: string | null;
+  [key: string]: any;
+};
