@@ -14,4 +14,11 @@ function getVersion(hybrid: HybridClient) {
     .catch((error) => console.error(JSON.stringify(error.toJson(), undefined, 2)));
 }
 
-export default { healthCheck, getVersion };
+function getStatus(hybrid: HybridClient) {
+  hybrid.status
+    .get()
+    .then((response) => console.log(JSON.stringify(response.data, undefined, 2)))
+    .catch((error) => console.error(JSON.stringify(error.toJson(), undefined, 2)));
+}
+
+export default { healthCheck, getVersion, getStatus };

@@ -15,4 +15,18 @@ function execute(hybrid: HybridClient) {
     .catch((error) => console.error(JSON.stringify(error.toJson(), undefined, 2)));
 }
 
-export default { upload, execute };
+function validate(hybrid: HybridClient) {
+  hybrid.services
+    .validate('version/uuid', { inputs: {}, validationType: 'static' })
+    .then((response) => console.log(JSON.stringify(response.data, undefined, 2)))
+    .catch((error) => console.error(JSON.stringify(error.toJson(), undefined, 2)));
+}
+
+function getMetadata(hybrid: HybridClient) {
+  hybrid.services
+    .getMetadata('version/uuid')
+    .then((response) => console.log(JSON.stringify(response.data, undefined, 2)))
+    .catch((error) => console.error(JSON.stringify(error.toJson(), undefined, 2)));
+}
+
+export default { upload, execute, validate, getMetadata };

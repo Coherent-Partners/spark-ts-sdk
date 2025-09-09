@@ -1,9 +1,9 @@
 {
   "name": "@cspark/wasm",
-  "version": "0.1.0",
-  "description": "A Node.js SDK for interacting with the Hybrid Runner API",
-  "author": "Coherent <team@coherent.global>",
-  "homepage": "https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/packages/wasm/docs/readme.md",
+  "version": "0.2.0",
+  "description": "A JavaScript SDK for interacting with the Hybrid Runner API",
+  "author": "Coherent (https://coherent.global)",
+  "homepage": "https://docs.coherent.global",
   "license": "Apache-2.0",
   "keywords": [
     "coherent",
