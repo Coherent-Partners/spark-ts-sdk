@@ -10,6 +10,7 @@ import * as API from './resources';
  * the base URL for the APIs, the API key to use for authentication, and the maximum
  * amount of time to wait for a response from the server before timing out.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ClientOptions extends Omit<SparkOptions, 'oauth' | 'env'> {}
 
 /**

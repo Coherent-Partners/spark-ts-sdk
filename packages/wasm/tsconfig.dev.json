@@ -1,8 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "lib",
+    "outDir": "build",
     "types": ["node", "jest"]
   },
-  "include": ["test/**/*", "examples/**/*"]
+  "include": ["test/**/*"]
 }
