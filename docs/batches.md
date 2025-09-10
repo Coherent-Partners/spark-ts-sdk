@@ -624,7 +624,7 @@ containing the details of the batch pipeline that was canceled.
 
 ---
 
-# Workflow Example
+## Workflow Example
 
 The content above describes the building blocks of the [Batches API][batch-apis]
 and its potential for efficiently processing large data volumes. How you choose

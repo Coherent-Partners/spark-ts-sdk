@@ -19,11 +19,6 @@ jobs:
         with:
           node-version: 18
 
-      - name: Download SDK build from artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: spark-ts-sdk
-
       - name: Install dependencies
         run: |
           cd packages/wasm
