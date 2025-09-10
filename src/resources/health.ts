@@ -14,4 +14,16 @@ export class Health extends ApiResource {
   }
 }
 
+export class Platform extends ApiResource {
+  /** Returns the configuration of the Spark environment. */
+  async getConfig(): Promise<HttpResponse<PlatformConfig>> {
+    const url = this.config.baseUrl.concat({ version: 'api/v1', endpoint: 'config/GetSparkConfiguration' });
+    return this.request(url, { method: 'GET' }).then((response: HttpResponse<any>) => {
+      return { ...response, data: response.data?.status === 'Success' ? response.data?.data : {} };
+    });
+  }
+}
+
 export type HealthStatus = { status: string };
+
+export type PlatformConfig = Record<string, any>;

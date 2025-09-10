@@ -4,9 +4,14 @@ import { type SparkClient } from '../src';
 function find(spark: SparkClient) {
   spark.logs
     .find('my-folder/my-service')
-    .then((response) => {
-      console.log(JSON.stringify(response.data, null, 2));
-    })
+    .then((response) => console.log(JSON.stringify(response.data, null, 2)))
+    .catch(console.error);
+}
+
+function get(spark: SparkClient) {
+  spark.logs
+    .get('uuid')
+    .then((response) => console.log(JSON.stringify(response.data, null, 2)))
     .catch(console.error);
 }
 
@@ -37,4 +42,4 @@ function download(spark: SparkClient) {
     .catch(console.error);
 }
 
-export default { find, rehydrate, download };
+export default { find, get, rehydrate, download };

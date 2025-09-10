@@ -10,6 +10,7 @@ import * as API from './resources';
  * the base URL for the APIs, the API key to use for authentication, and the maximum
  * amount of time to wait for a response from the server before timing out.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ClientOptions extends Omit<SparkOptions, 'oauth' | 'env'> {}
 
 /**
@@ -47,6 +48,11 @@ export class Client {
     return new API.Health(this.config);
   }
 
+  /** The resource to check status of the runner. */
+  get status(): API.Status {
+    return new API.Status(this.config);
+  }
+
   /** The resource to manage Services API. */
   get services(): API.Services {
     return new API.Services(this.config);
@@ -78,6 +84,20 @@ export class Client {
   ): Promise<HttpResponse<API.NeuronVersion>> {
     const config = new Config({ ...options, token, baseUrl: RunnerUrl.noTenant(baseUrl) });
     return new API.Version(config).get();
+  }
+
+  /**
+   * Convenience method to check the status of the runner.
+   *
+   * @param {string} baseUrl of the runner to check.
+   * @param {ClientOptions} options to use for the client.
+   */
+  static getStatus(
+    baseUrl?: string,
+    { token = 'open', ...options }: Omit<ClientOptions, 'tenant' | 'baseUrl'> = {},
+  ): Promise<HttpResponse<API.RunnerStatus>> {
+    const config = new Config({ ...options, token, baseUrl: RunnerUrl.noTenant(baseUrl) });
+    return new API.Status(config).get();
   }
 }
 

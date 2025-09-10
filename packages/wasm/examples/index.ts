@@ -15,6 +15,9 @@ const hybrid = new HybridClient({ tenant: 'my-tenant', token: 'open' });
 
 Misc.healthCheck(hybrid);
 Misc.getVersion(hybrid);
+Misc.getStatus(hybrid);
 
 Services.upload(hybrid);
 Services.execute(hybrid);
+Services.validate(hybrid);
+Services.getMetadata(hybrid);

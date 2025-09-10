@@ -10,7 +10,7 @@ provide convenient access to Coherent Spark APIs using JavaScript or TypeScript.
 
 👋 **Just a heads-up:**
 This SDK is supported by the community. If you encounter any bumps while using it,
-please report them [by creating a new issue](https://github.com/Coherent-Partners/spark-ts-sdk/issues).
+please report them [using GitHub issues](https://github.com/Coherent-Partners/spark-ts-sdk/issues).
 
 ## Installation
 
@@ -18,7 +18,7 @@ please report them [by creating a new issue](https://github.com/Coherent-Partner
 npm i @cspark/sdk
 ```
 
-> **Note:** This package requires [Node.js 14.15](https://nodejs.org/en/download/current)
+> **Note** that this package requires [Node.js 14.15](https://nodejs.org/en/download/current)
 > or higher. It is also supported in other JS runtime environments such as browsers,
 > [Bun](https://bun.sh), and [Deno](https://jsr.io/@cspark/sdk). Check out the [ecosystem]
 > folder for more details.
@@ -45,7 +45,7 @@ When interacting with a Spark service, you are always working with a specific
 version - the latest version by default. You can explicitly specify an older
 version if you need to work with a previous iteration of the service.
 
-Hence, there are various ways to indicate a Spark service URI in the SDK:
+Hence, there are various ways to indicate a Coherent Spark service URI in the SDK:
 
 - `{folder}/{service}[{version}]` - _version_ is optional.
 - `service/{serviceId}`
@@ -104,10 +104,7 @@ import Spark from '@cspark/sdk';
 
 const spark = new Spark({ env: 'my-env', tenant: 'my-tenant', apiKey: 'open' });
 const uri = { folder: 'my-folder', service: 'my-service', public: true };
-
 spark.services.execute(uri, { inputs: { value: 42 } }).then((response) => console.log(response.data));
-// The final URI in this case is:
-//    'my-tenant/api/v3/public/folders/my-folder/services/my-service/execute'
 ```
 
 See the [Uri][uri-url] class for more details.
@@ -288,6 +285,7 @@ OAuth2.0 Client Credentials flow:
 
 [Log History API](./docs/history.md) - manages service execution logs:
 
+- `Spark.logs.get(callId)` retrieves the detailed log of a service execution.
 - `Spark.logs.rehydrate(uri, callId)` rehydrates the executed model into the original Excel file.
 - `Spark.logs.download(uri, [type])` downloads service execution logs as `csv` or `json` file.
 - `Spark.logs.find(uri, [params])` finds logs by date range, call id, username, call purpose, etc.
@@ -301,6 +299,7 @@ OAuth2.0 Client Credentials flow:
 [Other APIs](./docs/misc.md) - for other functionalities:
 
 - `Spark.health.check()` checks the health status of a Spark environment.
+- `Spark.config.get()` fetches the platform configuration for the current user.
 - `Spark.wasm.download(uri)` downloads a service's WebAssembly module.
 - `Spark.files.download(url)` downloads temporary files issued by the Spark platform.
 

@@ -25,12 +25,15 @@ const hybrid = new Hybrid({ baseUrl: 'http://localhost:8080', tenant: 'my-tenant
 > `token: 'open'` is used to express open authorization. Otherwise, the SDK will throw
 > an error if the token is not provided.
 
-| Verb                                      | Description                                               |
-| ----------------------------------------- | --------------------------------------------------------- |
-| `Hybrid.health.check()`                   | [Health check](#health-check).                            |
-| `Hybrid.version.get()`                    | [Check the Neuron compatibility version](#version-check). |
-| `Hybrid.services.upload(file, [options])` | [Upload a WASM package](#upload-a-wasm-package).          |
-| `Hybrid.services.execute(uri, [params])`  | [Execute a WASM service](#execute-a-wasm-service).        |
+| Verb                                         | Description                                                      |
+| -------------------------------------------- | ---------------------------------------------------------------- |
+| `Hybrid.health.check()`                      | [Health check](#health-check).                                   |
+| `Hybrid.version.get()`                       | [Check the Neuron compatibility version](#version-check).        |
+| `Hybrid.status.get()`                        | [Get the status of the runner](#get-the-status-of-the-runner).   |
+| `Hybrid.services.upload(file, [options])`    | [Upload a WASM package](#upload-a-wasm-package).                 |
+| `Hybrid.services.execute(uri, [params])`     | [Execute a WASM service](#execute-a-wasm-service).               |
+| `Hybrid.services.validate(uri, [params])`    | [Validate input data](#validate-input-data).                     |
+| `Hybrid.services.getMetadata(uri, [params])` | [Get the metadata of a service](#get-the-metadata-of-a-service). |
 
 ## Health check
 
@@ -78,7 +81,6 @@ Alternatively, you can use the `Hybrid.version.get()` method directly from the c
 import Hybrid from '@cspark/wasm';
 
 const hybrid = new Hybrid({ tenant: 'my-tenant', token: 'open' });
-
 hybrid.version.get().then((response) => console.log(response.data));
 ```
 
@@ -89,6 +91,72 @@ hybrid.version.get().then((response) => console.log(response.data));
   "lastPullDate": "2024-05-07T03:43:46.333Z",
   "filehash": "d2f6a43d10f9aacdb8c61f0bb6307e4ebec782ecb4f44f1194a936a9227d99f2",
   "version": "1.31.2"
+}
+```
+
+## Get the status of the runner
+
+This method allows you to get the status of a running Hybrid Runner (v1.46.0+).
+
+```ts
+import Hybrid from '@cspark/wasm';
+
+Hybrid.getStatus().then((response) => console.log(response.data)); // will use default base URL
+// or
+Hybrid.getStatus('http://localhost:8080').then((response) => console.log(response.data));
+```
+
+Alternatively, you can use the `Hybrid.status.get()` method directly from the client instance.
+
+```ts
+import Hybrid from '@cspark/wasm';
+
+const hybrid = new Hybrid({ tenant: 'my-tenant', token: 'open' });
+hybrid.status.get().then((response) => console.log(response.data));
+```
+
+### Returns
+
+```json
+{
+  "models": [
+    {
+      "tenant": "my-tenant",
+      "model_stats": [
+        {
+          "thread_stats": {
+            "1": {
+              "init_time_ms": 0,
+              "init_memory_mb": null,
+              "uptime_ms": 1171059,
+              "peak_memory_mb": null,
+              "last_execute_consume_memory_mb": null,
+              "current_memory_mb": 122.63
+            }
+          },
+          "memory_usage_mb": 122.63,
+          "uptime_ms": 1171059,
+          "min_time_ms": 50,
+          "mean_time_ms": 50,
+          "p95_time_ms": 50,
+          "p99_time_ms": 50,
+          "max_time_ms": 50,
+          "busy": 0,
+          "size": 1,
+          "id": "uuid",
+          "last_use": "1970-12-03T04:56:56.186Z",
+          "completed_count": 0,
+          "running_count": 0,
+          "crash_count": 0,
+          "timeout_count": 0
+        }
+      ],
+      "total_model": 1,
+      "total_instances": 1
+    }
+  ],
+  "memory_usage_mb": 122.75,
+  "memory_limit_mb": 14073748835532.8
 }
 ```
 
@@ -284,11 +352,115 @@ This method returns the output data of the WASM service execution in the same fo
 as the regular [`Spark.services.execute(uri, [params])`][sdk-service-execute]
 method used for SaaS-based APIs in [@cspark/sdk][sdk].
 
+## Validate input data
+
+This method validates the input data using static or dynamic validations set in
+the Excel file via the WASM service.
+
+- `static` validation is a cell validation that's only affected by its own formula.
+- `dynamic` validation is a cell validation that depends on other cells/inputs.
+
+See more examples of [static validation](https://docs.coherent.global/spark-apis/validation-api#validation_type-static)
+and [dynamic validation](https://docs.coherent.global/spark-apis/validation-api#validation_type-dynamic-part-1).
+
+### Arguments
+
+This method relies on the service identifier in `UriParams` format (`versionId` or `serviceId`)
+to locate a model version to validate its input data. To specify which type of validation to use,
+you must provide the `validationType` property as part of the second argument. Other extra
+metadata can be provided as well.
+
+| Property         | Type                    | Description                    |
+| ---------------- | ----------------------- | ------------------------------ |
+| _inputs_         | `Record<string, any>`   | The input data.                |
+| _metadata_       | `Record<string, any>`   | Extra metadata fields.         |
+| _validationType_ | `'dynamic' \| 'static'` | The type of validation to use. |
+
+```ts
+import Hybrid from '@cspark/wasm';
+
+const hybrid = new Hybrid({ tenant: 'my-tenant', token: 'open' });
+hybrid.services
+  .validate('version/uuid', { inputs: { my_input: 13 }, validationType: 'dynamic' })
+  .then((response) => console.log(response.data));
+```
+
+### Returns
+
+This method returns the validation result in the same format as the regular
+`Spark.services.validate(uri, [**params])` method used for the SaaS-based API in
+[@cspark/sdk][sdk].
+
+## Get the metadata of a service
+
+A service metadata is a series of key-value pairs that are used for other purposes
+than computed output data. For example, you may want to embed details such as fonts
+and colors in the Excel file of a service. This method helps you retrieve these
+metadata fields as part of the output data.
+
+Check out the [API reference](https://docs.coherent.global/spark-apis/metadata-api)
+to learn more about Metadata API.
+
+### Arguments
+
+This method accepts the `versionId` or `serviceId` in `string` or `UriParams` format
+to locate a model version to retrieve the metadata. Other extra metadata can be
+provided as well as a second argument.
+
+| Property   | Type                  | Description            |
+| ---------- | --------------------- | ---------------------- |
+| _inputs_   | `Record<string, any>` | The input data.        |
+| _metadata_ | `Record<string, any>` | Extra metadata fields. |
+
+```ts
+import Hybrid from '@cspark/wasm';
+
+const hybrid = new Hybrid({ tenant: 'my-tenant', token: 'open' });
+hybrid.services.getMetadata('version/uuid').then((response) => console.log(response.data));
+```
+
+### Returns
+
+Do know that metadata fields created with [Subservices][subservices] are retrieved
+faster and more efficiently as they are not computed as regular outputs from Execute API.
+
+```json
+{
+  "status": "Success",
+  "error": null,
+  "response_data": {
+    "outputs": {
+      "Metadata.PrimaryColor": "#FF0",
+      "Metadata.Font": "Arial",
+      "Metadata.Logo": "data:image/png;base64,..."
+    },
+    "warnings": null,
+    "errors": null,
+    "service_chain": null
+  },
+  "response_meta": {
+    "service_id": "uuid",
+    "version_id": "uuid",
+    "version": "1.2.3",
+    "process_time": 0,
+    "call_id": "uuid",
+    "compiler_type": "Type3",
+    "compiler_version": "1.2.0",
+    "source_hash": null,
+    "engine_id": "hash-info",
+    "correlation_id": null,
+    "system": "SPARK",
+    "request_timestamp": "1970-01-23T00:58:20.752Z"
+  }
+}
+```
+
 [Back to top](#hybrid-runner-sdk)
 
 <!-- References -->
 
 [sdk]: https://www.npmjs.com/package/@cspark/sdk
+[subservices]: https://docs.coherent.global/build-spark-services/subservices#metadata-subservice
 [user-guide]: https://docs.coherent.global/integrations/how-to-deploy-a-hybrid-runner
 [sdk-service-execute]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/docs/services.md#execute-a-spark-service
 [v3-format]: https://docs.coherent.global/spark-apis/execute-api/execute-api-v3

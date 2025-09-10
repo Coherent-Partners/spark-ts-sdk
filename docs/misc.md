@@ -2,10 +2,80 @@
 
 # Other APIs
 
-| Verb                        | Description                                                                         |
-| --------------------------- | ----------------------------------------------------------------------------------- |
-| `Spark.wasm.download(uri)`  | [Download a service's WebAssembly module](#download-a-services-webassembly-module). |
-| `Spark.files.download(url)` | [Download a Spark file](#download-a-spark-file).                                    |
+| Verb                        | Description                                                                                        |
+| --------------------------- | -------------------------------------------------------------------------------------------------- |
+| `Spark.health.check()`      | [Check the health status of a Spark environment](#check-the-health-status-of-a-spark-environment). |
+| `Spark.config.get()`        | [Fetch the platform configuration](#fetch-the-platform-configuration).                             |
+| `Spark.wasm.download(uri)`  | [Download a service's WebAssembly module](#download-a-services-webassembly-module).                |
+| `Spark.files.download(url)` | [Download a Spark file](#download-a-spark-file).                                                   |
+
+## Check the health status of a Spark environment
+
+This method checks the health status of a Spark environment as described in the
+[API reference](https://docs.coherent.global/integrations/diagnose-spark-connectivity).
+
+### Arguments
+
+This method does not require any arguments as it relies on the current `Spark.Config` (i.e., `env`,
+`tenant`, or `base_url`) to determine which Spark environment to check.
+
+```ts
+import { SparkClient } from '@cspark/sdk';
+
+const client = new SparkClient({ baseUrl: 'https://my-env.coherent.global/my-tenant', token: 'open' });
+client.health.check().then((response) => console.log(response.data));
+```
+
+> [!NOTE]
+> Actually, no authentication is required to check the health status of a Spark environment.
+> A convenient way to do this without the need for a client instance is to use the
+> `SparkClient.healthCheck(url)` static method, where `url` can either be the base
+> URL or the environment/region name.
+
+```ts
+import { SparkClient } from '@cspark/sdk';
+
+SparkClient.healthCheck('my-env').then((response) => console.log(response.data));
+```
+
+### Returns
+
+When successful, this method returns an object containing the health status of the
+Spark environment.
+
+```json
+{ "status": "UP" }
+```
+
+> [!TIP]
+> You can simply use the `Spark.health.ok()` method to check if the Spark environment
+> is healthy. This method returns a boolean value indicating whether the environment
+> is up and running or not.
+
+## Fetch the platform configuration
+
+The platform or Spark configuration refers to the SaaS configuration for the current
+tenant (and user), which includes information such as batch size, timeout, supporter
+compilers, etc.
+
+### Arguments
+
+This method does not require any arguments and will fetch the SaaS configuration
+via API, which should not be confused with the SDK configuration.
+
+```ts
+import { Config } from '@cspark/sdk';
+
+const baseUrl = 'https://spark.my-env.coherent.global/my-tenant';
+const token = 'my-access-token'; // only this security scheme is supported for this API
+const config = new Config({ baseUrl, token });
+config.get().then((response) => console.log(response.data));
+```
+
+### Returns
+
+This method returns an object containing the platform configuration.
+See the [sample configuration](./samples/spark-config.json) for more information.
 
 ## Download a service's WebAssembly module
 

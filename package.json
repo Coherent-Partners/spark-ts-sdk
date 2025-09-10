@@ -1,6 +1,6 @@
 {
   "name": "@cspark/sdk",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "A JavaScript SDK for interacting with Coherent Spark APIs",
   "author": "Coherent (https://coherent.global)",
   "homepage": "https://docs.coherent.global",

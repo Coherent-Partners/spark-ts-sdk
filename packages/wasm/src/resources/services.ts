@@ -1,7 +1,8 @@
 import { type Readable } from 'stream';
-import { ApiResource, Uri, UriParams, HttpResponse, SparkClient } from '@cspark/sdk';
+import { Uri, UriParams, HttpResponse, SparkClient } from '@cspark/sdk';
+import { HybridResource } from './base';
 
-export class Services extends ApiResource {
+export class Services extends HybridResource {
   /**
    * upload a WASM package to a running Hybrid Runner.
    *
@@ -46,13 +47,52 @@ export class Services extends ApiResource {
     uri: string | UriParams,
     params: ExecuteParams<Input> = {},
   ): Promise<HttpResponse<ServiceExecuted<Output>>> {
-    return new SparkClient(this.config).services.execute(uri, params);
+    return await new SparkClient(this.config).services.execute(uri, params);
+  }
+
+  /**
+   * Validates the inputs for a service.
+   * @param {ServiceIdentifier} uri - how to locate the service
+   * @param {ValidateParams} params - optionally the validation parameters (inputs, metadata, etc.)
+   */
+  validate(uri: ServiceIdentifier, params?: ValidateParams): Promise<HttpResponse<ServiceValidated>> {
+    const { serviceId, versionId } = Uri.validate(uri);
+    const { inputs, validationType, metadata = {} } = params ?? {};
+    const url = this.config.baseUrl.concat({ endpoint: 'validation' });
+    const body = {
+      request_data: { inputs },
+      request_meta: {
+        ...metadata,
+        service_id: serviceId,
+        version_id: versionId,
+        validation_type: validationType === 'dynamic' ? 'dynamic' : 'default_values',
+      },
+    };
+
+    return this.request<ServiceValidated>(url, { method: 'POST', body });
+  }
+
+  /**
+   * Gets the metadata of a WASM service.
+   * @param {ServiceIdentifier} uri - how to locate the service
+   */
+  async getMetadata(uri: ServiceIdentifier, params?: GetMetadataParams): Promise<HttpResponse<ServiceExecuted>> {
+    const { serviceId, versionId } = Uri.validate(uri);
+    const { inputs, metadata = {} } = params ?? {};
+    const url = this.config.baseUrl.concat({ endpoint: 'metadata' });
+    const body = {
+      request_data: { inputs },
+      request_meta: { ...metadata, service_id: serviceId, version_id: versionId },
+    };
+
+    return this.request(url, { method: 'POST', body });
   }
 }
 
 type JsonInputs = Record<string, any>;
 type ArrayInputs<T = any> = T[];
 type Inputs<T> = undefined | null | string | JsonInputs | ArrayInputs<T>;
+type ServiceIdentifier = string | Pick<UriParams, 'serviceId' | 'versionId'>;
 
 interface ExecuteParams<I = Record<string, any>> {
   // Data for calculation
@@ -73,6 +113,17 @@ interface ExecuteParams<I = Record<string, any>> {
   selectedOutputs?: undefined | string | string[];
   tablesAsArray?: undefined | string | string[];
   outputsFilter?: string;
+}
+
+interface ValidateParams<I = Record<string, any>> {
+  inputs?: Inputs<I>;
+  metadata?: Record<string, any>;
+  validationType?: 'dynamic' | 'static';
+}
+
+interface GetMetadataParams<I = Record<string, any>> {
+  inputs?: Inputs<I>;
+  metadata?: Record<string, any>;
 }
 
 type ServiceUploaded = {
@@ -163,4 +214,21 @@ type ServiceExecuted<Output = Record<string, any>> = {
   compiler_version: string;
   correlation_id: string;
   request_timestamp: string;
+};
+
+type ServiceValidated = {
+  response_data: {
+    outputs: Record<string, any>;
+    [key: string]: any;
+  };
+  response_meta: {
+    version_id: string;
+    allow_range_address: boolean;
+    validation_type: string;
+    compiler_type: string;
+    system: string;
+    compiler_version: string;
+    process_time: number;
+    [key: string]: any;
+  };
 };

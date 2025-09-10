@@ -40,19 +40,18 @@ runner's configuration, you may or may not need to use authentication.
 ```ts
 import Hybrid from '@cspark/wasm';
 
-function main() {
+async function main() {
   const hybrid = new Hybrid({ tenant: 'my-tenant', token: 'open' }); // no authentication
-
-  hybrid.services
-    .execute('my-folder/my-service', { inputs: { value: 42 } })
-    .then((response) => console.log(response.data))
-    .catch(console.error);
+  const response = await hybrid.services.execute('my-folder/my-service', { inputs: { value: 42 } });
+  console.log(response.data);
 }
 
 main();
 ```
 
 Explore the [examples] and [docs] folders to find out more about its capabilities.
+For more AI-powered guidance and code documentation, check out the [DeepWiki][wiki]
+(powered by [Devin.ai](https://devin.ai)).
 
 ## Contributing
 
@@ -77,3 +76,4 @@ the code of conduct, and the process for submitting pull requests.
 [hybrid-runner]: https://github.com/orgs/Coherent-Partners/packages/container/package/nodegen-server
 [examples]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/packages/wasm/examples/index.ts
 [docs]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/packages/wasm/docs/readme.md
+[wiki]: https://deepwiki.com/Coherent-Partners/spark-ts-sdk
