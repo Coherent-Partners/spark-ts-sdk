@@ -12,7 +12,7 @@ jobs:
   cspark-sdk:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-2022, macOS-latest]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
         node: ['14.15.0', '16.0.0']
         exclude:
           - os: macOS-latest
