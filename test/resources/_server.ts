@@ -205,7 +205,7 @@ export default class LocalServer {
     }
 
     // Spark.batches.of('id').pull()
-    if (pathname === '/my-tenant/api/v4/batch/batch_uuid/chunkresults?max_chunks=2') {
+    if (pathname === '/my-tenant/api/v4/batch/batch_uuid/chunkresults?max=2') {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       res.end(

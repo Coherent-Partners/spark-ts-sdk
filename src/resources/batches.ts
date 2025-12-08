@@ -218,7 +218,7 @@ export class Pipeline extends ApiResource {
   async pull<Outputs>(max: number = 100): Promise<HttpResponse<BatchResult<Outputs>>> {
     this.#assertState(['cancelled']);
 
-    const endpoint = `batch/${this.id}/chunkresults?max_chunks=${Math.max(1, max)}`;
+    const endpoint = `batch/${this.id}/chunkresults?max=${Math.max(1, max)}`;
     const url = this.config.baseUrl.concat({ version: this.#version, endpoint });
     const response = await this.request<BatchResult<Outputs>>(url);
     this.logger.log(`${response.data.status.records_available} available records from batch pipeline <${this.id}>`);

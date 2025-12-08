@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.4.1 (2025-12-08)
+
+- Swap `max_chunks` with `max` in `Batches.pull(...)` method
+- Update documentation and tests for `Batches.pull(...)` method
+- Fix date time parsing in `DateUtils.parse(...)` method
+- Add support for additional metadata in `Transform.save(...)` method
+
 ## 0.4.0 (2025-09-08)
 
 - Add support for fetching the platform configuration

@@ -7,6 +7,6 @@ const files = readdirSync(buildPath)
   .sort((a, b) => statSync(join(buildPath, b)).mtime - statSync(join(buildPath, a)).mtime);
 
 if (files.length > 0) {
-  copyFileSync(join('build', files[0]), join('build', 'cspark-sdk-latest.tgz'));
+  copyFileSync(join(buildPath, files[0]), join(buildPath, 'cspark-sdk-latest.tgz'));
   console.log(`✓ Created cspark-sdk-latest.tgz from ${files[0]}`);
 }
