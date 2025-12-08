@@ -213,9 +213,8 @@ export abstract class NumberUtils {
 export abstract class DateUtils {
   static isDate(value: unknown): value is Date {
     if (value instanceof Date) return true;
-    if (typeof value === 'string' || typeof value === 'number') {
-      return !Number.isNaN(Date.parse(value.toString()));
-    }
+    if (typeof value === 'string') return !Number.isNaN(Date.parse(value));
+    if (typeof value === 'number') return !Number.isNaN(Date.parse(new Date(value).toString()));
     return false;
   }
 

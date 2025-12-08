@@ -85,7 +85,7 @@ export class Transforms extends ApiResource {
     value = (StringUtils.isString(value) ? JSON.parse(value) : value) as Transform;
 
     if (value?.schema?.toLowerCase()?.includes('nodejs22')) {
-      return JSON.stringify({ transform_type: value.schema, transform_code: value.inputs });
+      return JSON.stringify({ transform_type: value?.schema, transform_code: value?.inputs, ...(value?.extras ?? {}) });
     }
 
     const transform = JSON.stringify({
@@ -93,6 +93,7 @@ export class Transforms extends ApiResource {
       target_api_version: value?.apiVersion ?? 'v3',
       input_body_transform: value?.inputs ?? null,
       output_body_transform: value?.outputs ?? null,
+      ...(value?.extras ?? {}),
     });
 
     Validators.transform.getInstance().validate(transform);
@@ -112,6 +113,7 @@ interface Transform {
   apiVersion?: 'v3' | 'v4';
   inputs?: string;
   outputs?: string;
+  extras?: Record<string, any>; // additional metadata for the transform.
 }
 
 interface TransformParams {
