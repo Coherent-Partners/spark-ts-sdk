@@ -131,6 +131,15 @@ class Export extends ApiResource {
   }
 
   /**
+   * Describes the export jobs available across the tenant.
+   * @returns {Promise<HttpResponse<ExportDescribed>>} the batch pipeline details
+   */
+  describe(): Promise<HttpResponse<ExportDescribed>> {
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `export/status` });
+    return this.request(url, { method: 'GET' });
+  }
+
+  /**
    * Initiates an export job to export Spark entities such as versions, services, or folders.
    *
    * @param {ExportParams} params - what to export
@@ -239,6 +248,15 @@ class Import extends ApiResource {
   constructor(config: Config) {
     super(config);
     this.logger = Logger.of(config.logger);
+  }
+
+  /**
+   * Describes the import jobs available across the tenant.
+   * @returns {Promise<HttpResponse<ImportDescribed>>} the import job details
+   */
+  describe(): Promise<HttpResponse<ImportDescribed>> {
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `import/status` });
+    return this.request(url, { method: 'GET' });
   }
 
   /**
@@ -415,6 +433,23 @@ export type ExportResult = {
   };
 };
 
+type ExportDescribed = {
+  in_progress_exports: {
+    object: string;
+    id: string;
+    data: { export_status: string; response_timestamp: string };
+  }[];
+  recent_exports: {
+    object: string;
+    id: string;
+    data: { export_status: string; response_timestamp: string };
+  }[];
+  tenant: {
+    configuration: { export_api_job_limit: number };
+    status: { export_api_jobs_in_progress: number };
+  };
+};
+
 interface ImportParams extends ConfigParams {
   file: Readable;
   destination: ImportDestination;
@@ -479,6 +514,23 @@ export type ImportResult = {
       version_id_destination: string;
       status: string;
     }[];
+  };
+};
+
+type ImportDescribed = {
+  in_progress_imports: {
+    object: string;
+    id: string;
+    data: { import_status: string; response_timestamp: string };
+  }[];
+  recent_imports: {
+    object: string;
+    id: string;
+    data: { import_status: string; response_timestamp: string };
+  }[];
+  tenant: {
+    configuration: { import_api_job_limit: number };
+    status: { import_api_jobs_in_progress: number };
   };
 };
 

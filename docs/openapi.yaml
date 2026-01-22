@@ -1,0 +1,3251 @@
+openapi: 3.0.3
+info:
+  title: Coherent Spark API (unofficial)
+  description: |
+    API specifications for Coherent Spark platform (extracted from the TypeScript SDK).
+    This specification documents all available endpoints for managing folders, services,
+    batches, execution logs, imports/exports, and transforms.
+  version: 1.0.0
+  contact:
+    name: Coherent Global
+    url: https://docs.coherent.global
+
+servers:
+  - url: https://excel.{env}.coherent.global/{tenant}
+    description: Spark environment
+    variables:
+      env:
+        default: uat.us
+        description: Environment name (e.g., uat.us, us, uat.eu, eu)
+      tenant:
+        default: my-tenant
+        description: Tenant name
+  - url: https://excel.{env}.coherent.global
+    description: Only valid for APIv1 endpoints (tenant is provided in the body)
+    variables:
+      env:
+        default: uat.us
+
+tags:
+  - name: Health
+    description: Health check and platform configuration
+  - name: Folders
+    description: Folder (product) management operations
+  - name: Services
+    description: Service (engine) management and execution
+  - name: Batches
+    description: Asynchronous batch processing
+  - name: History
+    description: Service execution logs and history
+  - name: ImportExport
+    description: Import and export of Spark entities
+  - name: Transforms
+    description: Transform document management
+  - name: OAuth2
+    description: OAuth2 token generation
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
+  - OAuth2: []
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Check health status
+      description: Checks the health status or connectivity of a Spark environment
+      security:
+        - {}
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /api/v1/config/GetSparkConfiguration:
+    get:
+      tags:
+        - Health
+      summary: Get platform configuration
+      description: Returns the configuration of the Spark environment
+      responses:
+        '200':
+          description: Platform configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /api/v1/product/create:
+    post:
+      tags:
+        - Folders
+      summary: Create folder
+      description: Creates a new folder (product)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - Name
+                - Category
+                - StartDate
+                - LaunchDate
+                - Status
+              properties:
+                Name:
+                  type: string
+                Category:
+                  type: string
+                  enum:
+                    [
+                      Medical,
+                      Critical Illness,
+                      Lifelong Participation,
+                      Universal Life,
+                      Investment Linked,
+                      Annuity,
+                      Term,
+                      VHIS,
+                      VHIS + Medical,
+                      Property & Casualty,
+                      Other,
+                    ]
+                Description:
+                  type: string
+                StartDate:
+                  type: string
+                  format: date-time
+                LaunchDate:
+                  type: string
+                  format: date-time
+                Status:
+                  type: string
+                  default: Design
+                coverImage:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Folder created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderLocation'
+        '409':
+          description: Folder already exists
+        '400':
+          description: Bad request
+
+  /api/v1/product/list:
+    post:
+      tags:
+        - Folders
+      summary: Find folders
+      description: Finds folders by name, status, category, or favorite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                search:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                      value:
+                        type: string
+                page:
+                  type: integer
+                  default: 1
+                pageSize:
+                  type: integer
+                  default: 100
+                sort:
+                  type: string
+                  default: '-updated'
+                shouldFetchActiveServicesCount:
+                  type: boolean
+                  default: true
+      responses:
+        '200':
+          description: List of folders
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderListed'
+
+  /api/v1/product/update/{folderId}:
+    post:
+      tags:
+        - Folders
+      summary: Update folder
+      description: Updates a folder's information
+      parameters:
+        - name: folderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                category:
+                  type: string
+                startDate:
+                  type: string
+                  format: date-time
+                launchDate:
+                  type: string
+                  format: date-time
+                shouldTrackUserAction:
+                  type: boolean
+                  default: true
+      responses:
+        '200':
+          description: Folder updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderUpdated'
+
+  /api/v1/product/delete/{folderId}:
+    delete:
+      tags:
+        - Folders
+      summary: Delete folder
+      description: |
+        Deletes a folder by ID (WARNING: This will also delete all its services).
+      parameters:
+        - name: folderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Folder deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderDeleted'
+
+  /api/v1/product/UploadCoverImage:
+    post:
+      tags:
+        - Folders
+      summary: Upload folder cover image
+      description: Uploads a cover image to a folder
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - id
+                - coverImage
+              properties:
+                id:
+                  type: string
+                coverImage:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Cover image uploaded successfully
+
+  /api/v1/lookup/getcategories:
+    get:
+      tags:
+        - Folders
+      summary: List categories
+      description: Gets the list of folder categories
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FolderCategory'
+
+  /api/v1/lookup/savecategory:
+    post:
+      tags:
+        - Folders
+      summary: Save category
+      description: Saves or updates a category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - value
+              properties:
+                value:
+                  type: string
+                key:
+                  type: string
+                icon:
+                  type: string
+                  default: other.svg
+      responses:
+        '200':
+          description: Category saved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FolderCategory'
+
+  /api/v1/lookup/deletecategory/{key}:
+    delete:
+      tags:
+        - Folders
+      summary: Delete category
+      description: Deletes a category by key
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category deleted successfully
+
+  /api/v3/folders/{folder}/services/{service}/upload:
+    post:
+      tags:
+        - Services
+      summary: Upload and initiate compilation
+      description: Uploads a service file and initiates the compilation process
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - engineUploadRequestEntity
+                - serviceFile
+              properties:
+                engineUploadRequestEntity:
+                  type: object
+                  properties:
+                    request_data:
+                      type: object
+                      properties:
+                        version_difference:
+                          type: string
+                          enum: [major, minor, patch]
+                        effective_start_date:
+                          type: string
+                          format: date-time
+                        effective_end_date:
+                          type: string
+                          format: date-time
+                serviceFile:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Service uploaded and compilation initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceCompiled'
+
+  /api/v3/folders/{folder}/services/{service}/getcompilationprogess/{jobId}:
+    get:
+      tags:
+        - Services
+      summary: Get compilation status
+      description: Gets the status of a compilation job
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Compilation status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompilationStatus'
+
+  /api/v3/folders/{folder}/services/{service}/publish:
+    post:
+      tags:
+        - Services
+      summary: Publish service
+      description: Publishes a service after uploading and compiling it
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - request_data
+              properties:
+                request_data:
+                  type: object
+                  required:
+                    - original_file_documentid
+                    - engine_file_documentid
+                  properties:
+                    draft_service_name:
+                      type: string
+                    effective_start_date:
+                      type: string
+                      format: date-time
+                    effective_end_date:
+                      type: string
+                      format: date-time
+                    original_file_documentid:
+                      type: string
+                    engine_file_documentid:
+                      type: string
+                    version_difference:
+                      type: string
+                      enum: [major, minor, patch]
+                    should_trck_user_action:
+                      type: string
+                    version_label:
+                      type: string
+                    release_note:
+                      type: string
+                    tags:
+                      type: string
+      responses:
+        '200':
+          description: Service published successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServicePublished'
+
+  /api/v3/folders/{folder}/services/{service}/execute:
+    post:
+      tags:
+        - Services
+      summary: Execute service
+      description: Executes a service with the provided inputs
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: query
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                request_data:
+                  type: object
+                  properties:
+                    inputs:
+                      type: object
+                      additionalProperties: true
+                request_meta:
+                  type: object
+                  additionalProperties: true
+          application/gzip:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Service execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceExecuted'
+
+  /api/v4/public/execute:
+    post:
+      tags:
+        - Services
+      summary: Execute service (batch mode)
+      description: Executes a service in synchronous batch mode (v4 API)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                inputs:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: true
+                service:
+                  type: string
+                version_id:
+                  type: string
+                version_by_timestamp:
+                  type: string
+                  format: date-time
+                subservice:
+                  type: string
+                output:
+                  type: string
+                call_purpose:
+                  type: string
+                source_system:
+                  type: string
+                correlation_id:
+                  type: string
+          application/gzip:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Batch execution result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /api/v3/folders/{folder}/services/{service}/validation:
+    post:
+      tags:
+        - Services
+      summary: Validate service inputs
+      description: Validates the inputs for a service
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                request_data:
+                  type: object
+                  properties:
+                    inputs:
+                      type: object
+                      additionalProperties: true
+                request_meta:
+                  type: object
+                  properties:
+                    validation_type:
+                      type: string
+                      enum: [dynamic, default_values]
+                    transaction_date:
+                      type: string
+                      format: date-time
+                    call_purpose:
+                      type: string
+                    source_system:
+                      type: string
+                    correlation_id:
+                      type: string
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceExecuted'
+
+  /api/v3/folders/{folder}/services/{service}/metadata:
+    get:
+      tags:
+        - Services
+      summary: Get service metadata
+      description: Gets the metadata of a Spark service
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Service metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetadataFound'
+
+  /api/v1/product/{folder}/engines/get/{service}:
+    get:
+      tags:
+        - Services
+      summary: Get service schema
+      description: Gets the schema for a service
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Service schema
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /GetEngineDetailByVersionId/versionid/{versionId}:
+    post:
+      tags:
+        - Services
+      summary: Get service schema by version ID
+      description: Gets the schema for a service by version ID
+      parameters:
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Service schema
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /api/v1/product/{folder}/engines/getversions/{service}:
+    get:
+      tags:
+        - Services
+      summary: Get service versions
+      description: Gets the list of versions of a Spark service
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of versions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VersionInfo'
+
+  /api/v3/folders/{folder}/services/{service}/downloadswagger/{subservice}/{downloadable}/{versionId}:
+    get:
+      tags:
+        - Services
+      summary: Get Swagger documentation
+      description: Gets the Swagger documentation of a Spark service
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: subservice
+          in: path
+          required: true
+          schema:
+            type: string
+            default: All
+        - name: downloadable
+          in: path
+          required: true
+          schema:
+            type: boolean
+            default: false
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+            default: ''
+      responses:
+        '200':
+          description: Swagger documentation
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /api/v3/services/search:
+    post:
+      tags:
+        - Services
+      summary: Search services
+      description: Searches for services with pagination and filtering options
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                request_data:
+                  type: object
+                  properties:
+                    page:
+                      type: integer
+                      default: 1
+                    page_size:
+                      type: integer
+                      default: -1
+                    sort:
+                      type: string
+                      default: name1_co
+                    search:
+                      type: array
+                      items:
+                        type: object
+                    fields:
+                      type: array
+                      items:
+                        type: string
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListed'
+
+  /api/v1/product/{folder}/engines/{service}/download/{versionId}:
+    get:
+      tags:
+        - Services
+      summary: Download service file
+      description: Downloads the original (Excel) or configured file
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+            default: ''
+        - name: filename
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: ['', withmetadata]
+      responses:
+        '200':
+          description: File download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /api/v3/folders/{folder}/services/{service}/recompileNodgen:
+    post:
+      tags:
+        - Services
+      summary: Recompile service
+      description: Recompiles a service using a specific compiler version
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - request_data
+              properties:
+                request_data:
+                  type: object
+                  properties:
+                    versionId:
+                      type: string
+                    releaseNotes:
+                      type: string
+                    upgradeType:
+                      type: string
+                      enum: [major, minor, patch]
+                    neuronCompilerVersion:
+                      type: string
+                      default: StableLatest
+                    tags:
+                      type: string
+                    versionLabel:
+                      type: string
+                    effectiveStartDate:
+                      type: string
+                      format: date-time
+                    effectiveEndDate:
+                      type: string
+                      format: date-time
+      responses:
+        '200':
+          description: Recompilation initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceRecompiled'
+
+  /api/v1/product/{folder}/engines/delete/{service}:
+    delete:
+      tags:
+        - Services
+      summary: Delete service
+      description: Deletes a Spark service
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Service deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceDeleted'
+
+  /api/v4/transforms/{folder}/{service}/for/folders/{targetFolder}/services/{targetService}:
+    post:
+      tags:
+        - Services
+      summary: Execute service with transforms
+      description: Executes a service using transforms for preprocessing and postprocessing
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: targetFolder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: targetService
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+          application/gzip:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Transform execution result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /api/v4/batch/status:
+    get:
+      tags:
+        - Batches
+      summary: Describe batch pipelines
+      description: Describes the batch pipelines available across the tenant
+      responses:
+        '200':
+          description: Batch pipeline details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchDescribed'
+
+  /api/v4/batch:
+    post:
+      tags:
+        - Batches
+      summary: Create batch pipeline
+      description: Creates a batch pipeline for asynchronous execution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - service
+              properties:
+                service:
+                  type: string
+                version_id:
+                  type: string
+                version_by_timestamp:
+                  type: string
+                  format: date-time
+                subservice:
+                  type: string
+                output:
+                  type: string
+                call_purpose:
+                  type: string
+                  default: Async Batch Execution
+                source_system:
+                  type: string
+                correlation_id:
+                  type: string
+                unique_record_key:
+                  type: string
+                initial_workers:
+                  type: integer
+                max_workers:
+                  type: integer
+                chunks_per_request:
+                  type: integer
+                runner_thread_count:
+                  type: integer
+                max_input_size_in_mb:
+                  type: integer
+                max_output_size_in_mb:
+                  type: integer
+                acceptable_error_percentage:
+                  type: integer
+      responses:
+        '200':
+          description: Batch pipeline created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchCreated'
+
+  /api/v4/batch/{batchId}:
+    get:
+      tags:
+        - Batches
+      summary: Get batch information
+      description: Gets batch information
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Batch information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchInfo'
+    patch:
+      tags:
+        - Batches
+      summary: Dispose batch pipeline
+      description: Disposes a batch pipeline (closes or cancels it)
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - batch_status
+              properties:
+                batch_status:
+                  type: string
+                  enum: [closed, cancelled]
+      responses:
+        '200':
+          description: Batch pipeline disposed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchDisposed'
+
+  /api/v4/batch/{batchId}/status:
+    get:
+      tags:
+        - Batches
+      summary: Get batch status
+      description: Gets the status of a batch pipeline
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Batch status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchStatus'
+
+  /api/v4/batch/{batchId}/chunks:
+    post:
+      tags:
+        - Batches
+      summary: Push data to batch pipeline
+      description: Pushes data to a batch pipeline
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chunks
+              properties:
+                chunks:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/BatchChunk'
+      responses:
+        '200':
+          description: Records submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordSubmitted'
+
+  /api/v4/batch/{batchId}/chunkresults:
+    get:
+      tags:
+        - Batches
+      summary: Pull batch results
+      description: Pulls the results from a batch pipeline
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: max
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Batch results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResult'
+
+  /api/v3/log/getexecutionhistorybycallid/{callId}:
+    get:
+      tags:
+        - History
+      summary: Get detailed log
+      description: Retrieves detailed logs of a service execution
+      parameters:
+        - name: callId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detailed log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedLog'
+
+  /api/v1/product/{folder}/engines/{service}/logs:
+    post:
+      tags:
+        - History
+      summary: Find logs
+      description: Finds logs by date range, call id, username, call purpose, etc.
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                search:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                      value:
+                        type: string
+                      id:
+                        type: string
+                page:
+                  type: integer
+                  default: 1
+                pageSize:
+                  type: integer
+                  default: 100
+                sort:
+                  type: string
+                  default: '-updated'
+      responses:
+        '200':
+          description: List of logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogListed'
+
+  /api/v3/folders/{folder}/services/{service}/download/{callId}:
+    post:
+      tags:
+        - History
+      summary: Rehydrate log (legacy)
+      description: Rehydrates the executed model into the original excel file (legacy format)
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: callId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rehydrated log
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /api/v3/folders/{folder}/services/{service}/download/xml/{callId}:
+    post:
+      tags:
+        - History
+      summary: Rehydrate log
+      description: Rehydrates the executed model into the original excel file
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: callId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: index
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Rehydrated log
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /api/v3/folders/{folder}/services/{service}/log/downloadjson:
+    post:
+      tags:
+        - History
+      summary: Initiate JSON log download
+      description: Creates a download job for service execution logs in JSON format
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                request_data:
+                  type: object
+                  properties:
+                    call_ids:
+                      type: array
+                      items:
+                        type: string
+                    start_date:
+                      type: string
+                      format: date-time
+                    end_date:
+                      type: string
+                      format: date-time
+                    timezone_offset:
+                      type: string
+                request_meta:
+                  type: object
+                  properties:
+                    version_id:
+                      type: string
+      responses:
+        '200':
+          description: Download job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobCreated'
+
+  /api/v3/folders/{folder}/services/{service}/log/downloadcsv:
+    post:
+      tags:
+        - History
+      summary: Initiate CSV log download
+      description: Creates a download job for service execution logs in CSV format
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                request_data:
+                  type: object
+                  properties:
+                    call_ids:
+                      type: array
+                      items:
+                        type: string
+                    start_date:
+                      type: string
+                      format: date-time
+                    end_date:
+                      type: string
+                      format: date-time
+                    timezone_offset:
+                      type: string
+                request_meta:
+                  type: object
+                  properties:
+                    version_id:
+                      type: string
+      responses:
+        '200':
+          description: Download job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobCreated'
+
+  /api/v3/folders/{folder}/services/{service}/log/downloadjson/status/{jobId}:
+    get:
+      tags:
+        - History
+      summary: Get JSON log download status
+      description: Gets the status of a download job for service execution logs in JSON format
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Download status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogStatus'
+
+  /api/v3/folders/{folder}/services/{service}/log/downloadcsv/status/{jobId}:
+    get:
+      tags:
+        - History
+      summary: Get CSV log download status
+      description: Gets the status of a download job for service execution logs in CSV format
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Download status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogStatus'
+
+  /api/v4/export:
+    post:
+      tags:
+        - ImportExport
+      summary: Initiate export
+      description: Initiates an export job to export Spark entities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - inputs
+              properties:
+                inputs:
+                  type: object
+                  properties:
+                    folders:
+                      type: array
+                      items:
+                        type: string
+                    services:
+                      type: array
+                      items:
+                        type: string
+                    version_ids:
+                      type: array
+                      items:
+                        type: string
+                file_filter:
+                  type: string
+                  enum: [migrate, onpremises]
+                  default: migrate
+                version_filter:
+                  type: string
+                  enum: [latest, all]
+                  default: latest
+                source_system:
+                  type: string
+                correlation_id:
+                  type: string
+      responses:
+        '200':
+          description: Export job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportInit'
+
+  /api/v4/export/status:
+    get:
+      tags:
+        - ImportExport
+      summary: Get export status
+      description: Checks the status of an export job
+      responses:
+        '200':
+          description: Export status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportDescribed'
+
+  /api/v4/export/{jobId}/status:
+    get:
+      tags:
+        - ImportExport
+      summary: Get export status
+      description: Checks the status of an export job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Export status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportResult'
+
+  /api/v4/export/{jobId}:
+    patch:
+      tags:
+        - ImportExport
+      summary: Cancel export
+      description: Cancels an export job that is in progress
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - export_status
+              properties:
+                export_status:
+                  type: string
+                  enum: [cancelled]
+      responses:
+        '200':
+          description: Export job cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportResult'
+
+  /api/v4/import:
+    post:
+      tags:
+        - ImportExport
+      summary: Initiate import
+      description: Initiates an import job to import Spark entities
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - importRequestEntity
+                - file
+              properties:
+                importRequestEntity:
+                  type: object
+                  properties:
+                    inputs:
+                      type: object
+                      properties:
+                        services_modify:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              service_uri_source:
+                                type: string
+                              service_uri_destination:
+                                type: string
+                              update_version_type:
+                                type: string
+                                enum: [major, minor, patch]
+                    services_existing:
+                      type: string
+                      enum: [abort, replace, add_version]
+                    source_system:
+                      type: string
+                    correlation_id:
+                      type: string
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Import job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportInit'
+
+  /api/v4/import/status:
+    get:
+      tags:
+        - ImportExport
+      summary: Get import status
+      description: Checks the status of an import job
+      responses:
+        '200':
+          description: Import status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportDescribed'
+
+  /api/v4/import/{jobId}/status:
+    get:
+      tags:
+        - ImportExport
+      summary: Get import status
+      description: Checks the status of an import job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Import status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+
+  /api/v4/transforms/list/{folder}:
+    post:
+      tags:
+        - Transforms
+      summary: List transforms
+      description: Lists all transform documents in a folder
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                page:
+                  type: integer
+                  default: 1
+                pageSize:
+                  type: integer
+                  default: 100
+                sort:
+                  type: string
+                  default: '-updatedAt'
+                search:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                      value:
+                        type: string
+      responses:
+        '200':
+          description: List of transforms
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformListed'
+
+  /api/v4/transforms/validation:
+    post:
+      tags:
+        - Transforms
+      summary: Validate transform
+      description: Validates a transform document
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - transform_content
+              properties:
+                transform_content:
+                  type: string
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentValidated'
+
+  /api/v4/transforms/{folder}/{name}:
+    post:
+      tags:
+        - Transforms
+      summary: Save transform
+      description: Creates or updates a transform document
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - transform_content
+              properties:
+                transform_content:
+                  type: string
+      responses:
+        '200':
+          description: Transform saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentSaved'
+    get:
+      tags:
+        - Transforms
+      summary: Get transform
+      description: Retrieves a transform document
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transform document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentFound'
+    delete:
+      tags:
+        - Transforms
+      summary: Delete transform
+      description: Deletes a transform document
+      parameters:
+        - name: folder
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transform deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDeleted'
+
+  /protocol/openid-connect/token:
+    post:
+      tags:
+        - OAuth2
+      summary: Generate OAuth2 access token
+      description: Generates an OAuth2 access token using client credentials
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - client_id
+                - client_secret
+              properties:
+                grant_type:
+                  type: string
+                  default: client_credentials
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+      responses:
+        '200':
+          description: Access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessToken'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-synthetic-key
+      description: API key (synthetic key) for authentication
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer token for authentication
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /protocol/openid-connect/token
+          scopes: {}
+
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          example: UP
+
+    FolderLocation:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          type: object
+          properties:
+            folderId:
+              type: string
+            get_product_url:
+              type: string
+        errorCode:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+
+    FolderListed:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FolderInfo'
+        count:
+          type: integer
+        next:
+          type: integer
+        previous:
+          type: integer
+        errorCode:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+
+    FolderInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        coverImagePath:
+          type: string
+        createdAt:
+          type: string
+        createdBy:
+          type: string
+        lastModifiedDate:
+          type: string
+        isStarred:
+          type: boolean
+        kanbanStatus:
+          type: string
+        startDate:
+          type: string
+        launchDate:
+          type: string
+        activeServiceCount:
+          type: integer
+        totalServiceCount:
+          type: integer
+
+    FolderCategory:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        icon:
+          type: string
+
+    FolderUpdated:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          type: object
+          nullable: true
+        errorCode:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+
+    FolderDeleted:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          type: object
+          nullable: true
+        errorCode:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+
+    ServiceCompiled:
+      type: object
+      properties:
+        status:
+          type: string
+        response_data:
+          type: object
+          properties:
+            lines_of_code:
+              type: integer
+            hours_saved:
+              type: integer
+            nodegen_compilation_jobid:
+              type: string
+            original_file_documentid:
+              type: string
+            engine_file_documentid:
+              type: string
+            warnings:
+              type: array
+              items:
+                type: object
+              nullable: true
+            current_statistics:
+              type: object
+              nullable: true
+            no_of_sheets:
+              type: integer
+            no_of_inputs:
+              type: integer
+            no_of_outputs:
+              type: integer
+            no_of_formulas:
+              type: integer
+            no_of_cellswithdata:
+              type: integer
+        response_meta:
+          type: object
+        error:
+          type: object
+          nullable: true
+
+    CompilationStatus:
+      type: object
+      properties:
+        status:
+          type: string
+        response_data:
+          type: object
+          properties:
+            status:
+              type: string
+            last_error_message:
+              type: string
+            progress:
+              type: integer
+        response_meta:
+          type: object
+        error:
+          type: object
+          nullable: true
+
+    ServicePublished:
+      type: object
+      properties:
+        status:
+          type: string
+        response_data:
+          type: object
+          properties:
+            version_id:
+              type: string
+        response_meta:
+          type: object
+        error:
+          type: object
+          nullable: true
+
+    ServiceExecuted:
+      type: object
+      properties:
+        outputs:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        process_time:
+          type: array
+          items:
+            type: number
+        warnings:
+          type: array
+          items:
+            type: object
+        errors:
+          type: array
+          items:
+            type: object
+        service_chain:
+          type: array
+          items:
+            type: object
+          nullable: true
+        service_id:
+          type: string
+        version_id:
+          type: string
+        version:
+          type: string
+        call_id:
+          type: string
+        compiler_version:
+          type: string
+        correlation_id:
+          type: string
+        request_timestamp:
+          type: string
+
+    MetadataFound:
+      type: object
+      properties:
+        status:
+          type: string
+        response_data:
+          $ref: '#/components/schemas/ServiceExecuted'
+        response_meta:
+          type: object
+        error:
+          type: object
+          nullable: true
+
+    VersionInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        createdAt:
+          type: string
+        engine:
+          type: string
+        revision:
+          type: string
+        effectiveStartDate:
+          type: string
+        effectiveEndDate:
+          type: string
+        isActive:
+          type: boolean
+        releaseNote:
+          type: string
+        childEngines:
+          type: array
+          items:
+            type: object
+          nullable: true
+        versionLabel:
+          type: string
+        defaultEngineType:
+          type: string
+        tags:
+          type: object
+          nullable: true
+        product:
+          type: string
+        author:
+          type: string
+        originalFileName:
+          type: string
+
+    ServiceListed:
+      type: object
+      properties:
+        status:
+          type: string
+        response_data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              folderName:
+                type: string
+              fileName:
+                type: string
+              version:
+                type: string
+              modifiedDate:
+                type: string
+        response_meta:
+          type: object
+          properties:
+            count:
+              type: integer
+            next:
+              type: object
+              nullable: true
+            page:
+              type: integer
+            page_size:
+              type: integer
+            page_total:
+              type: integer
+            previous:
+              type: object
+              nullable: true
+            request_timestamp:
+              type: string
+            system:
+              type: string
+        error:
+          type: object
+          nullable: true
+
+    ServiceRecompiled:
+      type: object
+      properties:
+        status:
+          type: string
+        response_data:
+          type: object
+          properties:
+            versionId:
+              type: string
+            revision:
+              type: string
+            jobId:
+              type: string
+        response_meta:
+          type: object
+        error:
+          type: object
+          nullable: true
+
+    ServiceDeleted:
+      type: object
+      properties:
+        data:
+          type: object
+          nullable: true
+        errorCode:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+        status:
+          type: string
+
+    BatchDescribed:
+      type: object
+      properties:
+        in_progress_batches:
+          type: array
+          items:
+            type: object
+        recent_batches:
+          type: array
+          items:
+            type: object
+        tenant:
+          type: object
+          properties:
+            configuration:
+              type: object
+              properties:
+                input_buffer_allocated_bytes:
+                  type: integer
+                output_buffer_allocated_bytes:
+                  type: integer
+                max_workers:
+                  type: integer
+            status:
+              type: object
+              properties:
+                input_buffer_used_bytes:
+                  type: integer
+                input_buffer_remaining_bytes:
+                  type: integer
+                output_buffer_used_bytes:
+                  type: integer
+                output_buffer_remaining_bytes:
+                  type: integer
+                workers_in_use:
+                  type: integer
+        environment:
+          type: object
+          properties:
+            update:
+              type: integer
+
+    BatchCreated:
+      type: object
+      properties:
+        object:
+          type: string
+        id:
+          type: string
+        data:
+          type: object
+          properties:
+            service_id:
+              type: string
+            version_id:
+              type: string
+            compiler_version:
+              type: string
+            correlation_id:
+              type: string
+              nullable: true
+            source_system:
+              type: string
+              nullable: true
+            unique_record_key:
+              type: string
+              nullable: true
+            response_timestamp:
+              type: string
+            batch_status:
+              type: string
+            created_by:
+              type: string
+            created_timestamp:
+              type: string
+            updated_timestamp:
+              type: string
+            service_uri:
+              type: string
+
+    BatchStatus:
+      type: object
+      properties:
+        batch_status:
+          type: string
+        pipeline_status:
+          type: string
+        input_buffer_used_bytes:
+          type: integer
+        input_buffer_remaining_bytes:
+          type: integer
+        output_buffer_used_bytes:
+          type: integer
+        output_buffer_remaining_bytes:
+          type: integer
+        compute_time_ms:
+          type: integer
+        records_available:
+          type: integer
+        records_completed:
+          type: integer
+        record_submitted:
+          type: integer
+        request_timestamp:
+          type: string
+
+    BatchInfo:
+      type: object
+      properties:
+        object:
+          type: string
+        id:
+          type: string
+        data:
+          type: object
+          properties:
+            service_id:
+              type: string
+            version_id:
+              type: string
+            compiler_version:
+              type: string
+            correlation_id:
+              type: string
+              nullable: true
+            source_system:
+              type: string
+              nullable: true
+            unique_record_key:
+              type: string
+              nullable: true
+            summary:
+              type: object
+              properties:
+                chunks_submitted:
+                  type: integer
+                chunks_retried:
+                  type: integer
+                chunks_completed:
+                  type: integer
+                chunks_failed:
+                  type: integer
+                records_retried:
+                  type: integer
+                input_size_bytes:
+                  type: integer
+                output_size_bytes:
+                  type: integer
+                avg_compute_time_ms:
+                  type: integer
+                records_submitted:
+                  type: integer
+                records_failed:
+                  type: integer
+                records_completed:
+                  type: integer
+                compute_time_ms:
+                  type: integer
+                batch_time_ms:
+                  type: integer
+            configuration:
+              type: object
+              properties:
+                initial_workers:
+                  type: integer
+                chunks_per_request:
+                  type: integer
+                runner_thread_count:
+                  type: integer
+                acceptable_error_percentage:
+                  type: integer
+                input_buffer_allocated_bytes:
+                  type: integer
+                output_buffer_allocated_bytes:
+                  type: integer
+                max_workers:
+                  type: integer
+            response_timestamp:
+              type: string
+            batch_status:
+              type: string
+            created_by:
+              type: string
+            created_timestamp:
+              type: string
+            updated_timestamp:
+              type: string
+            service_uri:
+              type: string
+
+    BatchChunk:
+      type: object
+      properties:
+        id:
+          type: string
+        data:
+          type: object
+          properties:
+            inputs:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            parameters:
+              type: object
+              additionalProperties: true
+            summary:
+              type: object
+              additionalProperties: true
+        size:
+          type: integer
+
+    RecordSubmitted:
+      type: object
+      properties:
+        request_timestamp:
+          type: string
+        batch_status:
+          type: string
+        pipeline_status:
+          type: string
+        input_buffer_used_bytes:
+          type: integer
+        input_buffer_remaining_bytes:
+          type: integer
+        output_buffer_used_bytes:
+          type: integer
+        output_buffer_remaining_bytes:
+          type: integer
+        records_available:
+          type: integer
+        compute_time_ms:
+          type: integer
+        records_completed:
+          type: integer
+        record_submitted:
+          type: integer
+
+    BatchResult:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              summary_output:
+                type: array
+                items:
+                  type: object
+              outputs:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+              warnings:
+                type: array
+                items:
+                  type: object
+              errors:
+                type: array
+                items:
+                  type: object
+              process_time:
+                type: array
+                items:
+                  type: number
+        status:
+          type: object
+          properties:
+            request_timestamp:
+              type: string
+            response_timestamp:
+              type: string
+            batch_status:
+              type: string
+            pipeline_status:
+              type: string
+            input_buffer_used_bytes:
+              type: integer
+            input_buffer_remaining_bytes:
+              type: integer
+            output_buffer_used_bytes:
+              type: integer
+            output_buffer_remaining_bytes:
+              type: integer
+            records_available:
+              type: integer
+            compute_time_ms:
+              type: integer
+            records_completed:
+              type: integer
+            record_submitted:
+              type: integer
+            chunks_completed:
+              type: integer
+            chunks_submitted:
+              type: integer
+            chunks_available:
+              type: integer
+            workers_in_use:
+              type: integer
+
+    BatchDisposed:
+      type: object
+      properties:
+        object:
+          type: string
+        id:
+          type: string
+        meta:
+          type: object
+          properties:
+            service_id:
+              type: string
+            version_id:
+              type: string
+            compiler_version:
+              type: string
+            correlation_id:
+              type: string
+              nullable: true
+            source_system:
+              type: string
+              nullable: true
+            unique_record_key:
+              type: string
+              nullable: true
+            response_timestamp:
+              type: string
+            batch_status:
+              type: string
+            created_by:
+              type: string
+            created_timestamp:
+              type: string
+            updated_timestamp:
+              type: string
+            service_uri:
+              type: string
+
+    LogInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        transactionDate:
+          type: string
+        timeStamp:
+          type: string
+        callGUID:
+          type: string
+        engineGUID:
+          type: string
+        engineHASH:
+          type: string
+          nullable: true
+        serviceName:
+          type: string
+        serviceVersion:
+          type: string
+        calcTime:
+          type: string
+        callPurpose:
+          type: string
+        sourceSystem:
+          type: string
+        log:
+          type: string
+          nullable: true
+        totalTime:
+          type: string
+        username:
+          type: string
+        isBatchCall:
+          type: boolean
+          nullable: true
+        correlationId:
+          type: string
+          nullable: true
+
+    LogListed:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogInfo'
+        count:
+          type: integer
+        next:
+          type: integer
+        previous:
+          type: integer
+        errorCode:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+
+    DetailedLog:
+      type: object
+      nullable: true
+      properties:
+        EngineCallId:
+          type: string
+        LogTime:
+          type: string
+        TransactionDate:
+          type: string
+        SourceSystem:
+          type: string
+        Purpose:
+          type: string
+        UserName:
+          type: string
+        HostName:
+          type: string
+        Tenant:
+          type: string
+        Service:
+          type: string
+        Product:
+          type: string
+        EngineDetails:
+          type: object
+          properties:
+            response_data:
+              type: object
+              properties:
+                outputs:
+                  type: object
+                  additionalProperties: true
+                warnings:
+                  type: array
+                  items:
+                    type: object
+                  nullable: true
+                errors:
+                  type: array
+                  items:
+                    type: object
+                  nullable: true
+                service_chain:
+                  type: array
+                  items:
+                    type: object
+                  nullable: true
+            response_meta:
+              type: object
+              additionalProperties: true
+            request_data:
+              type: object
+              properties:
+                inputs:
+                  type: object
+                  additionalProperties: true
+            request_meta:
+              type: object
+              additionalProperties: true
+        CalcTime:
+          type: number
+        SparkTotalTime:
+          type: number
+        ServiceRevision:
+          type: string
+        APIVersion:
+          type: string
+        ControlLogReference:
+          type: string
+          nullable: true
+
+    JobCreated:
+      type: object
+      properties:
+        status:
+          type: string
+        response_data:
+          type: object
+          properties:
+            job_id:
+              type: string
+        response_meta:
+          type: object
+        error:
+          type: object
+          nullable: true
+
+    LogStatus:
+      type: object
+      properties:
+        status:
+          type: string
+        response_data:
+          type: object
+          properties:
+            progress:
+              type: integer
+            download_url:
+              type: string
+        response_meta:
+          type: object
+        error:
+          type: object
+          nullable: true
+
+    ExportInit:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+        status_url:
+          type: string
+
+    ExportDescribed:
+      type: object
+      properties:
+        in_progress_exports:
+          type: array
+          items:
+            type: object
+            properties:
+              object:
+                type: string
+              id:
+                type: string
+              data:
+                type: object
+                properties:
+                  export_status:
+                    type: string
+                  response_timestamp:
+                    type: string
+
+        recent_exports:
+          type: array
+          items:
+            type: object
+            properties:
+              object:
+                type: string
+              id:
+                type: string
+              data:
+                type: object
+                properties:
+                  export_status:
+                    type: string
+                  response_timestamp:
+                    type: string
+        tenant:
+          type: object
+          properties:
+            configuration:
+              type: object
+              properties:
+                export_api_job_limit:
+                  type: integer
+            status:
+              type: object
+              properties:
+                export_api_jobs_in_progress:
+                  type: integer
+
+    ExportResult:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+        status:
+          type: string
+        status_url:
+          type: string
+        response_timestamp:
+          type: string
+        process_time:
+          type: number
+        source_system:
+          type: string
+        correlation_id:
+          type: string
+        errors:
+          type: object
+          nullable: true
+        outputs:
+          type: object
+          properties:
+            files:
+              type: array
+              items:
+                type: object
+                properties:
+                  file:
+                    type: string
+                  file_hash:
+                    type: string
+            services:
+              type: array
+              items:
+                type: object
+                properties:
+                  service_uri_source:
+                    type: string
+                  folder_source:
+                    type: string
+                  service_source:
+                    type: string
+                  service_id_source:
+                    type: string
+            service_versions:
+              type: array
+              items:
+                type: object
+                properties:
+                  service_uri_source:
+                    type: string
+                  folder_source:
+                    type: string
+                  service_source:
+                    type: string
+                  version_source:
+                    type: string
+                  service_id_source:
+                    type: string
+                  version_id_source:
+                    type: string
+
+    ImportDescribed:
+      type: object
+      properties:
+        in_progress_imports:
+          type: array
+          items:
+            type: object
+            properties:
+              object:
+                type: string
+              id:
+                type: string
+              data:
+                type: object
+                properties:
+                  import_status:
+                    type: string
+                  response_timestamp:
+                    type: string
+        tenant:
+          type: object
+          properties:
+            configuration:
+              type: object
+              properties:
+                import_api_job_limit:
+                  type: integer
+            status:
+              type: object
+              properties:
+                import_api_jobs_in_progress:
+                  type: integer
+        recent_imports:
+          type: array
+          items:
+            type: object
+            properties:
+              object:
+                type: string
+              id:
+                type: string
+              data:
+                type: object
+                properties:
+                  import_status:
+                    type: string
+                  response_timestamp:
+                    type: string
+
+    ImportInit:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+        status_url:
+          type: string
+
+    ImportResult:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+        status:
+          type: string
+        status_url:
+          type: string
+        response_timestamp:
+          type: string
+        process_time:
+          type: number
+        source_system:
+          type: string
+        correlation_id:
+          type: string
+        errors:
+          type: object
+          nullable: true
+        outputs:
+          type: object
+          properties:
+            services:
+              type: array
+              items:
+                type: object
+                properties:
+                  service_uri_source:
+                    type: string
+                  folder_source:
+                    type: string
+                  service_source:
+                    type: string
+                  service_id_source:
+                    type: string
+                  service_uri_destination:
+                    type: string
+                  folder_destination:
+                    type: string
+                  service_destination:
+                    type: string
+                  service_id_destination:
+                    type: string
+                  status:
+                    type: string
+            service_versions:
+              type: array
+              items:
+                type: object
+                properties:
+                  service_uri_source:
+                    type: string
+                  folder_source:
+                    type: string
+                  service_source:
+                    type: string
+                  version_source:
+                    type: string
+                  service_id_source:
+                    type: string
+                  version_id_source:
+                    type: string
+                  folder_destination:
+                    type: string
+                  service_destination:
+                    type: string
+                  version_destination:
+                    type: string
+                  service_uri_destination:
+                    type: string
+                  service_id_destination:
+                    type: string
+                  version_id_destination:
+                    type: string
+                  status:
+                    type: string
+
+    TransformListed:
+      type: object
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        result:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              transform_type:
+                type: string
+              createdAt:
+                type: string
+              createdBy:
+                type: string
+              updatedAt:
+                type: string
+              modifiedBy:
+                type: string
+
+    TransformDocument:
+      type: object
+      properties:
+        object:
+          type: string
+        response_timestamp:
+          type: string
+        process_time:
+          type: number
+        id:
+          type: string
+        status:
+          type: string
+        outputs:
+          type: object
+          additionalProperties: true
+
+    DocumentValidated:
+      allOf:
+        - $ref: '#/components/schemas/TransformDocument'
+        - type: object
+          properties:
+            outputs:
+              type: object
+              properties:
+                isValid:
+                  type: boolean
+                error:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                      type:
+                        type: string
+                      message:
+                        type: string
+                  nullable: true
+
+    DocumentSaved:
+      allOf:
+        - $ref: '#/components/schemas/TransformDocument'
+        - type: object
+          properties:
+            outputs:
+              type: object
+              properties:
+                name:
+                  type: string
+                transform_uri:
+                  type: string
+
+    DocumentFound:
+      allOf:
+        - $ref: '#/components/schemas/TransformDocument'
+        - type: object
+          properties:
+            outputs:
+              type: object
+              properties:
+                transform_document:
+                  type: string
+                updatedAt:
+                  type: string
+
+    DocumentDeleted:
+      allOf:
+        - $ref: '#/components/schemas/TransformDocument'
+        - type: object
+          properties:
+            outputs:
+              type: object
+              properties:
+                name:
+                  type: string
+                transform_uri:
+                  type: string
+
+    AccessToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+        expires_in:
+          type: integer
+        refresh_expires_in:
+          type: integer
+        token_type:
+          type: string
+        not_before_policy:
+          type: integer
+        scope:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+              message:
+                type: string
+              cause:
+                type: object
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+              message:
+                type: string
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+              message:
+                type: string
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+              message:
+                type: string
+
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+              message:
+                type: string
+
+    RateLimit:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+              message:
+                type: string
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+              message:
+                type: string

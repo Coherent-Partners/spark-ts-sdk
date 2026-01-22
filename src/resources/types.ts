@@ -69,6 +69,9 @@ export interface ConfigParams {
 export interface CreateParams extends CompileParams, ConfigParams {
   draftName?: string;
   trackUser?: boolean;
+  label?: string;
+  releaseNotes?: string;
+  tags?: string | string[];
 }
 
 export interface CompileParams extends Pick<UriParams, 'folder' | 'service'> {
@@ -79,6 +82,7 @@ export interface CompileParams extends Pick<UriParams, 'folder' | 'service'> {
   versioning?: UpgradeType;
   startDate?: string | number | Date;
   endDate?: string | number | Date;
+  extras?: Record<string, any>;
 }
 
 export interface GetStatusParams extends Pick<UriParams, 'folder' | 'service'>, ConfigParams {
@@ -97,6 +101,10 @@ export interface PublishParams extends Pick<UriParams, 'folder' | 'service'> {
   startDate?: string | number | Date;
   endDate?: string | number | Date;
   trackUser?: boolean;
+  label?: string;
+  releaseNotes?: string;
+  tags?: string | string[];
+  extras?: Record<string, any>;
 }
 
 export interface ExecuteParams<I = Record<string, any>> {
