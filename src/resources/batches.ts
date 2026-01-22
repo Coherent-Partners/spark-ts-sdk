@@ -53,9 +53,10 @@ export class Batches extends ApiResource {
       max_workers: options?.maxRunners,
       chunks_per_request: options?.chunksPerVM,
       runner_thread_count: options?.runnersPerVM,
-      max_input_size: options?.maxInputSize,
-      max_output_size: options?.maxOutputSize,
+      max_input_size_in_mb: options?.maxInputSize,
+      max_output_size_in_mb: options?.maxOutputSize,
       acceptable_error_percentage: Math.ceil((1 - Math.min(options?.accuracy ?? 1, 1.0)) * 100), // ensure 0.0 to 1.0
+      ...(options?.extras ?? {}),
     };
 
     // remove undefined values
@@ -410,6 +411,9 @@ interface PipelineOptions {
    * 0.95, 5% of error rate is acceptable and the batch job will complete successfully.
    */
   accuracy?: number;
+
+  /** Additional metadata for the batch pipeline. */
+  extras?: Record<string, any>;
 }
 
 type BatchDescribed = {

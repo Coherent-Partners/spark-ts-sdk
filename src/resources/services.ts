@@ -38,7 +38,7 @@ export class Services extends ApiResource {
 
   /**
    * Compiles a service after uploading it.
-   * @param {CreateParams} params - the service creation parameters
+   * @param {CompileParams} params - the service creation parameters
    * @returns a summary of the upload, compilation, and publication process
    *
    * @transactional
@@ -71,7 +71,11 @@ export class Services extends ApiResource {
         original_file_documentid: params.fileId,
         engine_file_documentid: params.engineId,
         version_difference: params.versioning ?? 'minor',
-        should_track_user_action: `${params.trackUser ?? false}`,
+        should_trck_user_action: `${params.trackUser ?? false}`,
+        version_label: params.label,
+        release_note: params.releaseNotes ?? `Published via ${SPARK_SDK}`,
+        tags: StringUtils.join(params?.tags),
+        ...(params.extras ?? {}),
       },
     };
 
@@ -386,6 +390,7 @@ class Compilation extends ApiResource {
         version_difference: params.versioning ?? 'minor',
         effective_start_date: startDate.toISOString(),
         effective_end_date: endDate.toISOString(),
+        ...(params.extras ?? {}),
       },
     };
     const multiparts: Multipart[] = [

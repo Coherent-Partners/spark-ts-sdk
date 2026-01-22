@@ -1,9 +1,8 @@
 # SDK Documentation
 
 This guide should serve as a comprehensive reference for the SDK. It covers all
-the verbs (or methods) and parameters available in the SDK.
-
-Additional information about Spark APIs can be found on [Spark's User Guide](https://docs.coherent.global).
+the verbs (or methods) and parameters available in the SDK. Additional information
+can be found on the [Spark's User Guide](https://docs.coherent.global) page.
 
 ## Table of Contents
 
