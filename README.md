@@ -207,6 +207,16 @@ const spark = new Spark({ logger: 'warn' }); // or ['warn', 'error']
 const spark = new Spark({ logger: { colorful: false } });
 ```
 
+- `agent` (default: `undefined`) an HTTP agent to use for making requests
+  (not applicable for browser environments).
+
+```ts
+import { Agent } from 'node:https';
+import Spark from '@cspark/sdk';
+
+const spark = new Spark({ agent: new Agent({ keepAlive: true }) });
+```
+
 ## Client Errors
 
 `SparkError` is the base class for all custom errors thrown by the SDK. There are

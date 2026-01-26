@@ -3,13 +3,13 @@ import { Maybe, StringUtils } from './utils';
 import { Config, type BaseUrl, HealthUrl } from './config';
 import { LogLevel, LoggerOptions } from './logger';
 import { Authorization, AuthMethod } from './auth';
-import { HttpResponse } from './http';
+import { HttpResponse, HttpAgent } from './http';
 import * as API from './resources';
 
 /**
  * The available settings to initialize a new Spark client.
  *
- * These options are used to configure the behavior of the `SparkClient`, including
+ * These options are used to configure the behavior of `SparkClient`, including
  * the base URL for the APIs, the API key to use for authentication, and the maximum
  * amount of time to wait for a response from the server before timing out.
  *
@@ -94,6 +94,16 @@ export interface ClientOptions extends AuthMethod {
    * @see LoggerOptions for more details.
    */
   logger?: boolean | LogLevel | LogLevel[] | LoggerOptions;
+
+  /**
+   * An HTTP agent to use for making requests. This can be used to configure connection
+   * pooling, keep-alive, and other HTTP client behaviors (not applicable for browser
+   * environments).
+   *
+   * Can be an `http.Agent` or `https.Agent` instance, a function that returns an agent
+   * based on the URL protocol, or `false` to disable the agent.
+   */
+  agent?: HttpAgent;
 }
 
 /**

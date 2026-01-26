@@ -1,3 +1,5 @@
+import { type Agent } from 'http';
+import { type Agent as HttpsAgent } from 'https';
 import { type Readable as ByteStream } from 'stream';
 import nodeFetch, { RequestInit } from 'node-fetch';
 import { AbortSignal } from 'node-fetch/externals';
@@ -10,6 +12,8 @@ import { RETRY_RANDOMIZATION_FACTOR } from './constants';
 import Utils, { Nullable, loadModule } from './utils';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+export type HttpAgent = Agent | HttpsAgent | ((parsedURL: URL) => Agent | HttpsAgent) | false;
 
 export interface RequestOptions<T = JsonData> {
   /** Key-value pairs of headers to be sent with the request. */
@@ -195,7 +199,8 @@ export async function _fetch<Req = JsonData, Resp = JsonData>(
   const url = Utils.formatUrl(resource, fetchOptions.params);
   const response = await (async () => {
     try {
-      return await nodeFetch(url, { ...request, redirect: 'manual', timeout: config.timeout });
+      const opts: RequestInit = { ...request, redirect: 'manual', timeout: config.timeout, agent: config.agent };
+      return await nodeFetch(url, opts);
     } catch (cause) {
       if ((cause as any)?.name === 'AbortError') throw cause;
       // is it relevant to retry request when client's internet is down? 🤔
@@ -273,13 +278,14 @@ export async function _fetch<Req = JsonData, Resp = JsonData>(
 
 export async function _download(
   resource: string,
-  options: RequestOptions & { method?: HttpMethod },
+  options: RequestOptions & { method?: HttpMethod; agent?: HttpAgent },
 ): Promise<HttpResponse> {
-  const { method = 'GET', headers: _headers = {}, params, cancellationToken } = options;
+  const { method = 'GET', headers: _headers = {}, params, cancellationToken: signal, agent } = options;
   const url = Utils.formatUrl(resource, params);
   const headers = { 'Content-Type': 'application/json', ..._headers };
 
-  return nodeFetch(url, { method, headers, redirect: 'manual', signal: cancellationToken })
+  const fetchOptions: RequestInit = { method, headers, redirect: 'manual', signal, agent };
+  return nodeFetch(url, fetchOptions)
     .then(async (response) => {
       if (!response.ok || response.status >= 400) throw response;
       return {

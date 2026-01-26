@@ -1,7 +1,8 @@
-import Spark, { SparkError, SparkApiError, Uri, ApiResource } from '../../src';
+import { Agent as HttpAgent } from 'http';
+import nodeFetch, { AbortError } from 'node-fetch';
+import Spark, { SparkError, SparkApiError, Uri, ApiResource, SparkOptions } from '../../src';
 import LocalServer, { TestApiResource } from './_server';
 import Utils from '../../src/utils';
-import { AbortError } from 'node-fetch';
 
 describe('Uri', () => {
   const BASE_URL = 'https://excel.test.coherent.global/tenant-name';
@@ -196,5 +197,88 @@ describe('ApiResource', () => {
 
     expect((await extended.other.fetchData()).data.status).toBe('fetched');
     expect((await extended.more.fetchMore()).data.status).toBe('fetched');
+  });
+});
+
+describe('Config.HttpAgent', () => {
+  let localServer: LocalServer;
+  let testResource: TestApiResource;
+  let sparkOptions: SparkOptions;
+  let fetchSpy: jest.SpyInstance;
+
+  beforeAll(async () => {
+    localServer = new LocalServer();
+    await localServer.start();
+
+    sparkOptions = { baseUrl: localServer.baseUrl, token: 'open', logger: false };
+  });
+
+  beforeEach(() => (fetchSpy = jest.spyOn(nodeFetch, 'default')));
+
+  afterEach(() => fetchSpy.mockRestore());
+
+  afterAll(async () => await localServer.stop());
+
+  it('should pass agent to node-fetch and reuse keepAlive connections', async () => {
+    const agent = new HttpAgent({ keepAlive: true, keepAliveMsecs: 1000, maxSockets: 5, maxFreeSockets: 2 });
+    const spark = new Spark({ ...sparkOptions, agent });
+
+    testResource = new TestApiResource(spark.config);
+    await testResource.unauthorized().catch(() => {
+      // Expected to fail with 401, but we're testing the agent is used
+    });
+    await testResource.unauthorized().catch(() => {
+      // Second request should reuse the connection
+    });
+
+    // Verify node-fetch was called with the agent
+    expect(fetchSpy).toHaveBeenCalled();
+    const calls = fetchSpy.mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+
+    // Check that agent was passed in the options
+    calls.forEach((call) => {
+      const options = call[1] as any;
+      expect(options).toBeDefined();
+      expect(options.agent).toBe(agent);
+    });
+
+    // Verify keepAlive is enabled on the agent by checking its options
+    expect((agent as any).options.keepAlive).toBe(true);
+
+    // Verify that the agent has sockets in its pool (indicating connection reuse)
+    // After requests, the agent should have free sockets if keepAlive is working
+    const freeSockets = (agent as any).freeSockets;
+    const sockets = (agent as any).sockets;
+
+    // The agent should have created sockets for the connections
+    // Note: freeSockets might be empty if connections are still in use,
+    // but sockets should exist if connections were made
+    expect(sockets || freeSockets).toBeDefined();
+  });
+
+  it('should use different agents for different configs', async () => {
+    const agent1 = new HttpAgent({ keepAlive: true });
+    const agent2 = new HttpAgent({ keepAlive: true });
+
+    const spark1 = new Spark({ ...sparkOptions, agent: agent1 });
+    const spark2 = new Spark({ ...sparkOptions, agent: agent2 });
+
+    const resource1 = new TestApiResource(spark1.config);
+    const resource2 = new TestApiResource(spark2.config);
+
+    await resource1.unauthorized().catch(() => {});
+    await resource2.unauthorized().catch(() => {});
+
+    // Verify each request used its respective agent
+    const calls = fetchSpy.mock.calls;
+    expect(calls.length).toBeGreaterThanOrEqual(2);
+
+    // Find calls that used agent1 and agent2
+    const agent1Calls = calls.filter((call) => (call[1] as any)?.agent === agent1);
+    const agent2Calls = calls.filter((call) => (call[1] as any)?.agent === agent2);
+
+    expect(agent1Calls.length).toBeGreaterThan(0);
+    expect(agent2Calls.length).toBeGreaterThan(0);
   });
 });

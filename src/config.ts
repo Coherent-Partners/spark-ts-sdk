@@ -2,7 +2,7 @@ import Utils, { Maybe, loadModule } from './utils';
 import Validators from './validators';
 import { SparkError } from './error';
 import { Authorization } from './auth';
-import { Interceptor, HttpResponse } from './http';
+import { Interceptor, HttpResponse, HttpAgent } from './http';
 import { ClientOptions } from './client';
 import { Logger, LoggerOptions } from './logger';
 import { Uri, UriOptions, UriParams, Platform, PlatformConfig } from './resources';
@@ -29,6 +29,7 @@ export class Config {
   readonly timeout!: number;
   readonly allowBrowser!: boolean;
   readonly logger!: LoggerOptions;
+  readonly agent?: HttpAgent;
   readonly extraHeaders: Record<string, string> = {};
   readonly interceptors: Set<Interceptor> = new Set<Interceptor>();
 
@@ -52,6 +53,7 @@ export class Config {
     this.retryInterval = numberValidator.isValid(retryInterval) ? retryInterval! : DEFAULT_RETRY_INTERVAL;
     this.allowBrowser = this.auth.isOpen || !!options.allowBrowser;
     this.logger = Logger.for(options.logger);
+    this.agent = options.agent;
 
     this.#options = JSON.stringify({
       baseUrl: this.baseUrl.toString(),
@@ -102,6 +104,7 @@ export class Config {
       retryInterval: options.retryInterval ?? this.retryInterval,
       allowBrowser: options.allowBrowser ?? this.allowBrowser,
       logger: options.logger ?? this.logger,
+      agent: options.agent ?? this.agent,
     });
   }
 
