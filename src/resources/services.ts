@@ -17,6 +17,17 @@ export class Services extends ApiResource {
   }
 
   /**
+   * Checks if a service with the given name exists.
+   * @param {string | Pick<UriParams, 'folder' | 'service'>} uri - locate the service using folder, service only
+   * @returns {Promise<boolean>}
+   */
+  async exists(uri: string | Pick<UriParams, 'folder' | 'service'>): Promise<boolean> {
+    const response = await this.checkExistence(uri);
+    const data = response.data.response_data ?? {};
+    return response.status === 200 && (data.is_exists ?? false);
+  }
+
+  /**
    * Creates a new service by uploading a file and publishing it.
    * @param {CreateParams} params - the service creation parameters
    * @returns a summary of the upload, compilation, and publication process
@@ -322,6 +333,16 @@ export class Services extends ApiResource {
     const url = this.config.baseUrl.concat({ version: 'api/v1', endpoint });
 
     return this.request(url, { method: 'DELETE' });
+  }
+
+  /**
+   * Checks if a service with the given name exists.
+   * @param {string | Pick<UriParams, 'folder' | 'service'>} uri - locate the service using folder, service only
+   * @returns {Promise<HttpResponse<ServiceExistence>>} the existence status
+   */
+  async checkExistence(uri: string | Pick<UriParams, 'folder' | 'service'>): Promise<HttpResponse<ServiceExistence>> {
+    const url = this.config.baseUrl.add(Uri.validate(uri), { endpoint: 'exists' });
+    return this.request(url, { method: 'GET' });
   }
 
   /**
@@ -636,6 +657,25 @@ type ServiceListed = ServiceApiResponse<
     request_timestamp: string;
     system: string;
     [key: string]: any;
+  }
+>;
+
+type ServiceExistence = ServiceApiResponse<
+  {
+    id: string;
+    name: string;
+    is_exists: boolean;
+    version: string;
+    last_modified_date: string;
+    latest_version_id: string;
+    effective_start_date: string;
+    effective_end_date: string;
+    tags: string;
+    service_status: string;
+  },
+  {
+    system: string;
+    request_timestamp: string;
   }
 >;
 

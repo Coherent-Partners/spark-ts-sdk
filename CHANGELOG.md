@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## 0.4.3 (2026-04-03)
+
+- Add HTTP agent support for request config
+- Add ability to check the existence of a folder or service in Spark
+- Fix bug in `Spark.logs.rehydrate(...)` method: request body now needs to be an empty object
+- Add ability to pass `extras` parameter to `Spark.logs.download(...)` method
+
 ## 0.4.2 (2026-01-22)
 
 - Fix issue in `Batches.create(...)` method

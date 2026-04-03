@@ -263,6 +263,21 @@ export class BaseUrl {
     });
   }
 
+  /**
+   * Builds a base URL from the environment and tenant combination.
+   *
+   * @param {string} location - a combination of env and tenant name.
+   * @param {string} separator - the separator to use to split the location string.
+   * @returns {BaseUrl} a base URL for the given location.
+   *
+   * This is a convenient way to build a base URL from a location string (e.g., `uat.us/my-tenant`).
+   * @see {@link BaseUrl.from} for more details on how this method works.
+   */
+  static at(location: string, separator: string = '/'): BaseUrl {
+    const [env, tenant] = location?.split(separator, 2) ?? [];
+    return BaseUrl.from({ env, tenant });
+  }
+
   /** The base URL only (no tenant). */
   get value(): string {
     return this.url.origin;
