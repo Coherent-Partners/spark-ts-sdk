@@ -135,11 +135,11 @@ The `destination` folder should exist in the target workspace to import the enti
 you can define how to map the exported entities to the destination tenant by providing
 a `ServiceMapping` object.
 
-| Property  | Type                      | Description                                         |
-| --------- | ------------------------- | --------------------------------------------------- |
-| _source_  | `string`                  | The service URI of the source tenant.               |
-| _target_  | `string`                  | The service URI of the destination tenant.          |
-| _upgrade_ | `major \| minor \| patch` | The version upgrade strategy (defaults to `minor`). |
+| Property  | Type                              | Description                                         |
+| --------- | --------------------------------- | --------------------------------------------------- |
+| _source_  | `string`                          | The service URI of the source tenant.               |
+| _target_  | `string`                          | The service URI of the destination tenant.          |
+| _upgrade_ | `major \| minor \| patch \| copy` | The version upgrade strategy (defaults to `minor`). |
 
 Check out the [API reference](https://docs.coherent.global/spark-apis/impex-apis/import#request-body)
 for more information.
