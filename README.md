@@ -4,6 +4,7 @@
 [![JSR Version][jsr-version]][jsr-url]
 [![CI build][ci-img]][ci-url]
 [![License][license-img]][license-url]
+[![Ask DeepWiki][deepwiki-img]][deepwiki-url]
 
 The Coherent Spark SDK is designed to elevate the developer experience and
 provide convenient access to Coherent Spark APIs using JavaScript or TypeScript.
@@ -66,24 +67,20 @@ spark.services
 ```
 
 Though the package is designed for Node.js, it can also be used in browser-like
-environments:
+environments (e.g., loaded directly from [esm.sh](https://esm.sh/), [unpkg](https://unpkg.com), etc.):
 
 ```html
 <!doctype html>
 <html>
   <body>
-    <script src="https://www.unpkg.com/@cspark/sdk"></script>
-    <script>
-      const { SparkClient: Spark } = window['@cspark/sdk'];
+    <script type="module">
+      import Spark from 'https://esm.sh/@cspark/sdk';
 
-      function main(apiKey) {
-        const spark = new Spark({ apiKey, env: 'my-env', tenant: 'my-tenant', allowBrowser: true });
-        spark.services
-          .execute('my-folder/my-service', { inputs: { value: 42 } })
-          .then((response) => console.log(response.data));
-      }
-
-      main(prompt('Provide your API key'));
+      const apiKey = prompt('Provide your API key');
+      const spark = new Spark({ apiKey, env: 'my-env', tenant: 'my-tenant', allowBrowser: true });
+      spark.services
+        .execute('my-folder/my-service', { inputs: { value: 42 } })
+        .then((response) => console.log(response.data));
     </script>
   </body>
 </html>
@@ -207,6 +204,16 @@ const spark = new Spark({ logger: 'warn' }); // or ['warn', 'error']
 const spark = new Spark({ logger: { colorful: false } });
 ```
 
+- `agent` (default: `undefined`) an HTTP agent to use for making requests
+  (not applicable for browser environments).
+
+```ts
+import { Agent } from 'node:https';
+import Spark from '@cspark/sdk';
+
+const spark = new Spark({ agent: new Agent({ keepAlive: true }) });
+```
+
 ## Client Errors
 
 `SparkError` is the base class for all custom errors thrown by the SDK. There are
@@ -244,11 +251,10 @@ of the currently supported APIs.
 OAuth2.0 Client Credentials flow:
 
 - `Authorization.oauth.retrieveToken(config)` generates new access tokens.
-- `Authorization.oauth.refreshToken(config)` refreshes access token when expired.
 
 [Folders API](./docs/folders.md) - manages folders:
 
-- `Spark.folders.categories.list()` gets the list of folder categories.
+- `Spark.folders.exists(name)` checks if a folder exists.
 - `Spark.folders.create(data)` creates a new folder with additional info.
 - `Spark.folders.find(name)` finds folders by name, status, category, or favorite.
 - `Spark.folders.update(id, data)` updates a folder's information by id.
@@ -256,6 +262,7 @@ OAuth2.0 Client Credentials flow:
 
 [Services API](./docs/services.md) - manages Spark services:
 
+- `Spark.services.exists(uri)` checks if a service exists.
 - `Spark.services.create(data)` creates a new Spark service.
 - `Spark.services.execute(uri, data)` executes a Spark service.
 - `Spark.services.transform(uri, inputs)` executes a Spark service using `Transforms`.
@@ -295,6 +302,8 @@ OAuth2.0 Client Credentials flow:
 - `Spark.impex.export(data)` exports Spark entities (versions, services, or folders).
 - `Spark.impex.import(data)` imports previously exported Spark entities into the Spark platform.
 - `Spark.impex.exports.cancel(jobId)` cancels an in-progress export job.
+- `Spark.impex.exports.describe()` describes export jobs across the tenant.
+- `Spark.impex.imports.describe()` describes import jobs across the tenant.
 
 [Other APIs](./docs/misc.md) - for other functionalities:
 
@@ -333,3 +342,5 @@ conduct, and the process for submitting pull requests.
 [docs]: https://github.com/Coherent-Partners/spark-ts-sdk/tree/main/docs
 [wiki]: https://deepwiki.com/Coherent-Partners/spark-ts-sdk
 [uri-url]: https://github.com/Coherent-Partners/spark-ts-sdk/blob/main/src/resources/base.ts
+[deepwiki-img]: https://deepwiki.com/badge.svg
+[deepwiki-url]: https://deepwiki.com/Coherent-Partners/spark-ts-sdk

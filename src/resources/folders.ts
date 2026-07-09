@@ -16,6 +16,17 @@ export class Folders extends ApiResource {
   }
 
   /**
+   * Checks if a folder with the given name exists.
+   * @param {string} name - Folder name
+   * @returns {Promise<boolean>}
+   */
+  async exists(name: string): Promise<boolean> {
+    const response = await this.checkExistence(name);
+    const status = response.data.data ?? false;
+    return response.status === 200 && status === true;
+  }
+
+  /**
    * Creates a new folder.
    * @param {string | CreateParams} params - Folder name (and additional information)
    * If `params` is a string, it will be used as the folder name.
@@ -130,6 +141,16 @@ export class Folders extends ApiResource {
     ];
 
     return this.request(url, { method: 'POST', multiparts });
+  }
+
+  /**
+   * Checks if a folder with the given name exists.
+   * @param {string} name - Folder name
+   * @returns {Promise<HttpResponse<FolderExistence>>}
+   */
+  async checkExistence(name: string): Promise<HttpResponse<FolderExistence>> {
+    const url = this.config.baseUrl.concat({ version: this.#version, endpoint: `product/isproductexists/${name}` });
+    return this.request(url, { method: 'POST' });
   }
 }
 
@@ -256,6 +277,8 @@ type FolderUpdated = FolderApiResponse<null>;
 type FolderDeleted = FolderApiResponse<null>;
 
 type CoverUploaded = FolderApiResponse<null>;
+
+type FolderExistence = FolderApiResponse<boolean> & { status: string };
 
 type FolderCreated = FolderApiResponse<
   FolderInfo & {

@@ -37,7 +37,6 @@ export class TestApiResource extends ApiResource {
 // Inspired by https://github.com/node-fetch/node-fetch/blob/main/test/utils/server.js
 export default class LocalServer {
   private server: http.Server;
-  nextResponseHandler?: (res: http.ServerResponse<http.IncomingMessage>) => void;
 
   constructor(readonly hostname: string = 'localhost') {
     this.server = http.createServer(this.router);

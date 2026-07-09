@@ -30,11 +30,7 @@ export class Streamer {
   }
 
   static async toBuffer(bytes: Readable): Promise<Buffer> {
-    const buffers: Buffer[] = [];
-    for await (const data of bytes) {
-      buffers.push(data);
-    }
-    return Buffer.concat(buffers);
+    return Streamer.readStream(bytes);
   }
 
   static async readStream(stream: Readable): Promise<Buffer> {

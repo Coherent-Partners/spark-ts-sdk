@@ -74,7 +74,7 @@ export class History extends ApiResource {
     const endpoint = params?.legacy ? `download/${callId}` : `download/xml/${callId}`;
     const url = this.config.baseUrl.add({ folder, service }, { endpoint });
     const options = NumberUtils.isArrayIndex(index) ? { params: { index: index!.toFixed(0) } } : {};
-    const response = await this.request<LogRehydrated>(url, { ...options, method: 'POST' });
+    const response = await this.request<LogRehydrated>(url, { ...options, method: 'POST', body: {} });
     const downloadUrl = response.data?.response_data?.download_url;
 
     if (!downloadUrl) {
@@ -169,7 +169,7 @@ class LogDownload extends ApiResource {
     const url = this.config.baseUrl.add({ folder, service }, { endpoint: `log/download${type}` });
 
     const body = ((params: Omit<CreateJobParams, 'folder' | 'service'>) => {
-      const { sourceSystem, correlationId, startDate, endDate } = params;
+      const { sourceSystem, correlationId, startDate, endDate, extras = {} } = params;
       const callIds = params.callIds ?? [];
       if (callIds?.length === 0 && sourceSystem) callIds.push(sourceSystem);
       if (callIds?.length === 0 && correlationId) callIds.push(correlationId);
@@ -180,6 +180,7 @@ class LogDownload extends ApiResource {
           start_date: DateUtils.toDate(startDate)?.toISOString(),
           end_date: DateUtils.toDate(endDate)?.toISOString(),
           timezone_offset: params.timezoneOffset,
+          ...extras,
         },
         request_meta: {
           version_id: params.versionId,
@@ -214,14 +215,20 @@ class LogDownload extends ApiResource {
       const { progress } = response.data.response_data;
       this.logger.log(`waiting for log status job to complete - ${progress || 0}%`);
 
-      if (progress == 100) return response;
+      if (progress == 100) {
+        this.logger.log(`log download job <${jobId}> completed`);
+        return response;
+      }
       await Utils.sleep(getRetryTimeout(retries, retryInterval));
 
       retries++;
       response = await this.request<LogStatus>(url);
     } while (response.data.response_data.progress < 100 && retries < maxRetries);
 
-    if (response.data.response_data.progress == 100) return response;
+    if (response.data.response_data.progress == 100) {
+      this.logger.log(`log download job <${jobId}> completed`);
+      return response;
+    }
 
     const message = `log download job status check timed out after ${retries} retries`;
     this.logger.error(message);
@@ -256,6 +263,9 @@ interface CreateJobParams extends Pick<UriParams, 'folder' | 'service' | 'versio
   correlationId?: string;
   sourceSystem?: string;
   timezoneOffset?: string;
+
+  /** Additional metadata for the download job. */
+  extras?: Record<string, any>;
 }
 
 interface DownloadParams extends CreateJobParams, ConfigParams {}

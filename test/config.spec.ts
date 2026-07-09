@@ -73,7 +73,7 @@ describe('JwtConfig', () => {
 
   // should run this suite if node v16+, otherwise would fail.
   // jwt-decode depends on atob which is not available in node v14 and below.
-  // It should've considered using Buffer.from instead of atob.
+  // It should've considered using Buffer.from() instead of atob().
   if (16 > +version.major) return;
 
   const TOKEN = ''.concat(
@@ -111,6 +111,17 @@ describe('BaseUrl', () => {
     expect(BaseUrl.from({ url: 'https://spark.my.env.coherent.global', tenant: 'tenant' }).full).toBe(VALID_URL);
     expect(BaseUrl.from({ url: 'https://excel.my.env.coherent.global', tenant: 'tenant' }).full).toBe(VALID_URL);
     expect(BaseUrl.from({ env: 'my.env', tenant: 'tenant' }).full).toBe(VALID_URL);
+  });
+
+  it('can build base URL using a custom location', () => {
+    expect(BaseUrl.at('my.env/tenant').full).toBe(VALID_URL);
+    expect(BaseUrl.at('my.env/tenant/other/path').full).toBe(VALID_URL);
+    expect(BaseUrl.at('my.env:tenant', ':').full).toBe(VALID_URL);
+
+    expect(() => BaseUrl.at(null as any)).toThrow(SparkSdkError);
+    expect(() => BaseUrl.at('')).toThrow(SparkSdkError);
+    expect(() => BaseUrl.at('env/')).toThrow(SparkSdkError);
+    expect(() => BaseUrl.at('env:tenant')).toThrow(SparkSdkError);
   });
 
   it('can copy base URL with new values', () => {

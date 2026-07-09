@@ -1,6 +1,6 @@
 {
   "name": "@cspark/sdk",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "A JavaScript SDK for interacting with Coherent Spark APIs",
   "author": "Coherent (https://coherent.global)",
   "homepage": "https://docs.coherent.global",
@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "buffer": "6.0.3",
-    "form-data": "4.0.4",
+    "form-data": "4.0.6",
     "node-fetch": "2.7.0",
     "pako": "~2.1.0"
   },
@@ -53,7 +53,7 @@
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.5",
     "@types/jest": "29.5.11",
-    "@types/node": "*",
+    "@types/node": "~24.10.0",
     "@types/node-fetch": "^2.6.11",
     "@types/pako": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "^8.34.0",

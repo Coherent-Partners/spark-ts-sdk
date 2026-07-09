@@ -7,7 +7,7 @@ import { SPARK_SDK } from '../constants';
 import { SparkError, RetryTimeoutError } from '../error';
 import { HttpResponse, Multipart, getRetryTimeout } from '../http';
 import { ApiResource, Uri, UriParams } from './base';
-import { UpgradeType, ExportFilters, IfEntityPresent, ConfigParams } from './types';
+import { UpgradeType as VersioningType, ExportFilters, IfEntityPresent, ConfigParams } from './types';
 
 export class ImpEx {
   private constructor(readonly config: Config) {}
@@ -368,6 +368,8 @@ function buildServiceMappings(
 }
 
 export type ImportDestination = string | string[] | ServiceMapping | ServiceMapping[];
+
+type UpgradeType = VersioningType | 'copy';
 
 interface ServiceMapping {
   source: string;
