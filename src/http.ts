@@ -13,6 +13,8 @@ import Utils, { Nullable, loadModule } from './utils';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
+type FetchBody = NonNullable<RequestInit['body']>;
+
 export type HttpAgent = Agent | HttpsAgent | ((parsedURL: URL) => Agent | HttpsAgent) | false;
 
 export interface RequestOptions<T = JsonData> {
@@ -98,7 +100,7 @@ async function buildRequest<T>(options: HttpOptions<T>): Promise<RequestInit> {
 
   const { contentType, body } = await (async (): Promise<{
     contentType: string | undefined;
-    body: ByteStream | string;
+    body: FetchBody;
   }> => {
     if (options.multiparts) {
       const isBrowser = Utils.isBrowser();
@@ -155,7 +157,7 @@ async function buildRequest<T>(options: HttpOptions<T>): Promise<RequestInit> {
         if (!fileStream) {
           throw SparkError.sdk('file stream required for application/octet-stream content type');
         }
-        return { contentType, body: fileStream };
+        return { contentType, body: fileStream as FetchBody };
 
       default:
         throw SparkError.sdk(`unsupported content type: ${contentType}`);
